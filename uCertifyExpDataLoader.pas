@@ -1,0 +1,865 @@
+(*
+
+DevNotes:
+
+Lifecycle for recs in CertifyExp_PayComHistory recorded by the record_status & error_text fields:
+
+imported -> OK -> exported
+imported -> error               [missing data for required field, duplicate email]
+imported -> non-Certify employee
+
+
+
+To-Do:
+
+//  ShowMessage(' and '       + ParamStr(1) );   // command line params
+
+
+--  WHERE record_status = 'imported'
+--    AND imported_on = '2018-08-16 16:41:03.817'
+
+select work_email, COUNT(* as counter
+from CertifyExp_PayComHistory
+where record_status = 'non-certify' or record_status = 'imported'
+group by work_email
+having COUNT(* > 1
+
+
+select ID, employee_name, work_email
+from CertifyExp_PayComHistory
+where work_email = 'achaidez@claylacy.com'
+
+
+
+
+update CertifyExp_PayComHistory
+set record_status = 'non-certify', status_timestamp = CURRENT_TIMESTAMP
+-- from CertifyExp_PayComHistory
+where (certify_gp_vendornum is null or certify_gp_vendornum = '')
+  and (certify_department is null or certify_department = '' )
+  and (certify_role is null or certify_role = '')
+
+*)
+
+unit uCertifyExpDataLoader;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,   System.DateUtils,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, UniProvider, SQLServerUniProvider, Data.DB, MemDS, DBAccess, Uni, Vcl.ComCtrls,
+  IdMessage, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdExplicitTLSClientServerBase, IdMessageClient, IdSMTPBase,
+  IdSMTP, DAScript, UniScript;
+
+type
+  TufrmCertifyExpDataLoader = class(TForm)
+    UniConnection1: TUniConnection;
+    qryGetEmployees: TUniQuery;
+    SQLServerUniProvider1: TSQLServerUniProvider;
+    edPayComInputFile: TEdit;
+    Label1: TLabel;
+    btnGenerateFile: TButton;
+    StatusBar1: TStatusBar;
+    tblProComHistory: TUniTable;
+    IdSMTP1: TIdSMTP;
+    IdMessage1: TIdMessage;
+    btnTestEmail: TButton;
+    Label2: TLabel;
+    edOutputFileName: TEdit;
+    qryIdentifyNonCertifyRecs: TUniQuery;
+    qryGetDBServerTime: TUniQuery;
+    btnMain: TButton;
+    qryGetDupeEmails: TUniQuery;
+    qryUpdateDupeEmailRecStatus: TUniQuery;
+    scrLoadTripData: TUniScript;
+    qryLoadTripData: TUniQuery;
+    qryBuildValFile: TUniQuery;
+    edDaysBack: TEdit;
+    Label3: TLabel;
+    qryGetAirCrewVendorNum: TUniQuery;
+    qryEmptyStartBucket: TUniQuery;
+    edOutputDirectory: TEdit;
+    Label4: TLabel;
+    qryGetImportedRecs: TUniQuery;
+    qryGetApproverEmail: TUniQuery;
+    qryGetTripAccountantRec: TUniQuery;
+    scrLoadTripStopData: TUniScript;
+    qryGetTripStopRecs: TUniQuery;
+    qryGetStartBucketSorted: TUniQuery;
+    procedure btnGenerateFileClick(Sender: TObject);
+    procedure btnTestEmailClick(Sender: TObject);
+    procedure btnMainClick(Sender: TObject);
+    procedure qryLoadTripDataBeforeExecute(Sender: TObject);
+
+  private
+    Procedure Main();
+    Procedure ImportPayrollData(Const BatchTimeIn : TDateTime);
+    Procedure InsertIntoHistoryTable(Const slInputFileRec: TStringList; BatchTimeIn: TDateTime);
+    Procedure BuildEmployeeFile(Const BatchTimeIn: TDateTime)  ;
+    Procedure WriteToCertifyEmployeeFile(Const BatchTimeIn: TDateTime)   ;
+    Procedure SplitEmployeeName( Const FullNameIn: String; Var LastNameOut, FirstNameOut : String );
+    Procedure IdentifyNonCertifyRecs( Const BatchTimeIn : TDateTime );
+    Procedure ValidateRecords(Const BatchTimeIn: Tdatetime);
+    Procedure UpdateDupeEmailRecs( Const EMailIn: String; BatchTimeIn: TDateTime);
+    Procedure BuildCrewLogFile();
+    Procedure BuildCrewTailFile();
+    Procedure BuildCrewTripFile();
+
+    Procedure BuildGenericValidationFile(const TargetFileName, SQLIn: String) ;
+    Procedure BuildGenericValidationFile2(const TargetFileName, SQLIn: String) ;
+    Procedure LoadTripsIntoStartBucket;
+    Procedure BuildValidationFiles;
+    Procedure BuildTripAccountantFile(Const FileNameIn: String);
+    Procedure CalculateApproverEmail(Const BatchTimeIn: TDateTime) ;
+    Procedure FilterTripsByCount;
+    Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
+    Function  CalcDepartmentName(Const GroupValIn: String): String;
+    Function  GetTimeFromDBServer(): TDateTime;
+    Function  RecIsValid(Const TimeStampIn:TDateTime): Boolean ;
+
+  public
+    { Public declarations }
+  end;
+
+var
+  ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader;
+  CertifyEmployeeFile : TextFile;
+  CertifyEmployeeFileName : String;
+
+
+implementation
+
+{$R *.dfm}
+
+
+procedure TufrmCertifyExpDataLoader.Main;
+var
+  i: Integer;
+  BatchTime : TDateTime;
+
+begin
+  BatchTime := GetTimeFromDBServer;
+  ImportPayrollData(BatchTime);               // rec status: imported or error
+  IdentifyNonCertifyRecs(BatchTime);          // rec status: non-certify records flagged
+
+  ValidateRecords(BatchTime);                 // rec status: OK
+  CalculateApproverEmail(BatchTime);          // rec Status: exported
+  BuildEmployeeFile(BatchTime);
+
+  LoadTripsIntoStartBucket;
+  BuildValidationFiles;
+
+//  FilterTripsByCount;
+
+end;  { Main }
+
+
+procedure TufrmCertifyExpDataLoader.btnMainClick(Sender: TObject);
+var
+  TargetDirectory : string;
+
+begin
+  Main;
+
+end;
+
+
+procedure TufrmCertifyExpDataLoader.BuildValidationFiles;
+var
+  TargetDirectory : string;
+
+begin
+
+  TargetDirectory :=  edOutputDirectory.Text;  // 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\';
+
+  BuildGenericValidationFile(TargetDirectory + 'crew_log.csv',
+                             'select distinct LogSheet, CrewMemberVendorNum from CertifyExp_Trips_StartBucket' );
+
+  BuildGenericValidationFile(TargetDirectory + 'crew_tail.csv',
+                             'select distinct TailNum as TailNumber, CrewMemberVendorNum from CertifyExp_Trips_StartBucket' );
+
+  BuildGenericValidationFile(TargetDirectory + 'crew_trip.csv',
+                             'select distinct QuoteNum as TripNumber, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where QuoteNum is not null' );
+
+  BuildGenericValidationFile2(TargetDirectory + 'tail_log.csv',
+                             'select distinct TailNum as TailNumber, LogSheet from CertifyExp_Trips_StartBucket' );
+
+  BuildGenericValidationFile2(TargetDirectory + 'tail_trip.csv',
+                             'select distinct TailNum as TailNumber, QuoteNum as TripNumber from CertifyExp_Trips_StartBucket' );
+
+  BuildGenericValidationFile2(TargetDirectory + 'trip_log.csv',
+                             'select distinct QuoteNum as TripNumber, min( LogSheet ) as LogSheet from CertifyExp_Trips_StartBucket where QuoteNum is not null group by QuoteNum' );
+
+  BuildTripAccountantFile(edOutputDirectory.Text + 'trip_accountant.csv');
+
+
+  scrLoadTripStopData.Execute;
+  BuildGenericValidationFile2(TargetDirectory + 'trip_stop.csv',
+                             'select distinct TripNum, AirportID from CertifyExp_TripStop_Step1' );
+
+end;  { BuildValidationFiles }
+
+
+procedure TufrmCertifyExpDataLoader.CalculateApproverEmail(Const BatchTimeIn : TDateTime);
+var
+  ApproverEmail : String;
+
+begin
+  qryGetImportedRecs.Close;
+  qryGetImportedRecs.ParamByName('parmBatchTimeIn').AsDateTime := BatchTimeIn ;
+  qryGetImportedRecs.Open ;
+  while not qryGetImportedRecs.eof do begin
+    if qryGetImportedRecs.FieldByName('certify_department').AsString = 'Corporate' then begin
+      qryGetImportedRecs.Edit;
+      qryGetImportedRecs.FieldByName('accountant_email').AsString := 'QA-AP@ClayLacy.om';
+
+      ApproverEmail := GetApproverEmail(qryGetImportedRecs.FieldByName('supervisor_primary_code').AsString, BatchTimeIn);
+
+      if ApproverEmail = 'error' then begin
+        qryGetImportedRecs.FieldByName('record_status').AsString := 'error';
+        qryGetImportedRecs.FieldByName('error_text').AsString    := qryGetImportedRecs.FieldByName('error_text').AsString + ' missing supervisor email;';
+      end else begin
+        qryGetImportedRecs.FieldByName('approver_email').AsString := ApproverEmail;
+      end;
+      qryGetImportedRecs.Post;
+    end;
+    qryGetImportedRecs.Next;
+  end;
+
+end;  { CalculateApproverEmail }
+
+
+
+procedure TufrmCertifyExpDataLoader.FilterTripsByCount;
+var
+  PriorCrewID : String;
+  Counter : Integer;
+
+begin
+  qryGetStartBucketSorted.close;
+  qryGetStartBucketSorted.Open;
+
+  Counter := 1;
+  PriorCrewID := qryGetStartBucketSorted.FieldByName('CrewMemberID').AsString;
+  while not qryGetStartBucketSorted.eof do begin
+    if qryGetStartBucketSorted.FieldByName('CrewMemberID').AsString = PriorCrewID then begin
+      counter := counter + 1;
+      if Counter > 15 then
+        qryGetStartBucketSorted.Delete;
+
+    end else begin
+      PriorCrewID := qryGetStartBucketSorted.FieldByName('CrewMemberID').AsString;
+      Counter := 1;
+    end;
+
+    qryGetStartBucketSorted.Next;
+
+  end;  { While }
+
+end;
+
+
+procedure TufrmCertifyExpDataLoader.btnGenerateFileClick(Sender: TObject);
+begin
+
+  ShowMessage(DateTimeToStr(ISO8601ToDate('2018-08-21T16:40:45.723')));
+
+end;
+
+
+procedure TufrmCertifyExpDataLoader.btnTestEmailClick(Sender: TObject);
+Var
+  mySMTP    : TIdSMTP;
+  myMessage : TIDMessage;
+
+begin
+  myMessage := TIdMessage.Create(nil);
+  myMessage.From.Address := 'TKvassay@claylacy.com';
+  myMessage.Recipients.EMailAddresses := 'jeff@dcsit.com,jluckey@pacbell.net';
+  myMessage.Body.Text := 'fubar ask not why it is fubar, ask who is at fault...' ;
+  myMessage.Subject   := 'Test Email from Certify Data Loader 2';
+
+  mySMTP := TIdSMTP.Create(nil);
+
+  mySMTP.Host     := '192.168.1.73';
+  mySMTP.Username := 'tkvassay@claylacy.com';                // 'lmirakian@claylacy.com' ;
+  mySMTP.Password := '';                                     //'28lalal37';
+
+//  mySMTP.Host     := 'mail.authsmtp.com';
+//  mySMTP.Username := '';
+//  mySMTP.Password := '';
+
+  Try
+    mySMTP.Connect;
+    mySMTP.Send(myMessage);
+  Except on E:Exception Do
+    ShowMessage( 'Email Error: ' + E.Message);
+  End;
+
+  mySMTP.free;
+  myMessage.Free;
+
+end;
+
+
+
+procedure TufrmCertifyExpDataLoader.BuildEmployeeFile(Const BatchTimeIn: TDateTime)  ;
+var
+  slOutRec : TStringList;
+  WriteTime : TDateTime;
+
+
+begin
+(*  Get newly-imported records
+
+    work thru records with validation & write to output file
+*)
+  slOutRec := TStringList.Create;
+
+  // Prep Output File
+  AssignFile(CertifyEmployeeFile, edOutputDirectory.Text + edOutputFileName.Text);
+  Rewrite(CertifyEmployeeFile);
+
+  // write file header
+  WriteLn(CertifyEmployeeFile, 'work_email,first_name,last_name,employee_id,employee_type,group,department_name,approver_email,accountant_email') ;
+
+  qryGetEmployees.Close;
+  qryGetEmployees.ParamByName('parmImportDateIn').AsDateTime := BatchTimeIn;
+  qryGetEmployees.ParamByName('parmRecordStatusIn').AsString := 'OK';
+  qryGetEmployees.Open;
+  WriteTime := GetTimeFromDBServer();
+  while not qryGetEmployees.eof do begin
+    WriteToCertifyEmployeeFile(WriteTime);
+    qryGetEmployees.Next;
+  end;  { While }
+
+  slOutRec.free;                     // put in Try Finallys   ???JL
+  CloseFile(CertifyEmployeeFile);
+
+end;  { BuildEmployeeFile }
+
+
+procedure TufrmCertifyExpDataLoader.WriteToCertifyEmployeeFile( Const BatchTimeIn: TDateTime )  ;
+Var
+  slEmpRec : TStringList;          // Employee Record
+  LNameOut, FNameOut : String;
+  DeptName : String;
+
+begin
+  SplitEmployeeName( qryGetEmployees.FieldByName('employee_name').AsString, LNameOut, FNameOut );
+  slEmpRec := TStringList.Create;
+  try
+    slEmpRec.add( qryGetEmployees.FieldByName('work_email').AsString ) ;
+    slEmpRec.add( FNameOut ) ;
+    slEmpRec.add( LNameOut ) ;
+    slEmpRec.add( qryGetEmployees.FieldByName('certify_gp_vendornum').AsString ) ;
+    slEmpRec.add( qryGetEmployees.FieldByName('certify_role').AsString ) ;
+    slEmpRec.add( qryGetEmployees.FieldByName('certify_department').AsString ) ;  // aka group
+    
+    DeptName := CalcDepartmentName( qryGetEmployees.FieldByName('certify_department').AsString );
+    if DeptName <> 'error' then begin
+      slEmpRec.add(DeptName);
+      
+      slEmpRec.add( qryGetEmployees.FieldByName('approver_email').AsString ) ;
+      slEmpRec.add( qryGetEmployees.FieldByName('accountant_email').AsString ) ;
+
+      WriteLn(CertifyEmployeeFile, slEmpRec.CommaText) ;
+    end;
+
+    // update status fields   
+    qryGetEmployees.Edit;
+    if DeptName = 'error' then begin
+      qryGetEmployees.FieldByName('record_status').AsString := 'error';
+      qryGetEmployees.FieldByName('error_text').AsString    := qryGetEmployees.FieldByName('error_text').AsString + ' cannot find: ' + qryGetEmployees.FieldByName('certify_department').AsString + ' in Department_Name lookup; ';
+    end else     
+      qryGetEmployees.FieldByName('record_status').AsString := 'exported';
+
+    qryGetEmployees.FieldByName('status_timestamp').AsDateTime := BatchTimeIn;
+    qryGetEmployees.Post;
+
+  finally
+    slEmpRec.Free;
+  end;
+
+end;  { WriteToCertifyEmployeeFile }
+
+
+
+procedure TufrmCertifyExpDataLoader.IdentifyNonCertifyRecs( Const BatchTimeIn : TDateTime );
+begin
+  qryIdentifyNonCertifyRecs.close;
+  qryIdentifyNonCertifyRecs.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
+  qryIdentifyNonCertifyRecs.Execute;
+
+end;
+
+
+procedure TufrmCertifyExpDataLoader.ImportPayrollData(Const BatchTimeIn : TDateTime);  // rename to PayCom instead of Payroll ???JL
+var
+  FileIn: TextFile;
+  sl : TStringList;
+  s: string;
+  i: Integer;
+
+begin
+  sl := TStringList.Create;
+  sl.StrictDelimiter := true;      { don't use space as delimeter }
+
+  AssignFile(FileIn, edPayComInputFile.Text) ;
+  Reset(FileIn);
+  tblProComHistory.open;
+
+  while not Eof(FileIn) do begin
+    Readln(FileIn, s);
+    sl.CommaText := s;
+    InsertIntoHistoryTable(sl, BatchTimeIn);
+  end;
+
+  tblProComHistory.close;
+  CloseFile(FileIn);
+  sl.Free;
+
+end;  {PaycomImportMain }
+
+
+
+procedure TufrmCertifyExpDataLoader.InsertIntoHistoryTable(const slInputFileRec: TStringList; BatchTimeIn: TDateTime);
+var
+  recStatus : String;
+
+begin
+  try
+    tblProComHistory.Insert;
+    recStatus := 'imported';
+    tblProComHistory.FieldByName('employee_code').AsString           := slInputFileRec[0];
+    tblProComHistory.FieldByName('employee_name').AsString           := slInputFileRec[1];
+    tblProComHistory.FieldByName('work_email').AsString              := slInputFileRec[2];
+    tblProComHistory.FieldByName('position').AsString                := slInputFileRec[3];
+    tblProComHistory.FieldByName('department_descrip').AsString      := slInputFileRec[4];
+    tblProComHistory.FieldByName('job_code_descrip').AsString        := slInputFileRec[5];
+    tblProComHistory.FieldByName('supervisor_primary_code').AsString := slInputFileRec[6];
+
+    if slInputFileRec[7] <> '' then begin    //
+      try
+        tblProComHistory.FieldByName('certify_gp_vendornum').AsInteger := StrToInt(slInputFileRec[7]);
+      except on E1: Exception do begin
+        recStatus := 'error';
+        tblProComHistory.FieldByName('error_text').AsString    := tblProComHistory.FieldByName('error_text').AsString + '; Field: certify_gp_vendornum - ' + E1.Message;
+      end;
+      end;
+    end;
+
+    tblProComHistory.FieldByName('certify_department').AsString    := slInputFileRec[8];
+    tblProComHistory.FieldByName('certify_role').AsString          := slInputFileRec[9];
+    tblProComHistory.FieldByName('record_status').AsString         := recStatus ;
+    tblProComHistory.FieldByName('status_timestamp').AsDateTime    := BatchTimeIn;
+    tblProComHistory.FieldByName('imported_on').AsDateTime         := BatchTimeIn;
+    tblProComHistory.post;
+
+  except on E: Exception do begin
+    tblProComHistory.Edit;
+    tblProComHistory.FieldByName('record_status').AsString := 'error';
+    tblProComHistory.FieldByName('error_text').AsString    := tblProComHistory.FieldByName('error_text').AsString + '; ' + E.Message;
+    tblProComHistory.post;
+  end;
+
+  end;  { Try/Except }
+
+end;  { InsertIntoHistoryTable() }
+
+
+
+
+procedure TufrmCertifyExpDataLoader.LoadTripsIntoStartBucket;
+begin
+(*  1. Empty Start Bucket
+    2. Load trips into Start Bucket from Trip tables
+    3. Add Vendor number for air crew
+*)
+  scrLoadTripData.Execute;
+  qryGetAirCrewVendorNum.Execute;
+
+end;  { LoadTripsIntoStartBucket }
+
+
+procedure TufrmCertifyExpDataLoader.qryLoadTripDataBeforeExecute(Sender: TObject);
+begin
+  scrLoadTripData.Params.ParamByName('parmDaysBack').AsInteger := StrToInt(edDaysBack.Text);
+
+end;
+
+
+
+function TufrmCertifyExpDataLoader.RecIsValid(Const TimeStampIn:TDateTime): Boolean;
+var
+  strErrorText : String;
+
+begin
+  strErrorText := '';
+  Result := True;
+  if qryGetEmployees.FieldByName('certify_gp_vendornum').AsString = '' then
+    strErrorText := strErrorText + 'missing certify_gp_vendornum; ';
+
+  if qryGetEmployees.FieldByName('certify_department').AsString = '' then
+    strErrorText := strErrorText + 'missing certify_department; ';
+
+  if qryGetEmployees.FieldByName('certify_role').AsString = '' then
+    strErrorText := strErrorText + 'missing certify_role; ';
+
+  qryGetEmployees.Edit;
+  qryGetEmployees.FieldByName('status_timestamp').AsDateTime := TimeStampIn;  
+
+  if strErrorText <> '' then begin
+    qryGetEmployees.FieldByName('record_status').AsString := 'error';
+    qryGetEmployees.FieldByName('error_text').AsString    := qryGetEmployees.FieldByName('error_text').AsString + '; ' + strErrorText;
+    Result := False;
+  end else begin
+    qryGetEmployees.FieldByName('record_status').AsString := 'OK';
+    Result := True;
+  end;
+
+  qryGetEmployees.Post;
+
+end;  { RecIsValid }
+
+
+
+
+
+procedure TufrmCertifyExpDataLoader.SplitEmployeeName(const FullNameIn: String; var LastNameOut, FirstNameOut: String);
+var
+  slFullName : TStringList;
+
+begin
+  if Pos(',', FullNameIn) = 0 then begin
+    LastNameOut  := FullNameIn;
+    FirstNameOut := '';
+    Exit;
+  end;
+
+  slFullName := TStringList.Create;
+  slFullName.StrictDelimiter := True;    // don't use space as delimeter
+  try
+    slFullName.CommaText := FullNameIn;
+    LastNameOut  := Trim(slFullName[0]);
+    FirstNameOut := Trim(slFullName[1]);
+
+  finally
+    slFullName.Free;
+  end;
+
+
+end;  { SplitEmployeeName }
+
+
+procedure TufrmCertifyExpDataLoader.ValidateRecords(const BatchTimeIn: Tdatetime);
+var
+  Time_Stamp :  TDateTime;
+  
+begin
+
+  Time_Stamp := GetTimeFromDBServer();
+  // check for valid Certify recs
+  qryGetEmployees.Close;
+  qryGetEmployees.ParamByName('parmImportDateIn').AsDateTime := BatchTimeIn;
+  qryGetEmployees.ParamByName('parmRecordStatusIn').AsString := 'imported';
+  qryGetEmployees.Open;
+
+  while not qryGetEmployees.eof do begin
+    RecIsValid(Time_Stamp);
+    qryGetEmployees.Next;
+  end;
+  qryGetEmployees.Close;
+
+  //  Check for duplicate work_emails
+  qryGetDupeEmails.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
+  qryGetDupeEmails.Open;
+  while not qryGetDupeEmails.eof do begin
+    UpdateDupeEmailRecs( qryGetDupeEmails.FieldByName('work_email').AsString, BatchTimeIn);
+    qryGetDupeEmails.Next;
+  end;
+
+end;  { ValidateRecords }
+
+
+
+procedure TufrmCertifyExpDataLoader.UpdateDupeEmailRecs(const EMailIn: String; BatchTimeIn: TDateTime);
+begin
+
+// set record_status = 'error', error_text = :parmErrorTextIn     /* 'dupe work_email foo@bar.com' */
+// where work_email  = :parmEmailIn                               /* 'jrosen@claylacy.com' */
+//   and imported_on = :parmImportDateIn                          /* '2018-08-22 12:34:18.780' */
+
+  qryUpdateDupeEmailRecStatus.Close;
+  qryUpdateDupeEmailRecStatus.ParamByName('parmImportDateIn').AsDateTime := BatchTimeIn;
+  qryUpdateDupeEmailRecStatus.ParamByName('parmEmailIn').AsString        := EMailIn;
+  qryUpdateDupeEmailRecStatus.ParamByName('parmErrorTextIn').AsString    := 'dupe work_email: ' + EMailIn;
+  qryUpdateDupeEmailRecStatus.Execute;
+
+end;  { UpdateDupeEmailRecs }
+
+
+
+function TufrmCertifyExpDataLoader.GetApproverEmail(const SupervisorCode: String; BatchTimeIn: TDateTime): String;
+var
+  SC : String;
+
+begin
+
+  // hard-coded special case, per specs
+  if Pos('N113CS', qryGetImportedRecs.FieldByName('department_descrip').AsString) > 0 then begin
+    Result := 'rdragoo@claylacy.com';
+    Exit;
+  end;
+
+  SC := SupervisorCode;
+  If Length(SC) = 3 then
+    SC := '0' + SupervisorCode;
+
+  // use different technique to avoid repeated execution of qryGetApproverEmail;
+  qryGetApproverEmail.Close;
+  qryGetApproverEmail.ParamByName('parmEmpCode').AsString       := SC ;
+  qryGetApproverEmail.ParamByName('parmBatchTimeIn').AsDateTime := BatchTimeIn ;
+  qryGetApproverEmail.Open;
+
+  if  qryGetApproverEmail.FieldByName('work_email').AsString <> '' then
+    result := qryGetApproverEmail.FieldByName('work_email').AsString
+  else begin
+    result := 'error'
+  end;
+
+end;
+
+
+
+function TufrmCertifyExpDataLoader.GetTimeFromDBServer: TDateTime;
+begin
+  qryGetDBServerTime.Close;
+  qryGetDBServerTime.Open;
+  Result := qryGetDBServerTime.FieldByName('DateTimeOut').AsDateTime;
+  qryGetDBServerTime.Close;
+
+end;
+
+
+procedure TufrmCertifyExpDataLoader.BuildCrewLogFile;
+Var
+  RowOut : String;
+  CrewLogFile : TextFile;
+
+begin
+  AssignFile(CrewLogFile, 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CrewLog.csv');
+  Rewrite(CrewLogFile);
+
+  qryBuildValFile.Close;
+  qryBuildValFile.SQL.Text := 'select distinct LogSheet, CrewMemberID from CertifyExp_Trips_StartBucket';
+  qryBuildValFile.Open ;
+
+  RowOut := 'LogSheet,CrewMemberID';
+  WriteLn(CrewLogFile, RowOut) ;
+  while not qryBuildValFile.eof do begin
+    RowOut := qryBuildValFile.FieldByName('LogSheet').AsString + ',' +
+              qryBuildValFile.FieldByName('CrewMemberID').AsString + '|' + qryBuildValFile.FieldByName('LogSheet').AsString;
+
+    WriteLn(CrewLogFile, RowOut) ;
+    qryBuildValFile.Next;
+  end;
+
+  CloseFile(CrewLogFile);
+  qryBuildValFile.Close;
+
+end;  { BuildCrewLogFile }
+
+
+
+procedure TufrmCertifyExpDataLoader.BuildCrewTailFile;
+Var
+  RowOut : String;
+  WorkFile : TextFile;
+
+begin
+  AssignFile(WorkFile, 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CrewTail.csv');
+  Rewrite(WorkFile);
+
+  qryBuildValFile.Close;
+  qryBuildValFile.SQL.Text := 'select distinct TailNum, CrewMemberID from CertifyExp_Trips_StartBucket';
+  qryBuildValFile.Open ;
+
+  RowOut := 'TailNumber,CrewMemberID';
+  WriteLn(WorkFile, RowOut) ;
+  while not qryBuildValFile.eof do begin
+    RowOut := qryBuildValFile.FieldByName('TailNum').AsString + ',' +
+              qryBuildValFile.FieldByName('CrewMemberID').AsString + '|' + qryBuildValFile.FieldByName('TailNum').AsString;
+
+    WriteLn(WorkFile, RowOut) ;
+    qryBuildValFile.Next;
+  end;
+
+  CloseFile(WorkFile);
+  qryBuildValFile.Close;
+
+end;  { BuildCrewTailFile }
+
+
+
+procedure TufrmCertifyExpDataLoader.BuildCrewTripFile;
+Var
+  RowOut : String;
+  WorkFile : TextFile;
+
+begin
+  AssignFile(WorkFile, 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CrewTrip.csv');
+  Rewrite(WorkFile);
+
+  qryBuildValFile.Close;
+  qryBuildValFile.SQL.Text := 'select distinct QuoteNum, CrewMemberID from CertifyExp_Trips_StartBucket where QuoteNum is not null';
+  qryBuildValFile.Open ;
+
+  RowOut := 'TripNumber,CrewMemberID';
+  WriteLn(WorkFile, RowOut) ;
+  while not qryBuildValFile.eof do begin
+    RowOut := qryBuildValFile.FieldByName('QuoteNum').AsString + ',' +
+              qryBuildValFile.FieldByName('CrewMemberID').AsString + '|' + qryBuildValFile.FieldByName('QuoteNum').AsString;
+
+    WriteLn(WorkFile, RowOut) ;
+    qryBuildValFile.Next;
+  end;
+
+  ShowMessage(qryBuildValFile.Fields[0].FieldName);
+
+
+  CloseFile(WorkFile);
+  qryBuildValFile.Close;
+
+end;  { BuildCrewTripFile }
+
+
+
+procedure TufrmCertifyExpDataLoader.BuildGenericValidationFile(const TargetFileName, SQLIn: String);
+Var
+  RowOut : String;
+  WorkFile : TextFile;
+
+begin
+  AssignFile(WorkFile, TargetFileName);
+  Rewrite(WorkFile);
+
+  qryBuildValFile.Close;
+  qryBuildValFile.SQL.Text := SQLIn;
+  qryBuildValFile.Open ;
+
+  RowOut := qryBuildValFile.Fields[0].FieldName +',' + qryBuildValFile.Fields[1].FieldName ;
+  WriteLn(WorkFile, RowOut) ;
+  while not qryBuildValFile.eof do begin
+    RowOut := Trim(qryBuildValFile.Fields[0].AsString) + ',' +
+              Trim(qryBuildValFile.Fields[1].AsString) + '|' + Trim(qryBuildValFile.Fields[0].AsString);
+
+    WriteLn(WorkFile, RowOut) ;
+    qryBuildValFile.Next;
+  end;
+
+  CloseFile(WorkFile);
+  qryBuildValFile.Close;
+
+end; { BuildGenericValidationFile }
+
+
+procedure TufrmCertifyExpDataLoader.BuildGenericValidationFile2(const TargetFileName, SQLIn: String);
+Var
+  RowOut : String;
+  WorkFile : TextFile;
+
+begin
+  AssignFile(WorkFile, TargetFileName);
+  Rewrite(WorkFile);
+
+  qryBuildValFile.Close;
+  qryBuildValFile.SQL.Text := SQLIn;
+  qryBuildValFile.Open ;
+
+  RowOut := qryBuildValFile.Fields[0].FieldName +',' + qryBuildValFile.Fields[1].FieldName ;
+  WriteLn(WorkFile, RowOut) ;
+  while not qryBuildValFile.eof do begin
+    RowOut := Trim(qryBuildValFile.Fields[0].AsString) + ',' +
+              Trim(qryBuildValFile.Fields[1].AsString) ;
+
+    WriteLn(WorkFile, RowOut) ;
+    qryBuildValFile.Next;
+  end;
+
+  CloseFile(WorkFile);
+  qryBuildValFile.Close;
+
+end;  { BuildGenericValidationFile2 }
+
+
+
+function TufrmCertifyExpDataLoader.CalcDepartmentName(const GroupValIn: String): String;
+var
+  slGroupDefault_Index : TStringList;
+  slGroupDefault_Value : TStringList;
+  index : Integer;
+  
+begin
+
+  slGroupDefault_Index := TStringList.Create();
+  slGroupDefault_Value := TStringList.Create();
+  slGroupDefault_Index.CaseSensitive := false;
+  slGroupDefault_Value.CaseSensitive := false;
+  try
+    slGroupDefault_Index.CommaText := '"Corporate","Flight Crew",        "Charter - KVNY", "Charter - KOXC", "Hybrid",             "All" ' ;
+    slGroupDefault_Value.CommaText := '"Corporate","Flight Crew - Trip", "Charter - KVNY", "Charter - KOXC", "Flight Crew - Trip", "Corporate" ' ;
+
+    index := slGroupDefault_Index.IndexOf(GroupValIn); 
+
+    If index > -1 Then
+      Result := slGroupDefault_Value[index]
+    else 
+      Result := 'error';
+    
+  finally
+    slGroupDefault_Index.Free;
+    slGroupDefault_Value.Free;
+  end;
+
+
+end;
+
+
+
+procedure TufrmCertifyExpDataLoader.BuildTripAccountantFile(Const FileNameIn: String);
+Var
+  RowOut : String;
+  WorkFile : TextFile;
+  AccountantEmail : String;
+
+begin
+  AssignFile(WorkFile, FileNameIn);
+  Rewrite(WorkFile);
+
+  qryGetTripAccountantRec.Close;
+  qryGetTripAccountantRec.Open ;
+
+  RowOut := 'TripNumber,Accountant';
+  WriteLn(WorkFile, RowOut) ;
+  while not qryGetTripAccountantRec.eof do begin
+    if Trim(qryGetTripAccountantRec.Fields[2].AsString) = '91' then
+      AccountantEmail := 'QA-91@ClayLacy.com'
+    else
+      AccountantEmail := 'QA-135@ClayLacy.com';
+
+    RowOut := Trim(qryGetTripAccountantRec.Fields[1].AsString) + '|' +Trim(qryGetTripAccountantRec.Fields[0].AsString) + ',' +
+              AccountantEmail ;
+
+    WriteLn(WorkFile, RowOut) ;
+    qryGetTripAccountantRec.Next;
+  end;
+
+  CloseFile(WorkFile);
+  qryGetTripAccountantRec.Close;
+
+end;
+
+
+
+end.
