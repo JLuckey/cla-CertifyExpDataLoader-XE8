@@ -329,8 +329,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     SQL.Strings = (
       'select distinct LogSheet, CrewMemberID'
       'from CertifyExp_Trips_StartBucket')
-    Left = 36
-    Top = 111
+    Left = 26
+    Top = 116
   end
   object qryGetAirCrewVendorNum: TUniQuery
     Connection = UniConnection1
@@ -406,7 +406,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryGetTripAccountantRec: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
-      'select distinct QuoteNum, CrewMemberVendorNum, FarPart'
+      'select distinct QuoteNum, FarPart'
       'from CertifyExp_Trips_StartBucket'
       'where QuoteNum is not null'
       '  and CrewMemberVendorNum is not null'
@@ -456,5 +456,28 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '')
     Left = 185
     Top = 133
+  end
+  object scrGetCrewLogData: TUniScript
+    SQL.Strings = (
+      'select QuoteNum, min(LogSheet) as MinLogSheet'
+      'into #CertifyExp_Work20'
+      'from CertifyExp_Trips_StartBucket'
+      'where QuoteNum is not null'
+      'group by QuoteNum'
+      'order by QuoteNum'
+      ''
+      'select distinct CrewMemberVendorNum, LogSheet'
+      'from CertifyExp_Trips_StartBucket'
+      'where CrewMemberVendorNum is not null'
+      '  and LogSheet in '
+      '     (select distinct MinLogSheet'
+      '      from #CertifyExp_Work20)'
+      ''
+      'drop table #CertifyExp_Work20'
+      ''
+      '')
+    Connection = UniConnection1
+    Left = 125
+    Top = 83
   end
 end

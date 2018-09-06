@@ -86,6 +86,7 @@ type
     scrLoadTripStopData: TUniScript;
     qryGetTripStopRecs: TUniQuery;
     qryGetStartBucketSorted: TUniQuery;
+    scrGetCrewLogData: TUniScript;
     procedure btnGenerateFileClick(Sender: TObject);
     procedure btnTestEmailClick(Sender: TObject);
     procedure btnMainClick(Sender: TObject);
@@ -104,6 +105,9 @@ type
     Procedure BuildCrewLogFile();
     Procedure BuildCrewTailFile();
     Procedure BuildCrewTripFile();
+    Procedure BuildTripLogFile();
+    Procedure BuildTailTripFile();
+    Procedure BuildTailLogFile();
 
     Procedure BuildGenericValidationFile(const TargetFileName, SQLIn: String) ;
     Procedure BuildGenericValidationFile2(const TargetFileName, SQLIn: String) ;
@@ -147,9 +151,10 @@ begin
   BuildEmployeeFile(BatchTime);
 
   LoadTripsIntoStartBucket;
+
   BuildValidationFiles;
 
-//  FilterTripsByCount;
+  FilterTripsByCount;
 
 end;  { Main }
 
@@ -172,26 +177,34 @@ begin
 
   TargetDirectory :=  edOutputDirectory.Text;  // 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\';
 
-  BuildGenericValidationFile(TargetDirectory + 'crew_log.csv',
-                             'select distinct LogSheet, CrewMemberVendorNum from CertifyExp_Trips_StartBucket' );
+  BuildCrewTailFile;
+  BuildCrewTripFile;
+  BuildCrewLogFile;
 
-  BuildGenericValidationFile(TargetDirectory + 'crew_tail.csv',
-                             'select distinct TailNum as TailNumber, CrewMemberVendorNum from CertifyExp_Trips_StartBucket' );
+  BuildTripLogFile;
+  BuildTailTripFile;
+  BuildTailLogFile;
 
-  BuildGenericValidationFile(TargetDirectory + 'crew_trip.csv',
-                             'select distinct QuoteNum as TripNumber, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where QuoteNum is not null' );
+  //  BuildGenericValidationFile(TargetDirectory + 'crew_log.csv',
+//                             'select distinct LogSheet, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and LogSheet is not null' );
+//
+//  //  BuildGenericValidationFile(TargetDirectory + 'crew_tail.csv',
+////                             'select distinct TailNum as TailNumber, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and TailNumber is not null' );
+//
+//  BuildGenericValidationFile(TargetDirectory + 'crew_trip.csv',
+//                             'select distinct QuoteNum as TripNumber, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where QuoteNum is not null and CrewMemberVendorNum is not null' );
+//
+//  BuildGenericValidationFile2(TargetDirectory + 'tail_log.csv',
+//                             'select distinct TailNum as TailNumber, LogSheet from CertifyExp_Trips_StartBucket where TailNumber is not null and LogSheet is not null' );
+//
+//  BuildGenericValidationFile2(TargetDirectory + 'tail_trip.csv',
+//                             'select distinct TailNum as TailNumber, QuoteNum as TripNumber from CertifyExp_Trips_StartBucket where QuoteNum is not null and TailNumber is not null' );
+//
+//  BuildGenericValidationFile2(TargetDirectory + 'trip_log.csv',
+//                             'select distinct QuoteNum as TripNumber, min( LogSheet ) as LogSheet from CertifyExp_Trips_StartBucket where QuoteNum is not null group by QuoteNum' );
+//
 
-  BuildGenericValidationFile2(TargetDirectory + 'tail_log.csv',
-                             'select distinct TailNum as TailNumber, LogSheet from CertifyExp_Trips_StartBucket' );
-
-  BuildGenericValidationFile2(TargetDirectory + 'tail_trip.csv',
-                             'select distinct TailNum as TailNumber, QuoteNum as TripNumber from CertifyExp_Trips_StartBucket' );
-
-  BuildGenericValidationFile2(TargetDirectory + 'trip_log.csv',
-                             'select distinct QuoteNum as TripNumber, min( LogSheet ) as LogSheet from CertifyExp_Trips_StartBucket where QuoteNum is not null group by QuoteNum' );
-
-  BuildTripAccountantFile(edOutputDirectory.Text + 'trip_accountant.csv');
-
+  BuildTripAccountantFile(TargetDirectory + 'trip_accountant.csv');
 
   scrLoadTripStopData.Execute;
   BuildGenericValidationFile2(TargetDirectory + 'trip_stop.csv',
@@ -209,9 +222,9 @@ begin
   qryGetImportedRecs.ParamByName('parmBatchTimeIn').AsDateTime := BatchTimeIn ;
   qryGetImportedRecs.Open ;
   while not qryGetImportedRecs.eof do begin
+    qryGetImportedRecs.Edit;
     if qryGetImportedRecs.FieldByName('certify_department').AsString = 'Corporate' then begin
-      qryGetImportedRecs.Edit;
-      qryGetImportedRecs.FieldByName('accountant_email').AsString := 'QA-AP@ClayLacy.om';
+      qryGetImportedRecs.FieldByName('accountant_email').AsString := 'QA-AP@ClayLacy.com';
 
       ApproverEmail := GetApproverEmail(qryGetImportedRecs.FieldByName('supervisor_primary_code').AsString, BatchTimeIn);
 
@@ -221,10 +234,15 @@ begin
       end else begin
         qryGetImportedRecs.FieldByName('approver_email').AsString := ApproverEmail;
       end;
-      qryGetImportedRecs.Post;
+
+      end else begin
+        qryGetImportedRecs.FieldByName('accountant_email').AsString := 'QA-91@ClayLacy.com';
     end;
+
+    qryGetImportedRecs.Post;
     qryGetImportedRecs.Next;
-  end;
+  end;  { While }
+
 
 end;  { CalculateApproverEmail }
 
@@ -606,17 +624,17 @@ var
 
 begin
 
-  // hard-coded special case, per specs
-  if Pos('N113CS', qryGetImportedRecs.FieldByName('department_descrip').AsString) > 0 then begin
-    Result := 'rdragoo@claylacy.com';
-    Exit;
-  end;
+  // hard-coded special case, per specs - disabled, per revised specs dated 31Aug
+//  if Pos('N113CS', qryGetImportedRecs.FieldByName('department_descrip').AsString) > 0 then begin
+//    Result := 'rdragoo@claylacy.com';
+//    Exit;
+//  end;
 
   SC := SupervisorCode;
   If Length(SC) = 3 then
     SC := '0' + SupervisorCode;
 
-  // use different technique to avoid repeated execution of qryGetApproverEmail;
+  // use different technique to avoid repeated execution of qryGetApproverEmail;  ???JL
   qryGetApproverEmail.Close;
   qryGetApproverEmail.ParamByName('parmEmpCode').AsString       := SC ;
   qryGetApproverEmail.ParamByName('parmBatchTimeIn').AsDateTime := BatchTimeIn ;
@@ -645,28 +663,90 @@ end;
 procedure TufrmCertifyExpDataLoader.BuildCrewLogFile;
 Var
   RowOut : String;
-  CrewLogFile : TextFile;
+  WorkFile : TextFile;
 
 begin
-  AssignFile(CrewLogFile, 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CrewLog.csv');
-  Rewrite(CrewLogFile);
+  AssignFile(WorkFile, edOutputDirectory.Text + 'crew_log.csv');
+  Rewrite(WorkFile);
 
   qryBuildValFile.Close;
-  qryBuildValFile.SQL.Text := 'select distinct LogSheet, CrewMemberID from CertifyExp_Trips_StartBucket';
+
+  qryBuildValFile.SQL.Add( ' select QuoteNum, min(LogSheet) as MinLogSheet ' );
+  qryBuildValFile.SQL.Add( ' into #CertifyExp_Work20 '  );
+  qryBuildValFile.SQL.Add( ' from CertifyExp_Trips_StartBucket '  );
+  qryBuildValFile.SQL.Add( ' where QuoteNum is not null '  );
+  qryBuildValFile.SQL.Add( ' group by QuoteNum ' );
+  qryBuildValFile.SQL.Add( ' order by QuoteNum ' );
+
+  qryBuildValFile.Execute;
+
+  qryBuildValFile.Close ;
+  qryBuildValFile.SQL.Clear;
+  qryBuildValFile.SQL.Add( ' select distinct CrewMemberVendorNum, LogSheet ' );
+  qryBuildValFile.SQL.Add( ' from CertifyExp_Trips_StartBucket '  );
+  qryBuildValFile.SQL.Add( ' where CrewMemberVendorNum is not null '  );
+  qryBuildValFile.SQL.Add( '      and LogSheet in ' );
+  qryBuildValFile.SQL.Add( '       (select distinct MinLogSheet ' );
+  qryBuildValFile.SQL.Add( '        from #CertifyExp_Work20)' );
   qryBuildValFile.Open ;
 
-  RowOut := 'LogSheet,CrewMemberID';
-  WriteLn(CrewLogFile, RowOut) ;
+  RowOut := 'LogSheet,CrewMemberVendorNum';
+  WriteLn(WorkFile, RowOut) ;
   while not qryBuildValFile.eof do begin
-    RowOut := qryBuildValFile.FieldByName('LogSheet').AsString + ',' +
-              qryBuildValFile.FieldByName('CrewMemberID').AsString + '|' + qryBuildValFile.FieldByName('LogSheet').AsString;
+    RowOut := Trim(qryBuildValFile.FieldByName('LogSheet').AsString) + ',' +
+              qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + Trim(qryBuildValFile.FieldByName('LogSheet').AsString);
 
-    WriteLn(CrewLogFile, RowOut) ;
+    WriteLn(WorkFile, RowOut) ;
     qryBuildValFile.Next;
   end;
 
-  CloseFile(CrewLogFile);
   qryBuildValFile.Close;
+  qryBuildValFile.SQL.Text := 'select distinct CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null' ;
+  qryBuildValFile.Open ;
+
+  while not qryBuildValFile.eof do begin
+    RowOut := 'Future-Trip,' + qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + 'Future-Trip';
+    WriteLn(WorkFile, RowOut) ;
+    RowOut := 'Non-Trip,' + qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + 'Non-Trip';
+    WriteLn(WorkFile, RowOut) ;
+
+    qryBuildValFile.Next;
+  end;
+
+  CloseFile(WorkFile);
+  qryBuildValFile.Close;
+
+  qryBuildValFile.SQL.Clear;
+  qryBuildValFile.SQL.Add(' drop table #CertifyExp_Work20 ' );
+  qryBuildValFile.execute;
+
+
+//**************************************************************
+//
+//Var
+//  RowOut : String;
+//  CrewLogFile : TextFile;
+//
+//begin
+//  AssignFile(CrewLogFile, 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CrewLog.csv');
+//  Rewrite(CrewLogFile);
+//
+//  qryBuildValFile.Close;
+//  qryBuildValFile.SQL.Text := 'select distinct LogSheet, CrewMemberID from CertifyExp_Trips_StartBucket';
+//  qryBuildValFile.Open ;
+//
+//  RowOut := 'LogSheet,CrewMemberID';
+//  WriteLn(CrewLogFile, RowOut) ;
+//  while not qryBuildValFile.eof do begin
+//    RowOut := qryBuildValFile.FieldByName('LogSheet').AsString + ',' +
+//              qryBuildValFile.FieldByName('CrewMemberID').AsString + '|' + qryBuildValFile.FieldByName('LogSheet').AsString;
+//
+//    WriteLn(CrewLogFile, RowOut) ;
+//    qryBuildValFile.Next;
+//  end;
+//
+//  CloseFile(CrewLogFile);
+//  qryBuildValFile.Close;
 
 end;  { BuildCrewLogFile }
 
@@ -678,18 +758,30 @@ Var
   WorkFile : TextFile;
 
 begin
-  AssignFile(WorkFile, 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CrewTail.csv');
+  AssignFile(WorkFile, edOutputDirectory.Text + 'crew_tail.csv');
   Rewrite(WorkFile);
 
   qryBuildValFile.Close;
-  qryBuildValFile.SQL.Text := 'select distinct TailNum, CrewMemberID from CertifyExp_Trips_StartBucket';
+  qryBuildValFile.SQL.Text := 'select distinct TailNum as TailNumber, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and TailNum is not null' ;
   qryBuildValFile.Open ;
 
   RowOut := 'TailNumber,CrewMemberID';
   WriteLn(WorkFile, RowOut) ;
   while not qryBuildValFile.eof do begin
-    RowOut := qryBuildValFile.FieldByName('TailNum').AsString + ',' +
-              qryBuildValFile.FieldByName('CrewMemberID').AsString + '|' + qryBuildValFile.FieldByName('TailNum').AsString;
+    RowOut := Trim(qryBuildValFile.FieldByName('TailNumber').AsString) + ',' +
+              qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + Trim(qryBuildValFile.FieldByName('TailNumber').AsString);
+
+    WriteLn(WorkFile, RowOut) ;
+    qryBuildValFile.Next;
+  end;
+
+  qryBuildValFile.Close;
+  qryBuildValFile.SQL.Text := 'select distinct CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null' ;
+  qryBuildValFile.Open ;
+
+  while not qryBuildValFile.eof do begin
+    RowOut := 'Future-Trip,' +
+              qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + 'Future-Trip';
 
     WriteLn(WorkFile, RowOut) ;
     qryBuildValFile.Next;
@@ -708,30 +800,151 @@ Var
   WorkFile : TextFile;
 
 begin
-  AssignFile(WorkFile, 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CrewTrip.csv');
+  AssignFile(WorkFile, edOutputDirectory.Text + 'crew_trip.csv');
   Rewrite(WorkFile);
 
   qryBuildValFile.Close;
-  qryBuildValFile.SQL.Text := 'select distinct QuoteNum, CrewMemberID from CertifyExp_Trips_StartBucket where QuoteNum is not null';
+  qryBuildValFile.SQL.Text := 'select distinct QuoteNum, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and QuoteNum is not null' ;
   qryBuildValFile.Open ;
 
-  RowOut := 'TripNumber,CrewMemberID';
+  RowOut := 'TripNumber,CrewMemberVendorNum';
   WriteLn(WorkFile, RowOut) ;
   while not qryBuildValFile.eof do begin
-    RowOut := qryBuildValFile.FieldByName('QuoteNum').AsString + ',' +
-              qryBuildValFile.FieldByName('CrewMemberID').AsString + '|' + qryBuildValFile.FieldByName('QuoteNum').AsString;
+    RowOut := Trim(qryBuildValFile.FieldByName('QuoteNum').AsString) + ',' +
+              qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + Trim(qryBuildValFile.FieldByName('QuoteNum').AsString);
 
     WriteLn(WorkFile, RowOut) ;
     qryBuildValFile.Next;
   end;
 
-  ShowMessage(qryBuildValFile.Fields[0].FieldName);
+  qryBuildValFile.Close;
+  qryBuildValFile.SQL.Text := 'select distinct CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null' ;
+  qryBuildValFile.Open ;
+
+  while not qryBuildValFile.eof do begin
+    RowOut := 'Future-Trip,' + qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + 'Future-Trip';
+    WriteLn(WorkFile, RowOut) ;
+    RowOut := 'Non-Trip,' + qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + 'Non-Trip';
+    WriteLn(WorkFile, RowOut) ;
+
+    qryBuildValFile.Next;
+  end;
+
+  CloseFile(WorkFile);
+  qryBuildValFile.Close;
+
+
+//***************************************************************************
+//
+//Var
+//  RowOut : String;
+//  WorkFile : TextFile;
+//
+//begin
+//  AssignFile(WorkFile, 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CrewTrip.csv');
+//  Rewrite(WorkFile);
+//
+//  qryBuildValFile.Close;
+//  qryBuildValFile.SQL.Text := 'select distinct QuoteNum, CrewMemberID from CertifyExp_Trips_StartBucket where QuoteNum is not null';
+//  qryBuildValFile.Open ;
+//
+//  RowOut := 'TripNumber,CrewMemberID';
+//  WriteLn(WorkFile, RowOut) ;
+//  while not qryBuildValFile.eof do begin
+//    RowOut := qryBuildValFile.FieldByName('QuoteNum').AsString + ',' +
+//              qryBuildValFile.FieldByName('CrewMemberID').AsString + '|' + qryBuildValFile.FieldByName('QuoteNum').AsString;
+//
+//    WriteLn(WorkFile, RowOut) ;
+//    qryBuildValFile.Next;
+//  end;
+//
+//  ShowMessage(qryBuildValFile.Fields[0].FieldName);
+//
+//
+//  CloseFile(WorkFile);
+//  qryBuildValFile.Close;
+
+end;  { BuildCrewTripFile }
+
+
+procedure TufrmCertifyExpDataLoader.BuildTripLogFile;
+Var
+  RowOut : String;
+  WorkFile : TextFile;
+
+begin
+  AssignFile(WorkFile, edOutputDirectory.Text + 'trip_log.csv');
+  Rewrite(WorkFile);
+
+  qryBuildValFile.Close ;
+  qryBuildValFile.SQL.Clear;
+  qryBuildValFile.SQL.Add( ' select QuoteNum, min(LogSheet) as LogSheet ' );
+  qryBuildValFile.SQL.Add( ' from   CertifyExp_Trips_StartBucket '  );
+  qryBuildValFile.SQL.Add( ' where  QuoteNum is not null '  );
+  qryBuildValFile.SQL.Add( ' group by QuoteNum ' );
+  qryBuildValFile.SQL.Add( ' order by QuoteNum ' );
+  qryBuildValFile.Open ;
+
+  RowOut := 'LogSheet,QuoteNum';
+  WriteLn(WorkFile, RowOut) ;
+  while not qryBuildValFile.eof do begin
+    RowOut := Trim(qryBuildValFile.FieldByName('LogSheet').AsString) + ',' +
+              qryBuildValFile.FieldByName('QuoteNum').AsString ;
+
+    WriteLn(WorkFile, RowOut) ;
+    qryBuildValFile.Next;
+  end;
+
+  RowOut := 'Future-Trip,Future-Trip' ;
+  WriteLn(WorkFile, RowOut) ;
+  RowOut := 'Non-Trip,Non-Trip' ;
+  WriteLn(WorkFile, RowOut) ;
 
 
   CloseFile(WorkFile);
   qryBuildValFile.Close;
 
-end;  { BuildCrewTripFile }
+end;   { BuildTripLogFile }
+
+
+
+procedure TufrmCertifyExpDataLoader.BuildTailTripFile;
+Var
+  RowOut : String;
+  WorkFile : TextFile;
+
+begin
+  AssignFile(WorkFile, edOutputDirectory.Text + 'tail_trip.csv');
+  Rewrite(WorkFile);
+
+  qryBuildValFile.Close;
+  qryBuildValFile.SQL.Text := 'select distinct TailNum as TailNumber, QuoteNum as TripNumber from CertifyExp_Trips_StartBucket where QuoteNum is not null and TailNum is not null' ;
+  qryBuildValFile.Open ;
+
+  RowOut := 'TailNumber,TripNumber';
+  WriteLn(WorkFile, RowOut) ;
+  while not qryBuildValFile.eof do begin
+    RowOut := Trim(qryBuildValFile.FieldByName('TailNumber').AsString) + ',' + qryBuildValFile.FieldByName('TripNumber').AsString ;
+    WriteLn(WorkFile, RowOut) ;
+    qryBuildValFile.Next;
+  end;
+
+  qryBuildValFile.Close;
+  qryBuildValFile.SQL.Text := 'select distinct TailNum from CertifyExp_Trips_StartBucket where QuoteNum is not null' ;
+  qryBuildValFile.Open ;
+
+  while not qryBuildValFile.eof do begin
+    RowOut := Trim(qryBuildValFile.FieldByName('TailNum').AsString) + ',' + 'Future-Trip';
+    WriteLn(WorkFile, RowOut) ;
+    RowOut := Trim(qryBuildValFile.FieldByName('TailNum').AsString) + ',' + 'Non-Trip';
+    WriteLn(WorkFile, RowOut) ;
+    qryBuildValFile.Next;
+  end;
+
+  CloseFile(WorkFile);
+  qryBuildValFile.Close;
+
+end;  { BuildTailTripFile }
 
 
 
@@ -799,7 +1012,7 @@ var
   slGroupDefault_Index : TStringList;
   slGroupDefault_Value : TStringList;
   index : Integer;
-  
+
 begin
 
   slGroupDefault_Index := TStringList.Create();
@@ -810,13 +1023,13 @@ begin
     slGroupDefault_Index.CommaText := '"Corporate","Flight Crew",        "Charter - KVNY", "Charter - KOXC", "Hybrid",             "All" ' ;
     slGroupDefault_Value.CommaText := '"Corporate","Flight Crew - Trip", "Charter - KVNY", "Charter - KOXC", "Flight Crew - Trip", "Corporate" ' ;
 
-    index := slGroupDefault_Index.IndexOf(GroupValIn); 
+    index := slGroupDefault_Index.IndexOf(GroupValIn);
 
     If index > -1 Then
       Result := slGroupDefault_Value[index]
-    else 
+    else
       Result := 'error';
-    
+
   finally
     slGroupDefault_Index.Free;
     slGroupDefault_Value.Free;
@@ -824,6 +1037,7 @@ begin
 
 
 end;
+
 
 
 
@@ -843,13 +1057,12 @@ begin
   RowOut := 'TripNumber,Accountant';
   WriteLn(WorkFile, RowOut) ;
   while not qryGetTripAccountantRec.eof do begin
-    if Trim(qryGetTripAccountantRec.Fields[2].AsString) = '91' then
+    if Trim(qryGetTripAccountantRec.Fields[1].AsString) = '91' then
       AccountantEmail := 'QA-91@ClayLacy.com'
     else
       AccountantEmail := 'QA-135@ClayLacy.com';
 
-    RowOut := Trim(qryGetTripAccountantRec.Fields[1].AsString) + '|' +Trim(qryGetTripAccountantRec.Fields[0].AsString) + ',' +
-              AccountantEmail ;
+    RowOut := Trim(qryGetTripAccountantRec.Fields[0].AsString) + ',' + AccountantEmail ;
 
     WriteLn(WorkFile, RowOut) ;
     qryGetTripAccountantRec.Next;
@@ -858,8 +1071,69 @@ begin
   CloseFile(WorkFile);
   qryGetTripAccountantRec.Close;
 
-end;
+end;  { BuildTripAccountantFile }
 
+
+
+procedure TufrmCertifyExpDataLoader.BuildTailLogFile;
+Var
+  RowOut : String;
+  WorkFile : TextFile;
+
+begin
+  AssignFile(WorkFile, edOutputDirectory.Text + 'tail_log.csv');
+  Rewrite(WorkFile);
+
+  qryBuildValFile.Close;
+
+  qryBuildValFile.SQL.Add( ' select QuoteNum, min(LogSheet) as MinLogSheet ' );
+  qryBuildValFile.SQL.Add( ' into #CertifyExp_Work30 '  );
+  qryBuildValFile.SQL.Add( ' from CertifyExp_Trips_StartBucket '  );
+  qryBuildValFile.SQL.Add( ' where QuoteNum is not null '  );
+  qryBuildValFile.SQL.Add( ' group by QuoteNum ' );
+  qryBuildValFile.SQL.Add( ' order by QuoteNum ' );
+
+  qryBuildValFile.Execute;
+
+  qryBuildValFile.Close ;
+  qryBuildValFile.SQL.Clear;
+  qryBuildValFile.SQL.Add( ' select distinct TailNum, LogSheet ' );
+  qryBuildValFile.SQL.Add( ' from CertifyExp_Trips_StartBucket '  );
+  qryBuildValFile.SQL.Add( ' where TailNum is not null '  );
+  qryBuildValFile.SQL.Add( '      and LogSheet in ' );
+  qryBuildValFile.SQL.Add( '       (select distinct MinLogSheet ' );
+  qryBuildValFile.SQL.Add( '        from #CertifyExp_Work30)' );
+  qryBuildValFile.Open ;
+
+
+  RowOut := 'TailNumber,LogSheet';
+  WriteLn(WorkFile, RowOut) ;
+  while not qryBuildValFile.eof do begin
+    RowOut := Trim(qryBuildValFile.FieldByName('TailNum').AsString) + ',' + qryBuildValFile.FieldByName('LogSheet').AsString ;
+    WriteLn(WorkFile, RowOut) ;
+    qryBuildValFile.Next;
+  end;
+
+  qryBuildValFile.Close;
+  qryBuildValFile.SQL.Text := 'select distinct TailNum from CertifyExp_Trips_StartBucket where TailNum is not null' ;
+  qryBuildValFile.Open ;
+
+  while not qryBuildValFile.eof do begin
+    RowOut := Trim(qryBuildValFile.FieldByName('TailNum').AsString) + ',Future-Trip' ;
+    WriteLn(WorkFile, RowOut) ;
+    RowOut := Trim(qryBuildValFile.FieldByName('TailNum').AsString) + ',Non-Trip' ;
+    WriteLn(WorkFile, RowOut) ;
+    qryBuildValFile.Next;
+  end;
+
+  CloseFile(WorkFile);
+  qryBuildValFile.Close;
+
+  qryBuildValFile.SQL.Clear;
+  qryBuildValFile.SQL.Add(' drop table #CertifyExp_Work30 ' );
+  qryBuildValFile.execute;
+
+end;  { BuildTailLogFile }
 
 
 end.
