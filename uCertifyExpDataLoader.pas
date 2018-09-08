@@ -87,6 +87,9 @@ type
     qryGetTripStopRecs: TUniQuery;
     qryGetStartBucketSorted: TUniQuery;
     scrGetCrewLogData: TUniScript;
+    qryPilotsNotInPaycom: TUniQuery;
+    qryGetPilotsNotInPaycom: TUniQuery;
+    qryEmptyPilotsNotInPaycom: TUniQuery;
     procedure btnGenerateFileClick(Sender: TObject);
     procedure btnTestEmailClick(Sender: TObject);
     procedure btnMainClick(Sender: TObject);
@@ -116,6 +119,8 @@ type
     Procedure BuildTripAccountantFile(Const FileNameIn: String);
     Procedure CalculateApproverEmail(Const BatchTimeIn: TDateTime) ;
     Procedure FilterTripsByCount;
+    Procedure FindPilotsNotInPaycom(Const BatchTimeIn : TDateTime);
+
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
     Function  GetTimeFromDBServer(): TDateTime;
@@ -151,6 +156,8 @@ begin
   BuildEmployeeFile(BatchTime);
 
   LoadTripsIntoStartBucket;
+
+  FindPilotsNotInPaycom;
 
   BuildValidationFiles;
 
@@ -1134,6 +1141,32 @@ begin
   qryBuildValFile.execute;
 
 end;  { BuildTailLogFile }
+
+
+
+procedure TufrmCertifyExpDataLoader.FindPilotsNotInPaycom(Const BatchTimeIn : TDateTime);
+begin
+
+//  Notice: this flight crew member was not in Paycom but flew trips during this period and was added from the PilotMaster
+//  Notice: flight-crew-member was not in Paycom but flew trips during this period and therefore was added from PilotMaster
+
+
+  qryEmptyPilotsNotInPaycom.Execute;
+
+  qryPilotsNotInPaycom.Close;
+  qryPilotsNotInPaycom.paramByName('parmBatchTimeIn').AsDateTime := BatchTimeIn;
+  qryPilotsNotInPaycom.Execute;
+
+  qryGetPilotsNotInPaycom.Close;
+  qryGetPilotsNotInPaycom.Open;
+  while not qryBuildValFile.eof do begin
+
+    LoadPilotIntoPaycom;
+    qryGetPilotsNotInPaycom.Next;
+  end;
+
+end;  { FindPilotsNotInPaycom }
+
 
 
 end.

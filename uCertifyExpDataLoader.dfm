@@ -183,8 +183,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Recipients = <>
     ReplyTo = <>
     ConvertPreamble = True
-    Left = 603
-    Top = 232
+    Left = 620
+    Top = 223
   end
   object qryIdentifyNonCertifyRecs: TUniQuery
     Connection = UniConnection1
@@ -213,8 +213,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       'select CURRENT_TIMESTAMP as DateTimeOut;')
-    Left = 363
-    Top = 150
+    Left = 364
+    Top = 137
   end
   object qryGetDupeEmails: TUniQuery
     Connection = UniConnection1
@@ -251,8 +251,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '  and imported_on = :parmImportDateIn                          /' +
         '* '#39'2018-08-22 12:34:18.780'#39' */')
-    Left = 547
-    Top = 195
+    Left = 572
+    Top = 162
     ParamData = <
       item
         DataType = ftUnknown
@@ -373,8 +373,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  FROM [WarehouseDEV].[dbo].[CertifyExp_PayComHistory]'
       '  where imported_on = :parmBatchTimeIn'
       '    and record_status = '#39'OK'#39)
-    Left = 453
-    Top = 169
+    Left = 500
+    Top = 140
     ParamData = <
       item
         DataType = ftUnknown
@@ -479,5 +479,49 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     Left = 125
     Top = 83
+  end
+  object qryPilotsNotInPaycom: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'insert into CertifyExp_PilotsNotInPaycom'
+      'select distinct  CrewMemberVendorNum '
+      'from CertifyExp_Trips_StartBucket'
+      'where CrewMemberVendorNum not in ('
+      #9'select distinct certify_gp_vendornum'
+      #9'from CertifyExp_PayComHistory'
+      #9'where imported_on = :parmBatchTimeIn'
+      #9'  and certify_department = '#39'Flight Crew'#39
+      #9'  and certify_gp_vendornum is not null    )')
+    Left = 363
+    Top = 184
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmBatchTimeIn'
+        Value = nil
+      end>
+  end
+  object qryGetPilotsNotInPaycom: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select * from QuoteSys_PilotMaster'
+      
+        'where VendorNumber in ( select CrewMemberVendorNum from CertifyE' +
+        'xp_PilotsNotInPaycom )'
+      
+        '  and Status         in ('#39'Agent of CLA'#39', '#39'Cabin Serv'#39', '#39'Parttime' +
+        '-CLA'#39')'
+      '  and EmployeeStatus in ('#39'Part 91'#39', '#39'Part 135'#39', '#39'Cabin Serv'#39')'
+      '  and ArchiveFlag is null'
+      'order by LastName')
+    Left = 459
+    Top = 197
+  end
+  object qryEmptyPilotsNotInPaycom: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'delete from CertifyExp_PilotsNotInPaycom')
+    Left = 547
+    Top = 233
   end
 end
