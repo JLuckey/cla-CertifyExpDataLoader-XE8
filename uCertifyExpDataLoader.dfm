@@ -52,8 +52,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'le_withErrors.csv'
   end
   object btnGenerateFile: TButton
-    Left = 601
-    Top = 157
+    Left = 13
+    Top = 20
     Width = 107
     Height = 25
     Caption = 'btnGenerateFile'
@@ -68,8 +68,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Panels = <>
   end
   object btnTestEmail: TButton
-    Left = 633
-    Top = 197
+    Left = 13
+    Top = 60
     Width = 75
     Height = 25
     Caption = 'Test SMTP'
@@ -85,8 +85,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Text = 'CertifyEmployeeFile.csv'
   end
   object btnMain: TButton
-    Left = 304
-    Top = 231
+    Left = 257
+    Top = 227
     Width = 99
     Height = 25
     Caption = 'btnMain'
@@ -99,7 +99,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 53
     Height = 21
     TabOrder = 6
-    Text = '60'
+    Text = '180'
   end
   object edOutputDirectory: TEdit
     Left = 257
@@ -108,6 +108,17 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Height = 21
     TabOrder = 7
     Text = 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\OutputFiles\'
+  end
+  object Memo1: TMemo
+    Left = 367
+    Top = 145
+    Width = 341
+    Height = 136
+    Lines.Strings = (
+      'Memo1')
+    ParentColor = True
+    ScrollBars = ssVertical
+    TabOrder = 8
   end
   object UniConnection1: TUniConnection
     ProviderName = 'SQL Server'
@@ -340,8 +351,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from QuoteSys_PilotMaster'
       'where CrewMemberID = QuoteSys_PilotMaster.PilotID'
       '')
-    Left = 240
-    Top = 181
+    Left = 269
+    Top = 180
   end
   object qryEmptyStartBucket: TUniQuery
     Connection = UniConnection1
@@ -523,5 +534,31 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'delete from CertifyExp_PilotsNotInPaycom')
     Left = 547
     Top = 233
+  end
+  object qryDeleteTrips: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'delete from CertifyExp_Trips_StartBucket'
+      'where LogSheet     = :parmLogSheetIn'
+      '  and CrewMemberID = :parmCrewMemberIDIn'
+      '  and QuoteNum     = :parmQuoteNumIn')
+    Left = 642
+    Top = 128
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmLogSheetIn'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmCrewMemberIDIn'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmQuoteNumIn'
+        Value = nil
+      end>
   end
 end

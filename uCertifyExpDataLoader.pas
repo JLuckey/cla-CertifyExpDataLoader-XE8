@@ -9,6 +9,8 @@ imported -> error               [missing data for required field, duplicate emai
 imported -> non-Certify employee
 
 
+Depricated Minimum LogSheet queries/calcs
+
 
 To-Do:
 
@@ -90,6 +92,8 @@ type
     qryPilotsNotInPaycom: TUniQuery;
     qryGetPilotsNotInPaycom: TUniQuery;
     qryEmptyPilotsNotInPaycom: TUniQuery;
+    Memo1: TMemo;
+    qryDeleteTrips: TUniQuery;
     procedure btnGenerateFileClick(Sender: TObject);
     procedure btnTestEmailClick(Sender: TObject);
     procedure btnMainClick(Sender: TObject);
@@ -120,6 +124,7 @@ type
     Procedure CalculateApproverEmail(Const BatchTimeIn: TDateTime) ;
     Procedure FilterTripsByCount;
     Procedure FindPilotsNotInPaycom(Const BatchTimeIn : TDateTime);
+    Procedure DeleteTrip(Const LogSheetIn, CrewMemberIDIn, QuoteNumIn : Integer);
 
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
@@ -157,11 +162,12 @@ begin
 
   LoadTripsIntoStartBucket;
 
-  FindPilotsNotInPaycom;
+  FilterTripsByCount;
+
+//  FindPilotsNotInPaycom;
 
   BuildValidationFiles;
 
-  FilterTripsByCount;
 
 end;  { Main }
 
@@ -243,7 +249,7 @@ begin
       end;
 
       end else begin
-        qryGetImportedRecs.FieldByName('accountant_email').AsString := 'QA-91@ClayLacy.com';
+        qryGetImportedRecs.FieldByName('accountant_email').AsString := 'QA-135@ClayLacy.com';
     end;
 
     qryGetImportedRecs.Post;
@@ -270,7 +276,9 @@ begin
     if qryGetStartBucketSorted.FieldByName('CrewMemberID').AsString = PriorCrewID then begin
       counter := counter + 1;
       if Counter > 15 then
-        qryGetStartBucketSorted.Delete;
+        DeleteTrip(qryGetStartBucketSorted.FieldByName('LogSheet').AsInteger,
+                   qryGetStartBucketSorted.FieldByName('CrewMemberID').AsInteger,
+                   qryGetStartBucketSorted.FieldByName('QuoteNum').AsInteger );
 
     end else begin
       PriorCrewID := qryGetStartBucketSorted.FieldByName('CrewMemberID').AsString;
@@ -677,7 +685,11 @@ begin
   Rewrite(WorkFile);
 
   qryBuildValFile.Close;
+  qryBuildValFile.SQL.Clear;
+  qryBuildValFile.SQL.Text := 'select distinct LogSheet, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null order by LogSheet';
+  qryBuildValFile.Open ;
 
+(*  Disabled because requrirement for minimum LogSheet per Quote has been depricated  -- 11Sep2018 JL
   qryBuildValFile.SQL.Add( ' select QuoteNum, min(LogSheet) as MinLogSheet ' );
   qryBuildValFile.SQL.Add( ' into #CertifyExp_Work20 '  );
   qryBuildValFile.SQL.Add( ' from CertifyExp_Trips_StartBucket '  );
@@ -696,6 +708,7 @@ begin
   qryBuildValFile.SQL.Add( '       (select distinct MinLogSheet ' );
   qryBuildValFile.SQL.Add( '        from #CertifyExp_Work20)' );
   qryBuildValFile.Open ;
+*)
 
   RowOut := 'LogSheet,CrewMemberVendorNum';
   WriteLn(WorkFile, RowOut) ;
@@ -707,6 +720,8 @@ begin
     qryBuildValFile.Next;
   end;
 
+(*  Disable code per Tom's request 8 Sep 2018
+  // Writing Future & Non Trip rows for each Crew Member
   qryBuildValFile.Close;
   qryBuildValFile.SQL.Text := 'select distinct CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null' ;
   qryBuildValFile.Open ;
@@ -719,13 +734,10 @@ begin
 
     qryBuildValFile.Next;
   end;
+*)
 
   CloseFile(WorkFile);
   qryBuildValFile.Close;
-
-  qryBuildValFile.SQL.Clear;
-  qryBuildValFile.SQL.Add(' drop table #CertifyExp_Work20 ' );
-  qryBuildValFile.execute;
 
 
 //**************************************************************
@@ -769,7 +781,7 @@ begin
   Rewrite(WorkFile);
 
   qryBuildValFile.Close;
-  qryBuildValFile.SQL.Text := 'select distinct TailNum as TailNumber, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and TailNum is not null' ;
+  qryBuildValFile.SQL.Text := 'select distinct TailNum as TailNumber, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and TailNum is not null and CrewMemberVendorNum > 0' ;
   qryBuildValFile.Open ;
 
   RowOut := 'TailNumber,CrewMemberID';
@@ -782,7 +794,9 @@ begin
     qryBuildValFile.Next;
   end;
 
-  qryBuildValFile.Close;
+
+  //Disabled code per Tom's request dated 8 Sep 2018
+(*  qryBuildValFile.Close;
   qryBuildValFile.SQL.Text := 'select distinct CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null' ;
   qryBuildValFile.Open ;
 
@@ -793,6 +807,7 @@ begin
     WriteLn(WorkFile, RowOut) ;
     qryBuildValFile.Next;
   end;
+*)
 
   CloseFile(WorkFile);
   qryBuildValFile.Close;
@@ -811,7 +826,8 @@ begin
   Rewrite(WorkFile);
 
   qryBuildValFile.Close;
-  qryBuildValFile.SQL.Text := 'select distinct QuoteNum, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and QuoteNum is not null' ;
+  qryBuildValFile.SQL.Clear;
+  qryBuildValFile.SQL.Text := 'select distinct QuoteNum, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and QuoteNum is not null and CrewMemberVendorNum > 0' ;
   qryBuildValFile.Open ;
 
   RowOut := 'TripNumber,CrewMemberVendorNum';
@@ -823,6 +839,8 @@ begin
     WriteLn(WorkFile, RowOut) ;
     qryBuildValFile.Next;
   end;
+
+(* disabled per Tom's request dated 8 Sep 2018
 
   qryBuildValFile.Close;
   qryBuildValFile.SQL.Text := 'select distinct CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null' ;
@@ -836,6 +854,7 @@ begin
 
     qryBuildValFile.Next;
   end;
+*)
 
   CloseFile(WorkFile);
   qryBuildValFile.Close;
@@ -878,6 +897,7 @@ procedure TufrmCertifyExpDataLoader.BuildTripLogFile;
 Var
   RowOut : String;
   WorkFile : TextFile;
+  strTripNum : String;
 
 begin
   AssignFile(WorkFile, edOutputDirectory.Text + 'trip_log.csv');
@@ -885,28 +905,32 @@ begin
 
   qryBuildValFile.Close ;
   qryBuildValFile.SQL.Clear;
-  qryBuildValFile.SQL.Add( ' select QuoteNum, min(LogSheet) as LogSheet ' );
-  qryBuildValFile.SQL.Add( ' from   CertifyExp_Trips_StartBucket '  );
-  qryBuildValFile.SQL.Add( ' where  QuoteNum is not null '  );
-  qryBuildValFile.SQL.Add( ' group by QuoteNum ' );
-  qryBuildValFile.SQL.Add( ' order by QuoteNum ' );
+//  qryBuildValFile.SQL.Add( ' select QuoteNum, min(LogSheet) as LogSheet ' ); Disabled because requrirement for minimum LogSheet per Quote has been depricated  -- 11Sep2018 JL
+
+  qryBuildValFile.SQL.Add( ' select QuoteNum, LogSheet ' ) ;
+  qryBuildValFile.SQL.Add( ' from   CertifyExp_Trips_StartBucket '  ) ;
+  qryBuildValFile.SQL.Add( ' order by LogSheet ' );
   qryBuildValFile.Open ;
 
   RowOut := 'LogSheet,QuoteNum';
   WriteLn(WorkFile, RowOut) ;
   while not qryBuildValFile.eof do begin
-    RowOut := Trim(qryBuildValFile.FieldByName('LogSheet').AsString) + ',' +
-              qryBuildValFile.FieldByName('QuoteNum').AsString ;
+    strTripNum := qryBuildValFile.FieldByName('QuoteNum').AsString;
+    if strTripNum = '' then
+      strTripNum := 'No-Trip-Num';
+
+    RowOut := Trim(qryBuildValFile.FieldByName('LogSheet').AsString) + ',' + strTripNum ;
 
     WriteLn(WorkFile, RowOut) ;
     qryBuildValFile.Next;
   end;
 
+(* disabled per Tom's request dated 8 Sep 2018
   RowOut := 'Future-Trip,Future-Trip' ;
   WriteLn(WorkFile, RowOut) ;
   RowOut := 'Non-Trip,Non-Trip' ;
   WriteLn(WorkFile, RowOut) ;
-
+*)
 
   CloseFile(WorkFile);
   qryBuildValFile.Close;
@@ -936,6 +960,8 @@ begin
     qryBuildValFile.Next;
   end;
 
+(* disabled per Tom's request dated 8 Sep 2018
+
   qryBuildValFile.Close;
   qryBuildValFile.SQL.Text := 'select distinct TailNum from CertifyExp_Trips_StartBucket where QuoteNum is not null' ;
   qryBuildValFile.Open ;
@@ -947,6 +973,7 @@ begin
     WriteLn(WorkFile, RowOut) ;
     qryBuildValFile.Next;
   end;
+*)
 
   CloseFile(WorkFile);
   qryBuildValFile.Close;
@@ -1087,11 +1114,22 @@ Var
   RowOut : String;
   WorkFile : TextFile;
 
+
 begin
   AssignFile(WorkFile, edOutputDirectory.Text + 'tail_log.csv');
   Rewrite(WorkFile);
 
   qryBuildValFile.Close;
+  qryBuildValFile.SQL.Clear;
+  qryBuildValFile.SQL.Add( ' select distinct TailNum, LogSheet ' );
+  qryBuildValFile.SQL.Add( ' from CertifyExp_Trips_StartBucket '  );
+  qryBuildValFile.SQL.Add( ' where TailNum is not null '  );
+  qryBuildValFile.SQL.Add( ' order by TailNum ' );
+//  ShowMessage(qryBuildValFile.SQL.Text);
+  qryBuildValFile.Open ;
+
+
+(*  Disabled because requrirement for "minimum LogSheet per Quote" has been depricated  -- 11Sep2018 JL
 
   qryBuildValFile.SQL.Add( ' select QuoteNum, min(LogSheet) as MinLogSheet ' );
   qryBuildValFile.SQL.Add( ' into #CertifyExp_Work30 '  );
@@ -1111,7 +1149,7 @@ begin
   qryBuildValFile.SQL.Add( '       (select distinct MinLogSheet ' );
   qryBuildValFile.SQL.Add( '        from #CertifyExp_Work30)' );
   qryBuildValFile.Open ;
-
+*)
 
   RowOut := 'TailNumber,LogSheet';
   WriteLn(WorkFile, RowOut) ;
@@ -1120,6 +1158,9 @@ begin
     WriteLn(WorkFile, RowOut) ;
     qryBuildValFile.Next;
   end;
+
+
+(* disabled per Tom's request dated 8 Sep 2018
 
   qryBuildValFile.Close;
   qryBuildValFile.SQL.Text := 'select distinct TailNum from CertifyExp_Trips_StartBucket where TailNum is not null' ;
@@ -1132,13 +1173,10 @@ begin
     WriteLn(WorkFile, RowOut) ;
     qryBuildValFile.Next;
   end;
+*)
 
   CloseFile(WorkFile);
   qryBuildValFile.Close;
-
-  qryBuildValFile.SQL.Clear;
-  qryBuildValFile.SQL.Add(' drop table #CertifyExp_Work30 ' );
-  qryBuildValFile.execute;
 
 end;  { BuildTailLogFile }
 
@@ -1161,11 +1199,31 @@ begin
   qryGetPilotsNotInPaycom.Open;
   while not qryBuildValFile.eof do begin
 
-    LoadPilotIntoPaycom;
+//    LoadPilotIntoPaycom;
     qryGetPilotsNotInPaycom.Next;
   end;
 
 end;  { FindPilotsNotInPaycom }
+
+
+procedure TufrmCertifyExpDataLoader.DeleteTrip(const LogSheetIn, CrewMemberIDIn, QuoteNumIn: Integer);
+begin
+  qryDeleteTrips.Close;
+  qryDeleteTrips.ParamByName('parmLogSheetIn').AsInteger     := LogSheetIn;
+  qryDeleteTrips.ParamByName('parmCrewMemberIDIn').AsInteger := CrewMemberIDIn;
+  qryDeleteTrips.ParamByName('parmQuoteNumIn').AsInteger     := QuoteNumIn;
+
+  try
+    qryDeleteTrips.Execute;
+
+  except on E: Exception do
+     Memo1.Lines.Add('CrewID: '     + IntToStr(CrewMemberIDIn) +
+                     ' LogSheet: '  + IntToStr(LogSheetIn) +
+                     ' QuoteNum: '  + IntToStr(QuoteNumIn) +
+                     ' ErrorMsg: '  + E.Message) ;
+  end;
+
+end;  { DeleteTrips() }
 
 
 
