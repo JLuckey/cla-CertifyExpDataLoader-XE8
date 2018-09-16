@@ -82,7 +82,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 451
     Height = 21
     TabOrder = 4
-    Text = 'CertifyEmployeeFile.csv'
+    Text = 'certify_employees.csv'
   end
   object btnMain: TButton
     Left = 257

@@ -14,7 +14,17 @@ Depricated Minimum LogSheet queries/calcs
 
 To-Do:
 
-//  ShowMessage(' and '       + ParamStr(1) );   // command line params
+
+12 Sep 2018
+
+1. Add contractors that are not in Paycom to the Certify Employee file
+2. Add the "Trips back" count as a paramater to the UI
+3. Review error logging in the Validation-file-generation process
+4. Transmit error list via email
+5. Clean-up obsolete tables
+6. ShowMessage(' and '       + ParamStr(1) );   // command line params
+
+
 
 
 --  WHERE record_status = 'imported'
@@ -40,6 +50,12 @@ set record_status = 'non-certify', status_timestamp = CURRENT_TIMESTAMP
 where (certify_gp_vendornum is null or certify_gp_vendornum = '')
   and (certify_department is null or certify_department = '' )
   and (certify_role is null or certify_role = '')
+
+
+
+
+
+
 
 *)
 
@@ -945,7 +961,7 @@ Var
   WorkFile : TextFile;
 
 begin
-  AssignFile(WorkFile, edOutputDirectory.Text + 'tail_trip.csv');
+  AssignFile(WorkFile, edOutputDirectory.Text + 'trip_tail.csv');
   Rewrite(WorkFile);
 
   qryBuildValFile.Close;
