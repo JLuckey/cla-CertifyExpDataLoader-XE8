@@ -70,9 +70,9 @@ WelcomePageURL=http://docwiki.embarcadero.com/RADStudio/Tokyo/en/Main_Page
 [View1]
 CustomEditViewType=TEditView
 Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-CursorX=1
-CursorY=26
-TopLine=1
+CursorX=3
+CursorY=366
+TopLine=340
 LeftCol=1
 Elisions=
 Bookmarks={1,814,53}{9,800,1}
@@ -283,6 +283,11 @@ LRDockWidth=1521
 Dockable=1
 StayOnTop=0
 SplitPos=90
+
+[PropInspDesignerSelection]
+ArrangeBy=Name
+SelectedItem=Tag,
+ExpandedItems=StyleElements=0
 
 [frmDesignPreview]
 PercentageSizes=1

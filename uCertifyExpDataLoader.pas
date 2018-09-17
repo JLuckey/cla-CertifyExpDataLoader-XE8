@@ -27,6 +27,14 @@ To-Do:
 
 
 
+
+Notes:
+
+1. "TripNumber" & "QuoteNumber" are use interchangeably in this system  (also "TripNum" & "QuoteNum" & occasionally "QuoteNo")
+
+
+
+
 --  WHERE record_status = 'imported'
 --    AND imported_on = '2018-08-16 16:41:03.817'
 
@@ -923,12 +931,12 @@ begin
   qryBuildValFile.SQL.Clear;
 //  qryBuildValFile.SQL.Add( ' select QuoteNum, min(LogSheet) as LogSheet ' ); Disabled because requrirement for minimum LogSheet per Quote has been depricated  -- 11Sep2018 JL
 
-  qryBuildValFile.SQL.Add( ' select QuoteNum, LogSheet ' ) ;
+  qryBuildValFile.SQL.Add( ' select distinct QuoteNum, LogSheet ' ) ;
   qryBuildValFile.SQL.Add( ' from   CertifyExp_Trips_StartBucket '  ) ;
   qryBuildValFile.SQL.Add( ' order by LogSheet ' );
   qryBuildValFile.Open ;
 
-  RowOut := 'LogSheet,QuoteNum';
+  RowOut := 'LogSheet,TripNumber';
   WriteLn(WorkFile, RowOut) ;
   while not qryBuildValFile.eof do begin
     strTripNum := qryBuildValFile.FieldByName('QuoteNum').AsString;
