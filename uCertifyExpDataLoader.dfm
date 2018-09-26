@@ -125,6 +125,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Database = 'WarehouseDEV'
     Username = 'sa'
     Server = '192.168.1.122'
+    Connected = True
+    LoginPrompt = False
     Left = 38
     Top = 242
     EncryptedPassword = '9CFF93FF9EFF8CFF8EFF93FF8CFF8DFF89FFCDFFCFFFCEFFC9FF'
@@ -172,10 +174,10 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Left = 36
     Top = 200
   end
-  object tblProComHistory: TUniTable
+  object tblPaycomHistory: TUniTable
     TableName = 'CertifyExp_PayComHistory'
     Connection = UniConnection1
-    Left = 127
+    Left = 131
     Top = 245
   end
   object IdSMTP1: TIdSMTP
@@ -194,8 +196,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Recipients = <>
     ReplyTo = <>
     ConvertPreamble = True
-    Left = 620
-    Top = 223
+    Left = 622
+    Top = 211
   end
   object qryIdentifyNonCertifyRecs: TUniQuery
     Connection = UniConnection1
@@ -211,7 +213,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  and (certify_department is null or certify_department = '#39#39' )'
       '  and (certify_role is null or certify_role = '#39#39')'
       '')
-    Left = 264
+    Left = 263
     Top = 247
     ParamData = <
       item
@@ -560,5 +562,88 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Name = 'parmQuoteNumIn'
         Value = nil
       end>
+  end
+  object qryContractorsNotInPaycom_Step1: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      
+        '/* Step 1:  -- Contractors who have flown in last 30 days by Cre' +
+        'wMemberID: */'
+      ''
+      
+        'select distinct S.CrewMemberVendorNum, P.Status, P.EmployeeStatu' +
+        's, P.PilotID'
+      'into Contractors45'
+      
+        'from CertifyExp_Trips_StartBucket S left outer join QuoteSys_Pil' +
+        'otMaster P on S.CrewMemberVendorNum = P.VendorNumber'
+      
+        'where P.Status in ( '#39'Agent of CLA'#39', '#39'Cabin Server'#39', '#39'Parttime-CL' +
+        'A'#39' )    -- Definition of "Contractor"'
+      
+        '  and P.EmployeeStatus in ( '#39'Part 91'#39', '#39'Part 135'#39', '#39'Cabin Serv'#39' ' +
+        ')       -- Definition of "Contractor" ')
+    Left = 502
+    Top = 12
+  end
+  object qryContractorsNotInPaycom_Step2: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      
+        '/* Step 2: -- Find VendorNums in #Contractors45 that are not in ' +
+        'CertifyExp_PaycomHistory'#39's current batch */'
+      ''
+      'select PilotID, CrewMemberVendorNum, Status, EmployeeStatus'
+      'from Contractors45'
+      'where CrewMemberVendorNum is not null'
+      '  and CrewMemberVendorNum not in ('
+      '        select distinct certify_gp_vendornum'
+      '        from CertifyExp_PayComHistory'
+      
+        '        where imported_on     = :parmImportDateIn           -- '#39 +
+        '2018-09-12 10:07:41.537'#39
+      
+        '         -- and record_status = '#39'exported'#39'                  -- s' +
+        'uccessfully exported, not an Error record'
+      '          and certify_gp_vendornum is not null'
+      '      )')
+    Left = 618
+    Top = 24
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmImportDateIn'
+        Value = nil
+      end>
+  end
+  object qryDropWorkingTable: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'if OBJECT_ID('#39'Contractors45'#39') is not null'
+      '  drop table Contractors45')
+    Left = 480
+    Top = 58
+  end
+  object qryGetPilotDetails: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select [PilotID]'
+      '      ,[LastName]'
+      '      ,[FirstName]'
+      '      ,[VendorNumber]'
+      '      ,[UpdatedInQuoteSys]'
+      '      ,[UpdatedBy]'
+      '      ,[Base]'
+      '      ,[ArchiveFlag]'
+      '      ,[JobTitle]'
+      '      ,[EmployeeStatus]'
+      '      ,[Status]'
+      '      ,[EMail]'
+      '      ,[AssignedAC]'
+      ''
+      'from QuoteSys_PilotMaster'
+      'where PilotID in (select PilotID from Contractors45)')
+    Left = 636
+    Top = 73
   end
 end
