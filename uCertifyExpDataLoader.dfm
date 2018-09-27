@@ -11,6 +11,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnClose = FormClose
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
@@ -65,7 +67,19 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Top = 287
     Width = 716
     Height = 19
-    Panels = <>
+    Panels = <
+      item
+        Width = 200
+      end
+      item
+        Width = 200
+      end
+      item
+        Width = 200
+      end
+      item
+        Width = 80
+      end>
   end
   object btnTestEmail: TButton
     Left = 13
@@ -171,8 +185,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       end>
   end
   object SQLServerUniProvider1: TSQLServerUniProvider
-    Left = 36
-    Top = 200
+    Left = 44
+    Top = 198
   end
   object tblPaycomHistory: TUniTable
     TableName = 'CertifyExp_PayComHistory'

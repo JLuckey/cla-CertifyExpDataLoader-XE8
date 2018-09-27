@@ -25,6 +25,10 @@ C 2. Add the "Trips back" count as a paramater to the UI
   6. ShowMessage(' and '       + ParamStr(1) );   // command line params
 
 
+26 Sep 2016
+  7. Add .ini
+  8. Read command line param at start-up for auto-start
+  9.
 
 
 
@@ -59,12 +63,6 @@ where (certify_gp_vendornum is null or certify_gp_vendornum = '')
   and (certify_department is null or certify_department = '' )
   and (certify_role is null or certify_role = '')
 
-
-
-
-
-
-
 *)
 
 unit uCertifyExpDataLoader;
@@ -75,7 +73,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,   System.DateUtils,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, UniProvider, SQLServerUniProvider, Data.DB, MemDS, DBAccess, Uni, Vcl.ComCtrls,
   IdMessage, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdExplicitTLSClientServerBase, IdMessageClient, IdSMTPBase,
-  IdSMTP, DAScript, UniScript;
+  IdSMTP, DAScript, UniScript , IniFiles;
 
 type
   TufrmCertifyExpDataLoader = class(TForm)
@@ -126,6 +124,8 @@ type
     procedure btnTestEmailClick(Sender: TObject);
     procedure btnMainClick(Sender: TObject);
     procedure qryLoadTripDataBeforeExecute(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
 
   private
     Procedure Main();
@@ -157,6 +157,8 @@ type
     Procedure AddContractorsNotInPaycom(Const BatchTimeIn: TDateTime);
     Procedure WriteToPaycomTable(Const BatchTimeIn: TDateTime);
 
+    Procedure ConnectToDB();
+
 
 
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
@@ -175,6 +177,7 @@ var
   ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader;
   CertifyEmployeeFile : TextFile;
   CertifyEmployeeFileName : String;
+  myIni : TIniFile;
 
 
 implementation
@@ -188,12 +191,14 @@ var
   BatchTime : TDateTime;
 
 begin
+
   BatchTime := GetTimeFromDBServer;
 
   ImportPayrollData(BatchTime);               // rec status: imported or error
 
 //  AddContractorsNotInPaycom(BatchTime);  // Add Contractors that are Not-In Paycom
   // Add Tom's two testing recs
+
 
   IdentifyNonCertifyRecs(BatchTime);          // rec status: non-certify records flagged
 
@@ -211,6 +216,36 @@ begin
 end;  { Main }
 
 
+
+procedure TufrmCertifyExpDataLoader.FormCreate(Sender: TObject);
+var
+  HomeDirectory: String;
+
+begin
+  myIni := TIniFile.Create( ExtractFilePath(ParamStr(0)) + 'CertifyExpDataLoader.ini' );
+
+  ConnectToDB;
+
+//  edPayComInputFile.Text := myIni.ReadString('Startup', 'PaycomFileName',   '') ;
+//  edOutputFileName.Text  := myIni.ReadString('Startup', 'CertifyEmployeeFileName', '') ;
+//  edOutputDirectory.Text := myIni.ReadString('Startup', 'OutputDirectory', '') ;
+
+
+//   ShowMessage(ParamStr(1));
+
+
+end;
+
+
+procedure TufrmCertifyExpDataLoader.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+
+  UniConnection1.Close;
+  myIni.Free;
+
+end;
+
+
 procedure TufrmCertifyExpDataLoader.btnMainClick(Sender: TObject);
 var
   TargetDirectory : string;
@@ -219,6 +254,37 @@ begin
   Main;
 
 end;
+
+
+procedure TufrmCertifyExpDataLoader.ConnectToDB;
+var
+  errorMsg: String;
+  dbName: ShortString;
+
+begin
+  try
+    // Connect to Data Warehouse (SQL Server) database
+    UniConnection1.Connected := false;
+    UniConnection1.Server    := myIni.ReadString('DBConfig_Warehouse', 'Server', '') ;
+    UniConnection1.Database  := myIni.ReadString('DBConfig_Warehouse', 'DatabaseName', '') ;
+    dbName := UniConnection1.Database;
+    UniConnection1.Username  := myIni.ReadString('DBConfig_Warehouse', 'UserName', '') ;
+    UniConnection1.Password  := myIni.ReadString('DBConfig_Warehouse', 'Password', '') ;
+    UniConnection1.Connected := true;
+  except on E: Exception do begin
+    errorMsg := 'Error! from ConnectToDBs();  ' +
+                'Problem connecting to database: ' + dbName + '; ' +
+                E.ClassName + '; ' +
+                E.Message ;
+
+//    LogIt(errorMsg);
+    MessageDlg(errorMsg, mtError, [mbOK], 0);
+    Raise;
+  end;
+  end;
+
+end;
+
 
 
 procedure TufrmCertifyExpDataLoader.BuildValidationFiles;
@@ -427,23 +493,23 @@ begin
     slEmpRec.add( qryGetEmployees.FieldByName('certify_gp_vendornum').AsString ) ;
     slEmpRec.add( qryGetEmployees.FieldByName('certify_role').AsString ) ;
     slEmpRec.add( qryGetEmployees.FieldByName('certify_department').AsString ) ;  // aka group
-    
+
     DeptName := CalcDepartmentName( qryGetEmployees.FieldByName('certify_department').AsString );
     if DeptName <> 'error' then begin
       slEmpRec.add(DeptName);
-      
+
       slEmpRec.add( qryGetEmployees.FieldByName('approver_email').AsString ) ;
       slEmpRec.add( qryGetEmployees.FieldByName('accountant_email').AsString ) ;
 
       WriteLn(CertifyEmployeeFile, slEmpRec.CommaText) ;
     end;
 
-    // update status fields   
+    // update status fields
     qryGetEmployees.Edit;
     if DeptName = 'error' then begin
       qryGetEmployees.FieldByName('record_status').AsString := 'error';
       qryGetEmployees.FieldByName('error_text').AsString    := qryGetEmployees.FieldByName('error_text').AsString + ' cannot find: ' + qryGetEmployees.FieldByName('certify_department').AsString + ' in Department_Name lookup; ';
-    end else     
+    end else
       qryGetEmployees.FieldByName('record_status').AsString := 'exported';
 
     qryGetEmployees.FieldByName('status_timestamp').AsDateTime := BatchTimeIn;
@@ -475,7 +541,7 @@ var
 
 begin
   sl := TStringList.Create;
-  sl.StrictDelimiter := true;      { don't use space as delimeter }
+  sl.StrictDelimiter := true;      { tell stringList to not use space as delimeter }
 
   AssignFile(FileIn, edPayComInputFile.Text) ;
   Reset(FileIn);
@@ -1244,6 +1310,10 @@ begin
   end;
 
 end;  { FindPilotsNotInPaycom }
+
+
+
+
 
 
 procedure TufrmCertifyExpDataLoader.DeleteTrip(const LogSheetIn, CrewMemberIDIn, QuoteNumIn: Integer);
