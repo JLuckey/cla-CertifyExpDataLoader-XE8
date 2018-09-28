@@ -69,16 +69,13 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Height = 19
     Panels = <
       item
-        Width = 200
+        Width = 150
+      end
+      item
+        Width = 400
       end
       item
         Width = 200
-      end
-      item
-        Width = 200
-      end
-      item
-        Width = 80
       end>
   end
   object btnTestEmail: TButton
@@ -123,17 +120,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     TabOrder = 7
     Text = 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\OutputFiles\'
   end
-  object Memo1: TMemo
-    Left = 367
-    Top = 145
-    Width = 341
-    Height = 136
-    Lines.Strings = (
-      'Memo1')
-    ParentColor = True
-    ScrollBars = ssVertical
-    TabOrder = 8
-  end
   object UniConnection1: TUniConnection
     ProviderName = 'SQL Server'
     Database = 'WarehouseDEV'
@@ -165,7 +151,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '      ,[error_text]'
       '      ,[approver_email]'
       '      ,[accountant_email]'
-      '  FROM [WarehouseDEV].[dbo].[CertifyExp_PayComHistory]'
+      '  FROM  CertifyExp_PayComHistory'
       '  WHERE record_status = :parmRecordStatusIn'
       '    AND imported_on = :parmImportDateIn'
       ''
@@ -277,7 +263,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '* '#39'jrosen@claylacy.com'#39' */'
       
         '  and imported_on = :parmImportDateIn                          /' +
-        '* '#39'2018-08-22 12:34:18.780'#39' */')
+        '* '#39'2018-08-22 12:34:18.780'#39' */'
+      '  and record_status = '#39'OK'#39)
     Left = 572
     Top = 162
     ParamData = <
@@ -374,8 +361,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       'delete from CertifyExp_Trips_StartBucket;')
-    Left = 168
-    Top = 82
+    Left = 189
+    Top = 70
   end
   object qryGetImportedRecs: TUniQuery
     Connection = UniConnection1
@@ -397,15 +384,20 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '      ,[error_text]'
       #9'  ,[approver_email]'
       #9'  ,[accountant_email]'
-      '  FROM [WarehouseDEV].[dbo].[CertifyExp_PayComHistory]'
+      '  FROM CertifyExp_PayComHistory'
       '  where imported_on = :parmBatchTimeIn'
-      '    and record_status = '#39'OK'#39)
-    Left = 500
-    Top = 140
+      '    and record_status = :parmRecStatusIn')
+    Left = 461
+    Top = 144
     ParamData = <
       item
         DataType = ftUnknown
         Name = 'parmBatchTimeIn'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmRecStatusIn'
         Value = nil
       end>
   end
@@ -416,8 +408,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from CertifyExp_PayComHistory'
       'where employee_code = :parmEmpCode'
       '  and imported_on   = :parmBatchTimeIn')
-    Left = 80
-    Top = 127
+    Left = 75
+    Top = 142
     ParamData = <
       item
         DataType = ftUnknown
@@ -478,7 +470,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       '  SELECT *     '
-      '  FROM [WarehouseDEV].[dbo].[CertifyExp_Trips_StartBucket]'
+      '  FROM CertifyExp_Trips_StartBucket'
       '  ORDER By crewmemberid , TripDepartDate desc'
       '')
     Left = 185

@@ -114,7 +114,6 @@ type
     qryPilotsNotInPaycom: TUniQuery;
     qryGetPilotsNotInPaycom: TUniQuery;
     qryEmptyPilotsNotInPaycom: TUniQuery;
-    Memo1: TMemo;
     qryDeleteTrips: TUniQuery;
     qryContractorsNotInPaycom_Step1: TUniQuery;
     qryContractorsNotInPaycom_Step2: TUniQuery;
@@ -159,8 +158,6 @@ type
 
     Procedure ConnectToDB();
 
-
-
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
     Function  GetTimeFromDBServer(): TDateTime;
@@ -191,7 +188,6 @@ var
   BatchTime : TDateTime;
 
 begin
-
   BatchTime := GetTimeFromDBServer;
 
   ImportPayrollData(BatchTime);               // rec status: imported or error
@@ -200,7 +196,7 @@ begin
   // Add Tom's two testing recs
 
 
-  IdentifyNonCertifyRecs(BatchTime);          // rec status: non-certify records flagged
+  IdentifyNonCertifyRecs(BatchTime);          // rec status: non-certify;     non-certify records flagged in record_status field
 
   ValidateRecords(BatchTime);                 // rec status: OK
   CalculateApproverEmail(BatchTime);          // rec Status: exported
@@ -212,6 +208,8 @@ begin
 
   BuildValidationFiles;
 
+  StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
+  Application.ProcessMessages;
 
 end;  { Main }
 
@@ -226,13 +224,11 @@ begin
 
   ConnectToDB;
 
-//  edPayComInputFile.Text := myIni.ReadString('Startup', 'PaycomFileName',   '') ;
-//  edOutputFileName.Text  := myIni.ReadString('Startup', 'CertifyEmployeeFileName', '') ;
-//  edOutputDirectory.Text := myIni.ReadString('Startup', 'OutputDirectory', '') ;
-
+  edPayComInputFile.Text := myIni.ReadString('Startup', 'PaycomFileName',   '') ;
+  edOutputFileName.Text  := myIni.ReadString('Startup', 'CertifyEmployeeFileName', '') ;
+  edOutputDirectory.Text := myIni.ReadString('Startup', 'OutputDirectory', '') ;
 
 //   ShowMessage(ParamStr(1));
-
 
 end;
 
@@ -279,9 +275,13 @@ begin
 
 //    LogIt(errorMsg);
     MessageDlg(errorMsg, mtError, [mbOK], 0);
+    StatusBar1.Panels[0].Text :=  'DB: Error!' ;
+
     Raise;
   end;
   end;
+
+  StatusBar1.Panels[0].Text :=  'DB: ' + UniConnection1.Database;
 
 end;
 
@@ -336,8 +336,12 @@ var
   ApproverEmail : String;
 
 begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Calculating Approver Email ';
+  Application.ProcessMessages;
+
   qryGetImportedRecs.Close;
   qryGetImportedRecs.ParamByName('parmBatchTimeIn').AsDateTime := BatchTimeIn ;
+  qryGetImportedRecs.ParamByName('parmRecStatusIn').AsString   := 'OK' ;
   qryGetImportedRecs.Open ;
   while not qryGetImportedRecs.eof do begin
     qryGetImportedRecs.Edit;
@@ -372,6 +376,9 @@ var
   Counter : Integer;
 
 begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Filtering Trips by Max Count per person';
+  Application.ProcessMessages;
+
   qryGetStartBucketSorted.close;
   qryGetStartBucketSorted.Open;
 
@@ -452,6 +459,9 @@ begin
 
     work thru records with validation & write to output file
 *)
+  StatusBar1.Panels[1].Text := 'Current Task:  Writing ' + edOutputFileName.Text ;
+  Application.ProcessMessages;
+
   slOutRec := TStringList.Create;
 
   // Prep Output File
@@ -525,6 +535,9 @@ end;  { WriteToCertifyEmployeeFile }
 
 procedure TufrmCertifyExpDataLoader.IdentifyNonCertifyRecs( Const BatchTimeIn : TDateTime );
 begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Flaggin Non-Certify Records in PaycomHistory ';
+  Application.ProcessMessages;
+
   qryIdentifyNonCertifyRecs.close;
   qryIdentifyNonCertifyRecs.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
   qryIdentifyNonCertifyRecs.Execute;
@@ -540,6 +553,9 @@ var
   i: Integer;
 
 begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Importing Payroll Data' ;
+  Application.ProcessMessages;
+
   sl := TStringList.Create;
   sl.StrictDelimiter := true;      { tell stringList to not use space as delimeter }
 
@@ -585,6 +601,8 @@ begin
         tblPaycomHistory.FieldByName('error_text').AsString    := tblPaycomHistory.FieldByName('error_text').AsString + '; Field: certify_gp_vendornum - ' + E1.Message;
       end;
       end;
+    end else begin
+//      tblPaycomHistory.FieldByName('certify_gp_vendornum').AsInteger := '' ;
     end;
 
     tblPaycomHistory.FieldByName('certify_department').AsString  := slInputFileRec[8];
@@ -614,6 +632,9 @@ begin
     2. Load trips into Start Bucket from Trip tables
     3. Add Vendor number for air crew
 *)
+  StatusBar1.Panels[1].Text := 'Current Task:  Loading Trips into StartBucket ' ;
+  Application.ProcessMessages;
+
   scrLoadTripData.Execute;
   qryGetAirCrewVendorNum.Execute;
 
@@ -661,10 +682,6 @@ begin
 end;  { RecIsValid }
 
 
-
-
-
-
 procedure TufrmCertifyExpDataLoader.SplitEmployeeName(const FullNameIn: String; var LastNameOut, FirstNameOut: String);
 var
   slFullName : TStringList;
@@ -696,6 +713,8 @@ var
   Time_Stamp :  TDateTime;
   
 begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Validating Employee Records';
+  Application.ProcessMessages;
 
   Time_Stamp := GetTimeFromDBServer();
   // check for valid Certify recs
@@ -883,6 +902,9 @@ Var
   WorkFile : TextFile;
 
 begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Writing crew_tail.csv'  ;
+  Application.ProcessMessages;
+
   AssignFile(WorkFile, edOutputDirectory.Text + 'crew_tail.csv');
   Rewrite(WorkFile);
 
@@ -928,6 +950,9 @@ Var
   WorkFile : TextFile;
 
 begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Writing crew_trip.csv'  ;
+  Application.ProcessMessages;
+
   AssignFile(WorkFile, edOutputDirectory.Text + 'crew_trip.csv');
   Rewrite(WorkFile);
 
@@ -1006,6 +1031,9 @@ Var
   strTripNum : String;
 
 begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Writing trip_log.csv'  ;
+  Application.ProcessMessages;
+
   AssignFile(WorkFile, edOutputDirectory.Text + 'trip_log.csv');
   Rewrite(WorkFile);
 
@@ -1051,6 +1079,9 @@ Var
   WorkFile : TextFile;
 
 begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Writing trip_tail.csv'  ;
+  Application.ProcessMessages;
+
   AssignFile(WorkFile, edOutputDirectory.Text + 'trip_tail.csv');
   Rewrite(WorkFile);
 
@@ -1188,6 +1219,10 @@ Var
   AccountantEmail : String;
 
 begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Writing ' + ExtractFileName(FileNameIn) ;
+  Application.ProcessMessages;
+
+
   AssignFile(WorkFile, FileNameIn);
   Rewrite(WorkFile);
 
@@ -1222,6 +1257,9 @@ Var
 
 
 begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Writing tail_log.csv'  ;
+  Application.ProcessMessages;
+
   AssignFile(WorkFile, edOutputDirectory.Text + 'tail_log.csv');
   Rewrite(WorkFile);
 
@@ -1313,9 +1351,6 @@ end;  { FindPilotsNotInPaycom }
 
 
 
-
-
-
 procedure TufrmCertifyExpDataLoader.DeleteTrip(const LogSheetIn, CrewMemberIDIn, QuoteNumIn: Integer);
 begin
   qryDeleteTrips.Close;
@@ -1327,10 +1362,12 @@ begin
     qryDeleteTrips.Execute;
 
   except on E: Exception do
+(*
      Memo1.Lines.Add('CrewID: '     + IntToStr(CrewMemberIDIn) +
                      ' LogSheet: '  + IntToStr(LogSheetIn) +
                      ' QuoteNum: '  + IntToStr(QuoteNumIn) +
                      ' ErrorMsg: '  + E.Message) ;
+*)
   end;
 
 end;  { DeleteTrips() }
@@ -1360,6 +1397,7 @@ begin
   tblPaycomHistory.Close;
 
 end;
+
 
 
 procedure TufrmCertifyExpDataLoader.WriteToPaycomTable( Const BatchTimeIn: TDateTime ) ;
