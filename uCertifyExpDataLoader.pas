@@ -228,7 +228,19 @@ begin
   edOutputFileName.Text  := myIni.ReadString('Startup', 'CertifyEmployeeFileName', '') ;
   edOutputDirectory.Text := myIni.ReadString('Startup', 'OutputDirectory', '') ;
 
-//   ShowMessage(ParamStr(1));
+//  ShowMessage(ParamStr(1));
+
+  if ParamStr(1) = '-autorun' then begin
+    StatusBar1.Panels[2].Text := '*AutoRun: Active';
+    Self.Show;
+    Application.ProcessMessages;
+    Sleep(2000);
+    Main;
+    Sleep(2000);
+    Application.Terminate;
+  end;
+
+
 
 end;
 
