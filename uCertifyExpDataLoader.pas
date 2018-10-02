@@ -73,7 +73,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,   System.DateUtils,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, UniProvider, SQLServerUniProvider, Data.DB, MemDS, DBAccess, Uni, Vcl.ComCtrls,
   IdMessage, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdExplicitTLSClientServerBase, IdMessageClient, IdSMTPBase,
-  IdSMTP, DAScript, UniScript , IniFiles;
+  IdSMTP, IdAttachment, IdAttachmentFile, DAScript, UniScript , IniFiles;
 
 type
   TufrmCertifyExpDataLoader = class(TForm)
@@ -119,6 +119,7 @@ type
     qryContractorsNotInPaycom_Step2: TUniQuery;
     qryDropWorkingTable: TUniQuery;
     qryGetPilotDetails: TUniQuery;
+    qryGetEmployeeErrors: TUniQuery;
     procedure btnGenerateFileClick(Sender: TObject);
     procedure btnTestEmailClick(Sender: TObject);
     procedure btnMainClick(Sender: TObject);
@@ -157,7 +158,9 @@ type
     Procedure WriteToPaycomTable(Const BatchTimeIn: TDateTime);
 
     Procedure ConnectToDB();
-
+    Procedure SendStatusEmail;
+    Procedure CreateEmployeeErrorReport(Const BatchTimeIn : TDateTime) ;
+    
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
     Function  GetTimeFromDBServer(): TDateTime;
@@ -166,6 +169,8 @@ type
     Function  CalcPilotName: String;
     Function  CalcDeptDescrip: String;
 
+    Function  CalcPaycomErrorFileName(Const BatchTimeIn: TDateTime): String;
+    
   public
     { Public declarations }
   end;
@@ -207,6 +212,10 @@ begin
   FilterTripsByCount;
 
   BuildValidationFiles;
+
+//  CreateEmployeeErrorReport;
+
+  SendStatusEmail;
 
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
   Application.ProcessMessages;
@@ -299,6 +308,7 @@ end;
 
 
 
+
 procedure TufrmCertifyExpDataLoader.BuildValidationFiles;
 var
   TargetDirectory : string;
@@ -377,6 +387,7 @@ begin
     qryGetImportedRecs.Next;
   end;  { While }
 
+  qryGetImportedRecs.Close;
 
 end;  { CalculateApproverEmail }
 
@@ -428,13 +439,21 @@ procedure TufrmCertifyExpDataLoader.btnTestEmailClick(Sender: TObject);
 Var
   mySMTP    : TIdSMTP;
   myMessage : TIDMessage;
+  myAttach  : TIdAttachment;
 
 begin
+
+  SendStatusEmail;
+
+(*
   myMessage := TIdMessage.Create(nil);
-  myMessage.From.Address := 'TKvassay@claylacy.com';
+  myMessage.From.Address := 'NoReply@claylacy.com';
   myMessage.Recipients.EMailAddresses := 'jeff@dcsit.com,jluckey@pacbell.net';
   myMessage.Body.Text := 'fubar ask not why it is fubar, ask who is at fault...' ;
   myMessage.Subject   := 'Test Email from Certify Data Loader 2';
+
+  TIDAttachmentFile.Create(myMessage.MessageParts, 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\OutputFiles\crew_log.csv' );
+  TIDAttachmentFile.Create(myMessage.MessageParts, 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\OutputFiles\trip_log.csv' );
 
   mySMTP := TIdSMTP.Create(nil);
 
@@ -442,19 +461,17 @@ begin
   mySMTP.Username := 'tkvassay@claylacy.com';                // 'lmirakian@claylacy.com' ;
   mySMTP.Password := '';                                     //'28lalal37';
 
-//  mySMTP.Host     := 'mail.authsmtp.com';
-//  mySMTP.Username := '';
-//  mySMTP.Password := '';
-
   Try
     mySMTP.Connect;
     mySMTP.Send(myMessage);
+    mySMTP.Disconnect();
   Except on E:Exception Do
     ShowMessage( 'Email Error: ' + E.Message);
   End;
 
   mySMTP.free;
   myMessage.Free;
+*)
 
 end;
 
@@ -692,6 +709,7 @@ begin
   qryGetEmployees.Post;
 
 end;  { RecIsValid }
+
 
 
 procedure TufrmCertifyExpDataLoader.SplitEmployeeName(const FullNameIn: String; var LastNameOut, FirstNameOut: String);
@@ -1439,6 +1457,7 @@ end;  { WriteToPaycomTable }
 
 
 
+
 function TufrmCertifyExpDataLoader.CalcPilotName: String;
 begin
   Result := qryGetPilotDetails.FieldByName('LastName').AsString + ',' + qryGetPilotDetails.FieldByName('FirstName').AsString
@@ -1452,6 +1471,91 @@ begin
   Result :=  'Designated-' + qryGetPilotDetails.FieldByName('AssignedAC').AsString    ;
 
 //  Result := 'Designated-N1234X';
+end;
+
+
+
+procedure TufrmCertifyExpDataLoader.SendStatusEmail;
+Var
+  mySMTP    : TIdSMTP;
+  myMessage : TIDMessage;
+  myAttach  : TIdAttachment;
+  OutPutFileDir : String;
+  stlOutputFiles : TStringList;
+  i : Integer;
+
+begin
+
+  myMessage := TIdMessage.Create(nil);
+  myMessage.Subject      := 'CLA Certify Data Loader Status Report';
+  myMessage.From.Address := 'NoReply@claylacy.com';
+  myMessage.Body.Text    := 'See attached files for Employee processing errors and uploaded data files:' ;
+  myMessage.Recipients.EMailAddresses := myIni.ReadString('OutputFiles', 'EMailRecipientList', '');   //jeff@dcsit.com,jluckey@pacbell.net';   //,thomasfduffy@gmail.com';
+
+  //  Load Attachments
+  OutPutFileDir := myIni.ReadString('OutputFiles', 'OutputFileDir', '');
+  stlOutputFiles := TStringList.Create();
+  stlOutputFiles.CommaText :=myIni.ReadString('OutputFiles', 'EmailAttachFileList', '');
+  for i := 0 to stlOutputFiles.Count - 1 do begin
+   if FileExists( OutPutFileDir + stlOutputFiles[i] ) then
+     TIDAttachmentFile.Create(myMessage.MessageParts, OutPutFileDir + stlOutputFiles[i] );
+
+  end ; { for }
+  
+  mySMTP := TIdSMTP.Create(nil);
+  mySMTP.Host     := '192.168.1.73';
+  mySMTP.Username := 'tkvassay@claylacy.com';                // 'lmirakian@claylacy.com' ;
+  mySMTP.Password := '';                                     //'28lalal37';
+
+  Try
+    mySMTP.Connect;
+    mySMTP.Send(myMessage);
+//    mySMTP.Disconnect();
+  Except on E:Exception Do
+    ShowMessage( 'Email Error: ' + E.Message);
+  End;
+
+  mySMTP.free;
+  myMessage.Free;
+
+end;
+
+
+procedure TufrmCertifyExpDataLoader.CreateEmployeeErrorReport(Const BatchTimeIn : TDateTime);
+Var
+  PaycomErrorFile : TextFile;
+  
+begin
+
+  // Prep Output File
+  AssignFile(PaycomErrorFile, edOutputDirectory.Text + CalcPaycomErrorFileName(BatchTimeIn));
+  Rewrite(PaycomErrorFile);
+
+
+  qryGetImportedRecs.Close;
+  qryGetImportedRecs.ParamByName('parmBatchTimeIn').AsDateTime := BatchTimeIn ;
+  qryGetImportedRecs.ParamByName('parmRecStatusIn').AsString   := 'error' ;
+  qryGetImportedRecs.Open ;
+  while not qryGetImportedRecs.eof do begin
+
+
+//    slEmpRec.add( qryGetEmployees.FieldByName('work_email').AsString ) ;
+//    slEmpRec.add( FNameOut ) ;
+//    slEmpRec.add( LNameOut ) ;
+//    slEmpRec.add( qryGetEmployees.FieldByName('certify_gp_vendornum').AsString ) ;
+//    slEmpRec.add( qryGetEmployees.FieldByName('certify_role').AsString ) ;
+//    slEmpRec.add( qryGetEmployees.FieldByName('certify_department').AsString ) ;  // aka group
+
+  end;
+
+end;
+
+
+function TufrmCertifyExpDataLoader.CalcPaycomErrorFileName(const BatchTimeIn: TDateTime): String;
+begin
+
+  Result := 'PaycomErrors_' + DateTimeToStr(BatchTimeIn);
+
 end;
 
 

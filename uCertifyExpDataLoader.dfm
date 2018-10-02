@@ -652,4 +652,41 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Left = 636
     Top = 73
   end
+  object qryGetEmployeeErrors: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'SELECT [ID]'
+      '      ,[employee_code]'
+      '      ,[employee_name]'
+      '      ,[work_email]'
+      '      ,[position]'
+      '      ,[department_descrip]'
+      '      ,[job_code_descrip]'
+      '      ,[supervisor_primary_code]'
+      '      ,[certify_gp_vendornum]'
+      '      ,[certify_department]'
+      '      ,[certify_role]'
+      '      ,[record_status]'
+      '      ,[status_timestamp]'
+      '      ,[imported_on]'
+      '      ,[error_text]'
+      #9'  ,[approver_email]'
+      #9'  ,[accountant_email]'
+      '  FROM CertifyExp_PayComHistory'
+      '  where imported_on = :parmBatchTimeIn'
+      '    and record_status = :parmRecStatusIn')
+    Left = 533
+    Top = 111
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmBatchTimeIn'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmRecStatusIn'
+        Value = nil
+      end>
+  end
 end
