@@ -200,7 +200,7 @@ begin
 //  AddContractorsNotInPaycom(BatchTime);  // Add Contractors that are Not-In Paycom
   // Add Tom's two testing recs
 
-
+(*
   IdentifyNonCertifyRecs(BatchTime);          // rec status: non-certify;     non-certify records flagged in record_status field
 
   ValidateRecords(BatchTime);                 // rec status: OK
@@ -219,7 +219,7 @@ begin
 
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
   Application.ProcessMessages;
-
+*)
 end;  { Main }
 
 
@@ -443,7 +443,9 @@ Var
 
 begin
 
-  SendStatusEmail;
+//  SendStatusEmail;
+
+ShowMessage(DateToStr(StrToDate('00/00/2000')));
 
 (*
   myMessage := TIdMessage.Create(nil);
@@ -605,26 +607,46 @@ begin
 end;  {PaycomImportMain }
 
 
-
 procedure TufrmCertifyExpDataLoader.InsertIntoHistoryTable(const slInputFileRec: TStringList; BatchTimeIn: TDateTime);
 var
   recStatus : String;
 
 begin
+
+(*
+Paycom file columns:
+0  Employee_Code,
+1  Employee_Name,
+2  Termination_Date,
+3  Work_Email,
+4  Position,
+5  Department_Desc,
+6  Job_Code_Desc,
+7  Supervisor_Primary_Code,
+8  CertifyDepartment,
+9  CertifyGPVendor,
+10 CertifyRole
+*)
+
   try
     tblPayComHistory.Insert;
     recStatus := 'imported';
     tblPaycomHistory.FieldByName('employee_code').AsString           := slInputFileRec[0];
     tblPaycomHistory.FieldByName('employee_name').AsString           := slInputFileRec[1];
-    tblPaycomHistory.FieldByName('work_email').AsString              := slInputFileRec[2];
-    tblPaycomHistory.FieldByName('position').AsString                := slInputFileRec[3];
-    tblPaycomHistory.FieldByName('department_descrip').AsString      := slInputFileRec[4];
-    tblPaycomHistory.FieldByName('job_code_descrip').AsString        := slInputFileRec[5];
-    tblPaycomHistory.FieldByName('supervisor_primary_code').AsString := slInputFileRec[6];
 
-    if slInputFileRec[7] <> '' then begin    //
+    if slInputFileRec[2] <> '00/00/0000' then
+      tblPaycomHistory.FieldByName('termination_date').AsDateTime    := StrToDate(slInputFileRec[2]);
+
+
+    tblPaycomHistory.FieldByName('work_email').AsString              := slInputFileRec[3];
+    tblPaycomHistory.FieldByName('position').AsString                := slInputFileRec[4];
+    tblPaycomHistory.FieldByName('department_descrip').AsString      := slInputFileRec[5];
+    tblPaycomHistory.FieldByName('job_code_descrip').AsString        := slInputFileRec[6];
+    tblPaycomHistory.FieldByName('supervisor_primary_code').AsString := slInputFileRec[7];
+
+    if slInputFileRec[9] <> '' then begin    //
       try
-        tblPaycomHistory.FieldByName('certify_gp_vendornum').AsInteger := StrToInt(slInputFileRec[7]);
+        tblPaycomHistory.FieldByName('certify_gp_vendornum').AsInteger := StrToInt(slInputFileRec[9]);
       except on E1: Exception do begin
         recStatus := 'error';
         tblPaycomHistory.FieldByName('error_text').AsString    := tblPaycomHistory.FieldByName('error_text').AsString + '; Field: certify_gp_vendornum - ' + E1.Message;
@@ -635,7 +657,7 @@ begin
     end;
 
     tblPaycomHistory.FieldByName('certify_department').AsString  := slInputFileRec[8];
-    tblPaycomHistory.FieldByName('certify_role').AsString        := slInputFileRec[9];
+    tblPaycomHistory.FieldByName('certify_role').AsString        := slInputFileRec[10];
     tblPaycomHistory.FieldByName('record_status').AsString       := recStatus ;
     tblPaycomHistory.FieldByName('status_timestamp').AsDateTime  := BatchTimeIn;
     tblPaycomHistory.FieldByName('imported_on').AsDateTime       := BatchTimeIn;
@@ -645,6 +667,7 @@ begin
     tblPaycomHistory.Edit;
     tblPaycomHistory.FieldByName('record_status').AsString := 'error';
     tblPaycomHistory.FieldByName('error_text').AsString    := tblPaycomHistory.FieldByName('error_text').AsString + '; ' + E.Message;
+    tblPaycomHistory.FieldByName('imported_on').AsDateTime := BatchTimeIn;
     tblPaycomHistory.post;
   end;
 
