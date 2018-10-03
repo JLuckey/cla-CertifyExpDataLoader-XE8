@@ -195,7 +195,7 @@ var
 begin
   BatchTime := GetTimeFromDBServer;
 
-  ImportPayrollData(BatchTime);               // rec status: imported or error
+//  ImportPayrollData(BatchTime);               // rec status: imported or error
 
 //  AddContractorsNotInPaycom(BatchTime);  // Add Contractors that are Not-In Paycom
   // Add Tom's two testing recs
@@ -212,9 +212,11 @@ begin
   FilterTripsByCount;
 
   BuildValidationFiles;
+*)
 
-//  CreateEmployeeErrorReport;
+  CreateEmployeeErrorReport(StrToDateTime('02/02/2018'));
 
+(*
   SendStatusEmail;
 
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
@@ -1547,37 +1549,104 @@ end;
 procedure TufrmCertifyExpDataLoader.CreateEmployeeErrorReport(Const BatchTimeIn : TDateTime);
 Var
   PaycomErrorFile : TextFile;
-  
+  i, j : Integer;
+  slErrorRec : TStringList;
+
 begin
+  slErrorRec := TStringList.Create;
 
   // Prep Output File
   AssignFile(PaycomErrorFile, edOutputDirectory.Text + CalcPaycomErrorFileName(BatchTimeIn));
+
+  ShowMessage( edOutputDirectory.Text + CalcPaycomErrorFileName(BatchTimeIn) );
+
   Rewrite(PaycomErrorFile);
 
-
   qryGetImportedRecs.Close;
-  qryGetImportedRecs.ParamByName('parmBatchTimeIn').AsDateTime := BatchTimeIn ;
+//  qryGetImportedRecs.ParamByName('parmBatchTimeIn').AsDateTime := BatchTimeIn ;
   qryGetImportedRecs.ParamByName('parmRecStatusIn').AsString   := 'error' ;
   qryGetImportedRecs.Open ;
-  while not qryGetImportedRecs.eof do begin
 
-
-//    slEmpRec.add( qryGetEmployees.FieldByName('work_email').AsString ) ;
-//    slEmpRec.add( FNameOut ) ;
-//    slEmpRec.add( LNameOut ) ;
-//    slEmpRec.add( qryGetEmployees.FieldByName('certify_gp_vendornum').AsString ) ;
-//    slEmpRec.add( qryGetEmployees.FieldByName('certify_role').AsString ) ;
-//    slEmpRec.add( qryGetEmployees.FieldByName('certify_department').AsString ) ;  // aka group
-
+  // Write header record
+  for j := 0 to qryGetImportedRecs.FieldCount - 1  do begin
+    slErrorRec.Add(qryGetImportedRecs.Fields[j].FieldName) ;
   end;
+  Writeln(PaycomErrorFile, slErrorRec.CommaText);
+  slErrorRec.Clear;
+
+  while not qryGetImportedRecs.eof do begin
+    for i := 0 to qryGetImportedRecs.FieldCount - 1 do begin
+      slErrorRec.Add(qryGetImportedRecs.Fields[i].AsString) ;
+    end;
+    Writeln(PaycomErrorFile, slErrorRec.CommaText);
+
+    slErrorRec.Clear;
+    qryGetImportedRecs.Next;
+  end;  { While }
+
+  qryGetImportedRecs.Close;
+  CloseFile(PaycomErrorFile);
+  slErrorRec.Free;
+
+(*
+CREATE TABLE [dbo].[CertifyExp_PayComHistory](
+	[ID] [int] IDENTITY(1,1) NOT NULL,
+	[employee_code] [varchar](10) NULL,
+	[employee_name] [varchar](50) NULL,
+	[work_email] [varchar](60) NULL,
+	[position] [varchar](50) NULL,
+	[department_descrip] [varchar](50) NULL,
+	[job_code_descrip] [varchar](50) NULL,
+	[supervisor_primary_code] [varchar](20) NULL,
+	[certify_gp_vendornum] [int] NULL,
+	[certify_department] [varchar](20) NULL,
+	[certify_role] [varchar](20) NULL,
+	[record_status] [varchar](20) NULL,
+	[status_timestamp] [datetime] NULL,
+	[imported_on] [datetime] NULL,
+	[error_text] [varchar](1000) NULL,
+	[approver_email] [varchar](60) NULL,
+	[accountant_email] [varchar](60) NULL,
+	[termination_date] [datetime] NULL,
+PRIMARY KEY CLUSTERED
+
+Paycom file columns:
+0  Employee_Code,
+1  Employee_Name,
+2  Termination_Date,
+3  Work_Email,
+4  Position,
+5  Department_Desc,
+6  Job_Code_Desc,
+7  Supervisor_Primary_Code,
+8  CertifyDepartment,
+9  CertifyGPVendor,
+10 CertifyRole
+*)
 
 end;
 
 
 function TufrmCertifyExpDataLoader.CalcPaycomErrorFileName(const BatchTimeIn: TDateTime): String;
-begin
+var
+  myMonth, myDay, myYear: word;
+  strMonth, strDay, strYear : String;
 
-  Result := 'PaycomErrors_' + DateTimeToStr(BatchTimeIn);
+begin
+  DecodeDate(Trunc(BatchTimeIn), myYear, myMonth, myday);
+
+  if myMonth < 10 then
+    strMonth := '0' + IntToStr(myMonth)
+  else
+    strMonth := IntToStr(myMonth);
+
+  if myDay < 10 then
+    strDay := '0' + IntToStr(myDay)
+  else
+    strDay := IntToStr(myDay);
+
+
+  Result := 'PaycomErrors_' + IntToStr(myYear) + strMonth + strDay + '.csv';
 
 end;
 

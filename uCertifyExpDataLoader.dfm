@@ -385,16 +385,13 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       #9'  ,[approver_email]'
       #9'  ,[accountant_email]'
       '  FROM CertifyExp_PayComHistory'
-      '  where imported_on = :parmBatchTimeIn'
+      
+        '  where imported_on = '#39'2018-10-02 11:31:50.920'#39'   /* :parmBatchT' +
+        'imeIn */'
       '    and record_status = :parmRecStatusIn')
     Left = 461
     Top = 144
     ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'parmBatchTimeIn'
-        Value = nil
-      end
       item
         DataType = ftUnknown
         Name = 'parmRecStatusIn'
