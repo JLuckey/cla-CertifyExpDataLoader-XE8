@@ -160,6 +160,8 @@ type
     Procedure ConnectToDB();
     Procedure SendStatusEmail;
     Procedure CreateEmployeeErrorReport(Const BatchTimeIn : TDateTime) ;
+
+    Procedure AppendExtraEmployees(Const FileToAppend: TextFile);
     
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
@@ -214,7 +216,7 @@ begin
   BuildValidationFiles;
 *)
 
-  CreateEmployeeErrorReport(StrToDateTime('02/02/2018'));
+  CreateEmployeeErrorReport(BatchTime);
 
 (*
   SendStatusEmail;
@@ -429,6 +431,7 @@ begin
 end;
 
 
+
 procedure TufrmCertifyExpDataLoader.btnGenerateFileClick(Sender: TObject);
 begin
 
@@ -516,6 +519,8 @@ begin
 
   slOutRec.free;                     // put in Try Finallys   ???JL
   CloseFile(CertifyEmployeeFile);
+
+  AppendExtraEmployees(CertifyEmployeeFile);
 
 end;  { BuildEmployeeFile }
 
@@ -1588,43 +1593,7 @@ begin
   CloseFile(PaycomErrorFile);
   slErrorRec.Free;
 
-(*
-CREATE TABLE [dbo].[CertifyExp_PayComHistory](
-	[ID] [int] IDENTITY(1,1) NOT NULL,
-	[employee_code] [varchar](10) NULL,
-	[employee_name] [varchar](50) NULL,
-	[work_email] [varchar](60) NULL,
-	[position] [varchar](50) NULL,
-	[department_descrip] [varchar](50) NULL,
-	[job_code_descrip] [varchar](50) NULL,
-	[supervisor_primary_code] [varchar](20) NULL,
-	[certify_gp_vendornum] [int] NULL,
-	[certify_department] [varchar](20) NULL,
-	[certify_role] [varchar](20) NULL,
-	[record_status] [varchar](20) NULL,
-	[status_timestamp] [datetime] NULL,
-	[imported_on] [datetime] NULL,
-	[error_text] [varchar](1000) NULL,
-	[approver_email] [varchar](60) NULL,
-	[accountant_email] [varchar](60) NULL,
-	[termination_date] [datetime] NULL,
-PRIMARY KEY CLUSTERED
-
-Paycom file columns:
-0  Employee_Code,
-1  Employee_Name,
-2  Termination_Date,
-3  Work_Email,
-4  Position,
-5  Department_Desc,
-6  Job_Code_Desc,
-7  Supervisor_Primary_Code,
-8  CertifyDepartment,
-9  CertifyGPVendor,
-10 CertifyRole
-*)
-
-end;
+end;  { CreateEmployeeErrorReport }
 
 
 function TufrmCertifyExpDataLoader.CalcPaycomErrorFileName(const BatchTimeIn: TDateTime): String;
@@ -1645,10 +1614,32 @@ begin
   else
     strDay := IntToStr(myDay);
 
-
   Result := 'PaycomErrors_' + IntToStr(myYear) + strMonth + strDay + '.csv';
 
+end;  { CalcPaycomErrorFileName }
+
+
+
+procedure TufrmCertifyExpDataLoader.AppendExtraEmployees(Const FileToAppend: TextFile);
+var
+  ExtraEmployeeFile : TextFile;
+  EmpRec : String;
+
+begin
+  AssignFile(ExtraEmployeeFile, 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\InputFiles\certify_employee_extra.csv');
+  Reset(ExtraEmployeeFile);
+  Append(FileToAppend);
+
+  while not eof(ExtraEmployeeFile) do begin
+    ReadLn(ExtraEmployeeFile, EmpRec);
+    Writeln(FileToAppend, EmpRec);
+  end;
+
+  CloseFile(FileToAppend);
+  CloseFile(ExtraEmployeeFile);
+
 end;
+
 
 
 
