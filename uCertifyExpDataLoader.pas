@@ -120,6 +120,8 @@ type
     qryDropWorkingTable: TUniQuery;
     qryGetPilotDetails: TUniQuery;
     qryGetEmployeeErrors: TUniQuery;
+    edSpecialUsersFile: TEdit;
+    Label5: TLabel;
     procedure btnGenerateFileClick(Sender: TObject);
     procedure btnTestEmailClick(Sender: TObject);
     procedure btnMainClick(Sender: TObject);
@@ -161,8 +163,8 @@ type
     Procedure SendStatusEmail;
     Procedure CreateEmployeeErrorReport(Const BatchTimeIn : TDateTime) ;
 
-    Procedure AppendExtraEmployees(Const FileToAppend: TextFile);
-    
+    Procedure AppendSpecialUsers(Const FileToAppend: TextFile);
+
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
     Function  GetTimeFromDBServer(): TDateTime;
@@ -172,7 +174,7 @@ type
     Function  CalcDeptDescrip: String;
 
     Function  CalcPaycomErrorFileName(Const BatchTimeIn: TDateTime): String;
-    
+
   public
     { Public declarations }
   end;
@@ -182,6 +184,7 @@ var
   CertifyEmployeeFile : TextFile;
   CertifyEmployeeFileName : String;
   myIni : TIniFile;
+  gloPaycomErrorFile: String;
 
 
 implementation
@@ -196,34 +199,27 @@ var
 
 begin
   BatchTime := GetTimeFromDBServer;
-
-//  ImportPayrollData(BatchTime);               // rec status: imported or error
+  ImportPayrollData(BatchTime);               // rec status: imported or error
 
 //  AddContractorsNotInPaycom(BatchTime);  // Add Contractors that are Not-In Paycom
   // Add Tom's two testing recs
 
-(*
   IdentifyNonCertifyRecs(BatchTime);          // rec status: non-certify;     non-certify records flagged in record_status field
-
   ValidateRecords(BatchTime);                 // rec status: OK
   CalculateApproverEmail(BatchTime);          // rec Status: exported
   BuildEmployeeFile(BatchTime);
 
   LoadTripsIntoStartBucket;
-
   FilterTripsByCount;
-
   BuildValidationFiles;
-*)
 
   CreateEmployeeErrorReport(BatchTime);
 
-(*
   SendStatusEmail;
 
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
   Application.ProcessMessages;
-*)
+
 end;  { Main }
 
 
@@ -237,9 +233,10 @@ begin
 
   ConnectToDB;
 
-  edPayComInputFile.Text := myIni.ReadString('Startup', 'PaycomFileName',   '') ;
-  edOutputFileName.Text  := myIni.ReadString('Startup', 'CertifyEmployeeFileName', '') ;
-  edOutputDirectory.Text := myIni.ReadString('Startup', 'OutputDirectory', '') ;
+  edPayComInputFile.Text  := myIni.ReadString('Startup', 'PaycomFileName',   '') ;
+  edOutputFileName.Text   := myIni.ReadString('Startup', 'CertifyEmployeeFileName', '') ;
+  edOutputDirectory.Text  := myIni.ReadString('Startup', 'OutputDirectory', '') ;
+  edSpecialUsersFile.Text := myIni.ReadString('Startup', 'SpecialUsersFileName', '') ;
 
 //  ShowMessage(ParamStr(1));
 
@@ -252,8 +249,6 @@ begin
     Sleep(2000);
     Application.Terminate;
   end;
-
-
 
 end;
 
@@ -311,8 +306,6 @@ begin
 end;
 
 
-
-
 procedure TufrmCertifyExpDataLoader.BuildValidationFiles;
 var
   TargetDirectory : string;
@@ -328,25 +321,6 @@ begin
   BuildTripLogFile;
   BuildTailTripFile;
   BuildTailLogFile;
-
-  //  BuildGenericValidationFile(TargetDirectory + 'crew_log.csv',
-//                             'select distinct LogSheet, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and LogSheet is not null' );
-//
-//  //  BuildGenericValidationFile(TargetDirectory + 'crew_tail.csv',
-////                             'select distinct TailNum as TailNumber, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and TailNumber is not null' );
-//
-//  BuildGenericValidationFile(TargetDirectory + 'crew_trip.csv',
-//                             'select distinct QuoteNum as TripNumber, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where QuoteNum is not null and CrewMemberVendorNum is not null' );
-//
-//  BuildGenericValidationFile2(TargetDirectory + 'tail_log.csv',
-//                             'select distinct TailNum as TailNumber, LogSheet from CertifyExp_Trips_StartBucket where TailNumber is not null and LogSheet is not null' );
-//
-//  BuildGenericValidationFile2(TargetDirectory + 'tail_trip.csv',
-//                             'select distinct TailNum as TailNumber, QuoteNum as TripNumber from CertifyExp_Trips_StartBucket where QuoteNum is not null and TailNumber is not null' );
-//
-//  BuildGenericValidationFile2(TargetDirectory + 'trip_log.csv',
-//                             'select distinct QuoteNum as TripNumber, min( LogSheet ) as LogSheet from CertifyExp_Trips_StartBucket where QuoteNum is not null group by QuoteNum' );
-//
 
   BuildTripAccountantFile(TargetDirectory + 'trip_accountant.csv');
 
@@ -452,43 +426,13 @@ begin
 
 ShowMessage(DateToStr(StrToDate('00/00/2000')));
 
-(*
-  myMessage := TIdMessage.Create(nil);
-  myMessage.From.Address := 'NoReply@claylacy.com';
-  myMessage.Recipients.EMailAddresses := 'jeff@dcsit.com,jluckey@pacbell.net';
-  myMessage.Body.Text := 'fubar ask not why it is fubar, ask who is at fault...' ;
-  myMessage.Subject   := 'Test Email from Certify Data Loader 2';
-
-  TIDAttachmentFile.Create(myMessage.MessageParts, 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\OutputFiles\crew_log.csv' );
-  TIDAttachmentFile.Create(myMessage.MessageParts, 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\OutputFiles\trip_log.csv' );
-
-  mySMTP := TIdSMTP.Create(nil);
-
-  mySMTP.Host     := '192.168.1.73';
-  mySMTP.Username := 'tkvassay@claylacy.com';                // 'lmirakian@claylacy.com' ;
-  mySMTP.Password := '';                                     //'28lalal37';
-
-  Try
-    mySMTP.Connect;
-    mySMTP.Send(myMessage);
-    mySMTP.Disconnect();
-  Except on E:Exception Do
-    ShowMessage( 'Email Error: ' + E.Message);
-  End;
-
-  mySMTP.free;
-  myMessage.Free;
-*)
-
 end;
-
 
 
 procedure TufrmCertifyExpDataLoader.BuildEmployeeFile(Const BatchTimeIn: TDateTime)  ;
 var
   slOutRec : TStringList;
   WriteTime : TDateTime;
-
 
 begin
 (*  Get newly-imported records
@@ -520,7 +464,7 @@ begin
   slOutRec.free;                     // put in Try Finallys   ???JL
   CloseFile(CertifyEmployeeFile);
 
-  AppendExtraEmployees(CertifyEmployeeFile);
+  AppendSpecialUsers(CertifyEmployeeFile);
 
 end;  { BuildEmployeeFile }
 
@@ -707,7 +651,6 @@ begin
 end;
 
 
-
 function TufrmCertifyExpDataLoader.RecIsValid(Const TimeStampIn:TDateTime): Boolean;
 var
   strErrorText : String;
@@ -725,7 +668,7 @@ begin
     strErrorText := strErrorText + 'missing certify_role; ';
 
   qryGetEmployees.Edit;
-  qryGetEmployees.FieldByName('status_timestamp').AsDateTime := TimeStampIn;  
+  qryGetEmployees.FieldByName('status_timestamp').AsDateTime := TimeStampIn;
 
   if strErrorText <> '' then begin
     qryGetEmployees.FieldByName('record_status').AsString := 'error';
@@ -739,7 +682,6 @@ begin
   qryGetEmployees.Post;
 
 end;  { RecIsValid }
-
 
 
 procedure TufrmCertifyExpDataLoader.SplitEmployeeName(const FullNameIn: String; var LastNameOut, FirstNameOut: String);
@@ -763,7 +705,6 @@ begin
   finally
     slFullName.Free;
   end;
-
 
 end;  { SplitEmployeeName }
 
@@ -800,7 +741,6 @@ begin
 end;  { ValidateRecords }
 
 
-
 procedure TufrmCertifyExpDataLoader.UpdateDupeEmailRecs(const EMailIn: String; BatchTimeIn: TDateTime);
 begin
 
@@ -815,7 +755,6 @@ begin
   qryUpdateDupeEmailRecStatus.Execute;
 
 end;  { UpdateDupeEmailRecs }
-
 
 
 function TufrmCertifyExpDataLoader.GetApproverEmail(const SupervisorCode: String; BatchTimeIn: TDateTime): String;
@@ -1266,10 +1205,7 @@ begin
     slGroupDefault_Value.Free;
   end;
 
-
 end;
-
-
 
 
 procedure TufrmCertifyExpDataLoader.BuildTripAccountantFile(Const FileNameIn: String);
@@ -1307,7 +1243,6 @@ begin
   qryGetTripAccountantRec.Close;
 
 end;  { BuildTripAccountantFile }
-
 
 
 procedure TufrmCertifyExpDataLoader.BuildTailLogFile;
@@ -1363,7 +1298,6 @@ begin
     qryBuildValFile.Next;
   end;
 
-
 (* disabled per Tom's request dated 8 Sep 2018
 
   qryBuildValFile.Close;
@@ -1385,13 +1319,11 @@ begin
 end;  { BuildTailLogFile }
 
 
-
 procedure TufrmCertifyExpDataLoader.FindPilotsNotInPaycom(Const BatchTimeIn : TDateTime);
 begin
 
 //  Notice: this flight crew member was not in Paycom but flew trips during this period and was added from the PilotMaster
 //  Notice: flight-crew-member was not in Paycom but flew trips during this period and therefore was added from PilotMaster
-
 
   qryEmptyPilotsNotInPaycom.Execute;
 
@@ -1486,14 +1418,11 @@ begin
 end;  { WriteToPaycomTable }
 
 
-
-
 function TufrmCertifyExpDataLoader.CalcPilotName: String;
 begin
   Result := qryGetPilotDetails.FieldByName('LastName').AsString + ',' + qryGetPilotDetails.FieldByName('FirstName').AsString
 
 end;
-
 
 
 function TufrmCertifyExpDataLoader.CalcDeptDescrip: String;
@@ -1502,7 +1431,6 @@ begin
 
 //  Result := 'Designated-N1234X';
 end;
-
 
 
 procedure TufrmCertifyExpDataLoader.SendStatusEmail;
@@ -1523,15 +1451,18 @@ begin
   myMessage.Recipients.EMailAddresses := myIni.ReadString('OutputFiles', 'EMailRecipientList', '');   //jeff@dcsit.com,jluckey@pacbell.net';   //,thomasfduffy@gmail.com';
 
   //  Load Attachments
-  OutPutFileDir := myIni.ReadString('OutputFiles', 'OutputFileDir', '');
+  OutPutFileDir  := myIni.ReadString('OutputFiles', 'OutputFileDir', '');
   stlOutputFiles := TStringList.Create();
-  stlOutputFiles.CommaText :=myIni.ReadString('OutputFiles', 'EmailAttachFileList', '');
+  stlOutputFiles.CommaText := myIni.ReadString('OutputFiles', 'EmailAttachFileList', '');
   for i := 0 to stlOutputFiles.Count - 1 do begin
    if FileExists( OutPutFileDir + stlOutputFiles[i] ) then
      TIDAttachmentFile.Create(myMessage.MessageParts, OutPutFileDir + stlOutputFiles[i] );
 
   end ; { for }
-  
+
+  if FileExists( OutPutFileDir + gloPaycomErrorFile ) then
+    TIDAttachmentFile.Create(myMessage.MessageParts, OutPutFileDir + gloPaycomErrorFile );
+
   mySMTP := TIdSMTP.Create(nil);
   mySMTP.Host     := '192.168.1.73';
   mySMTP.Username := 'tkvassay@claylacy.com';                // 'lmirakian@claylacy.com' ;
@@ -1542,13 +1473,13 @@ begin
     mySMTP.Send(myMessage);
 //    mySMTP.Disconnect();
   Except on E:Exception Do
-    ShowMessage( 'Email Error: ' + E.Message);
+    //ShowMessage( 'Email Error: ' + E.Message);   need to log this
   End;
 
   mySMTP.free;
   myMessage.Free;
 
-end;
+end;  { SendStatusEmail }
 
 
 procedure TufrmCertifyExpDataLoader.CreateEmployeeErrorReport(Const BatchTimeIn : TDateTime);
@@ -1563,7 +1494,7 @@ begin
   // Prep Output File
   AssignFile(PaycomErrorFile, edOutputDirectory.Text + CalcPaycomErrorFileName(BatchTimeIn));
 
-  ShowMessage( edOutputDirectory.Text + CalcPaycomErrorFileName(BatchTimeIn) );
+//  ShowMessage( edOutputDirectory.Text + CalcPaycomErrorFileName(BatchTimeIn) );
 
   Rewrite(PaycomErrorFile);
 
@@ -1602,32 +1533,32 @@ var
   strMonth, strDay, strYear : String;
 
 begin
-  DecodeDate(Trunc(BatchTimeIn), myYear, myMonth, myday);
+  DecodeDate(Trunc(BatchTimeIn), myYear, myMonth, myDay);
 
+  strMonth := IntToStr(myMonth);
   if myMonth < 10 then
-    strMonth := '0' + IntToStr(myMonth)
-  else
-    strMonth := IntToStr(myMonth);
+    strMonth := '0' + strMonth ;
 
+  strDay := IntToStr(myDay);
   if myDay < 10 then
-    strDay := '0' + IntToStr(myDay)
-  else
-    strDay := IntToStr(myDay);
+    strDay := '0' + strDay;
 
   Result := 'PaycomErrors_' + IntToStr(myYear) + strMonth + strDay + '.csv';
+
+  gloPaycomErrorFile := Result;
 
 end;  { CalcPaycomErrorFileName }
 
 
-
-procedure TufrmCertifyExpDataLoader.AppendExtraEmployees(Const FileToAppend: TextFile);
+procedure TufrmCertifyExpDataLoader.AppendSpecialUsers(Const FileToAppend: TextFile);
 var
   ExtraEmployeeFile : TextFile;
   EmpRec : String;
 
 begin
-  AssignFile(ExtraEmployeeFile, 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\InputFiles\certify_employee_extra.csv');
+  AssignFile(ExtraEmployeeFile, edSpecialUsersFile.Text );
   Reset(ExtraEmployeeFile);
+  ReadLn(ExtraEmployeeFile, EmpRec);  // Read first row which contains file header & ignore it
   Append(FileToAppend);
 
   while not eof(ExtraEmployeeFile) do begin
@@ -1638,7 +1569,7 @@ begin
   CloseFile(FileToAppend);
   CloseFile(ExtraEmployeeFile);
 
-end;
+end;  { AppendSpecialUsers }
 
 
 

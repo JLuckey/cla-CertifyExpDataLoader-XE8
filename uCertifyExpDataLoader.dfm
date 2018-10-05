@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'ufrmCertifyExpDataLoader-Ver 0.6'
+  Caption = 'ufrmCertifyExpDataLoader-Ver 0.7'
   ClientHeight = 306
   ClientWidth = 716
   Color = clBtnFace
@@ -31,7 +31,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object Label3: TLabel
     Left = 257
-    Top = 143
+    Top = 184
     Width = 53
     Height = 13
     Caption = 'Days Back:'
@@ -42,6 +42,13 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 85
     Height = 13
     Caption = 'Output Directory:'
+  end
+  object Label5: TLabel
+    Left = 257
+    Top = 142
+    Width = 86
+    Height = 13
+    Caption = 'Special Users File:'
   end
   object edPayComInputFile: TEdit
     Left = 257
@@ -97,7 +104,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object btnMain: TButton
     Left = 257
-    Top = 227
+    Top = 240
     Width = 99
     Height = 25
     Caption = 'btnMain'
@@ -106,7 +113,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object edDaysBack: TEdit
     Left = 257
-    Top = 159
+    Top = 200
     Width = 53
     Height = 21
     TabOrder = 6
@@ -119,6 +126,16 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Height = 21
     TabOrder = 7
     Text = 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\OutputFiles\'
+  end
+  object edSpecialUsersFile: TEdit
+    Left = 257
+    Top = 157
+    Width = 451
+    Height = 21
+    TabOrder = 8
+    Text = 
+      'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\InputFiles\certify_' +
+      'special_users.csv'
   end
   object UniConnection1: TUniConnection
     ProviderName = 'SQL Server'
@@ -385,13 +402,16 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       #9'  ,[approver_email]'
       #9'  ,[accountant_email]'
       '  FROM CertifyExp_PayComHistory'
-      
-        '  where imported_on = '#39'2018-10-02 11:31:50.920'#39'   /* :parmBatchT' +
-        'imeIn */'
+      '  where imported_on =  :parmBatchTimeIn '
       '    and record_status = :parmRecStatusIn')
     Left = 461
     Top = 144
     ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmBatchTimeIn'
+        Value = nil
+      end
       item
         DataType = ftUnknown
         Name = 'parmRecStatusIn'
