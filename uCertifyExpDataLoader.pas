@@ -122,6 +122,8 @@ type
     qryGetEmployeeErrors: TUniQuery;
     edSpecialUsersFile: TEdit;
     Label5: TLabel;
+    qryGetFutureTrips: TUniQuery;
+    tblStartBucket: TUniTable;
     procedure btnGenerateFileClick(Sender: TObject);
     procedure btnTestEmailClick(Sender: TObject);
     procedure btnMainClick(Sender: TObject);
@@ -163,6 +165,9 @@ type
     Procedure SendStatusEmail;
     Procedure CreateEmployeeErrorReport(Const BatchTimeIn : TDateTime) ;
 
+    Procedure LoadFutureTripsIntoStartBucket(Const DaysForward: Integer);
+    Procedure InsertCrewMemberRec(Const CrewMemID: Integer);
+
     Procedure AppendSpecialUsers(Const FileToAppend: TextFile);
 
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
@@ -172,6 +177,7 @@ type
 
     Function  CalcPilotName: String;
     Function  CalcDeptDescrip: String;
+    Function  ScrubFARPart(Const FarPartIn: String): String;
 
     Function  CalcPaycomErrorFileName(Const BatchTimeIn: TDateTime): String;
 
@@ -198,18 +204,24 @@ var
   BatchTime : TDateTime;
 
 begin
+
   BatchTime := GetTimeFromDBServer;
   ImportPayrollData(BatchTime);               // rec status: imported or error
 
+
 //  AddContractorsNotInPaycom(BatchTime);  // Add Contractors that are Not-In Paycom
   // Add Tom's two testing recs
+
 
   IdentifyNonCertifyRecs(BatchTime);          // rec status: non-certify;     non-certify records flagged in record_status field
   ValidateRecords(BatchTime);                 // rec status: OK
   CalculateApproverEmail(BatchTime);          // rec Status: exported
   BuildEmployeeFile(BatchTime);
 
+
   LoadTripsIntoStartBucket;
+
+
   FilterTripsByCount;
   BuildValidationFiles;
 
@@ -219,6 +231,7 @@ begin
 
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
   Application.ProcessMessages;
+
 
 end;  { Main }
 
@@ -558,6 +571,7 @@ begin
 end;  {PaycomImportMain }
 
 
+
 procedure TufrmCertifyExpDataLoader.InsertIntoHistoryTable(const slInputFileRec: TStringList; BatchTimeIn: TDateTime);
 var
   recStatus : String;
@@ -627,9 +641,10 @@ Paycom file columns:
 end;  { InsertIntoHistoryTable() }
 
 
-
-
 procedure TufrmCertifyExpDataLoader.LoadTripsIntoStartBucket;
+var
+  DaysForward : Integer;
+
 begin
 (*  1. Empty Start Bucket
     2. Load trips into Start Bucket from Trip tables
@@ -639,6 +654,9 @@ begin
   Application.ProcessMessages;
 
   scrLoadTripData.Execute;
+  DaysForward := 30;
+  LoadFutureTripsIntoStartBucket(DaysForward);
+
   qryGetAirCrewVendorNum.Execute;
 
 end;  { LoadTripsIntoStartBucket }
@@ -836,7 +854,7 @@ begin
 
   RowOut := 'LogSheet,CrewMemberVendorNum';
   WriteLn(WorkFile, RowOut) ;
-  while not qryBuildValFile.eof do begin
+  while ( not qryBuildValFile.eof ) do begin
     RowOut := Trim(qryBuildValFile.FieldByName('LogSheet').AsString) + ',' +
               qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + Trim(qryBuildValFile.FieldByName('LogSheet').AsString);
 
@@ -1433,6 +1451,7 @@ begin
 end;
 
 
+
 procedure TufrmCertifyExpDataLoader.SendStatusEmail;
 Var
   mySMTP    : TIdSMTP;
@@ -1446,7 +1465,7 @@ begin
 
   myMessage := TIdMessage.Create(nil);
   myMessage.Subject      := 'CLA Certify Data Loader Status Report';
-  myMessage.From.Address := 'NoReply@claylacy.com';
+  myMessage.From.Address := 'CertifyDataLoader@claylacy.com';
   myMessage.Body.Text    := 'See attached files for Employee processing errors and uploaded data files:' ;
   myMessage.Recipients.EMailAddresses := myIni.ReadString('OutputFiles', 'EMailRecipientList', '');   //jeff@dcsit.com,jluckey@pacbell.net';   //,thomasfduffy@gmail.com';
 
@@ -1570,6 +1589,52 @@ begin
   CloseFile(ExtraEmployeeFile);
 
 end;  { AppendSpecialUsers }
+
+
+procedure TufrmCertifyExpDataLoader.LoadFutureTripsIntoStartBucket(const DaysForward: Integer);
+begin
+
+  tblStartBucket.Open;
+  qryGetFutureTrips.Close;
+  qryGetFutureTrips.paramByName('parmDaysForward').AsInteger := DaysForward + 1 ;
+  qryGetFutureTrips.Open;
+  while not qryGetFutureTrips.eof do begin
+    InsertCrewMemberRec(qryGetFutureTrips.FieldByName('PICPilotNo').AsInteger);
+    InsertCrewMemberRec(qryGetFutureTrips.FieldByName('SICPilotNo').AsInteger);
+    InsertCrewMemberRec(qryGetFutureTrips.FieldByName('FANo').AsInteger);
+
+    qryGetFutureTrips.Next;
+  end;
+
+  qryGetFutureTrips.Close;
+  tblStartBucket.Close;
+
+end;
+
+
+procedure TufrmCertifyExpDataLoader.InsertCrewMemberRec(Const CrewMemID: Integer);
+begin
+  tblStartBucket.Insert;
+  tblStartBucket.FieldByName('CrewMemberID').AsString   := IntToStr(CrewMemID);
+  tblStartBucket.FieldByName('QuoteNum').AsInteger      := qryGetFutureTrips.FieldByName('QUOTENO').AsInteger;
+  tblStartBucket.FieldByName('TailNum').AsString        := qryGetFutureTrips.FieldByName('ACREGNO').AsString;
+  tblStartBucket.FieldByName('FARPart').AsString        := ScrubFARPart(qryGetFutureTrips.FieldByName('PART135').AsString);
+  tblStartBucket.FieldByName('TripDepartDate').AsDateTime := qryGetFutureTrips.FieldByName('TRIP_START_DATE').AsDateTime;
+  tblStartBucket.Post;
+
+end;
+
+
+function TufrmCertifyExpDataLoader.ScrubFARPart(const FarPartIn: String): String;
+begin
+  Result := 'Error_FARPart';
+
+  if Pos('135', FarPartIn) > 0 then
+    Result := '135'
+  else if Pos('91', FarPartIn) > 0 then
+    Result := '91' ;
+
+end;  { ScrubFARPart }
 
 
 

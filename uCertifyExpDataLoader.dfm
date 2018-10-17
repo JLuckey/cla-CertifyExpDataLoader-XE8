@@ -1,8 +1,8 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'ufrmCertifyExpDataLoader-Ver 0.7'
-  ClientHeight = 306
+  Caption = 'ufrmCertifyExpDataLoader-Ver 0.71'
+  ClientHeight = 391
   ClientWidth = 716
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -71,7 +71,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 287
+    Top = 372
     Width = 716
     Height = 19
     Panels = <
@@ -144,7 +144,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Server = '192.168.1.122'
     Connected = True
     LoginPrompt = False
-    Left = 38
+    Left = 37
     Top = 242
     EncryptedPassword = '9CFF93FF9EFF8CFF8EFF93FF8CFF8DFF89FFCDFFCFFFCEFFC9FF'
   end
@@ -384,7 +384,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryGetImportedRecs: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
-      'SELECT [ID]'
+      'SELECT [id]'
       '      ,[employee_code]'
       '      ,[employee_name]'
       '      ,[work_email]'
@@ -705,5 +705,32 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Name = 'parmRecStatusIn'
         Value = nil
       end>
+  end
+  object qryGetFutureTrips: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      
+        'select QUOTENO, PICPILOTNO, SICPILOTNO, FANO, ACREGNO, PART135, ' +
+        'TRIP_START_DATE'
+      'from QuoteSys_Quote'
+      
+        'where TRIP_START_DATE between ( CURRENT_TIMESTAMP - 1 ) and ( CU' +
+        'RRENT_TIMESTAMP + :parmDaysForward )'
+      '  and STATUS = '#39'confirmed'#39
+      'order by QUOTENO')
+    Left = 442
+    Top = 298
+    ParamData = <
+      item
+        DataType = ftInteger
+        Name = 'parmDaysForward'
+        Value = 30
+      end>
+  end
+  object tblStartBucket: TUniTable
+    TableName = 'CertifyExp_Trips_StartBucket'
+    Connection = UniConnection1
+    Left = 558
+    Top = 299
   end
 end
