@@ -384,7 +384,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryGetImportedRecs: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
-      'SELECT [ID]'
+      'SELECT [id]'
       '      ,[employee_code]'
       '      ,[employee_name]'
       '      ,[work_email]'
@@ -405,7 +405,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  where imported_on =  :parmBatchTimeIn '
       '    and record_status = :parmRecStatusIn')
     Left = 461
-    Top = 144
+    Top = 143
     ParamData = <
       item
         DataType = ftUnknown
