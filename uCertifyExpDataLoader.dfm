@@ -405,7 +405,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  where imported_on =  :parmBatchTimeIn '
       '    and record_status = :parmRecStatusIn')
     Left = 461
-    Top = 144
+    Top = 143
     ParamData = <
       item
         DataType = ftUnknown
