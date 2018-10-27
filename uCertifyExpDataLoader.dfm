@@ -142,7 +142,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Database = 'WarehouseDEV'
     Username = 'sa'
     Server = '192.168.1.122'
-    Connected = True
     LoginPrompt = False
     Left = 37
     Top = 242
@@ -229,6 +228,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         ')'
       '  and (certify_department is null or certify_department = '#39#39' )'
       '  and (certify_role is null or certify_role = '#39#39')'
+      '  and (record_status <> '#39'error'#39')'
       '')
     Left = 263
     Top = 247

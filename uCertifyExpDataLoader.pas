@@ -216,8 +216,9 @@ begin
   IdentifyNonCertifyRecs(BatchTime);          // rec status: non-certify;     non-certify records flagged in record_status field
   ValidateRecords(BatchTime);                 // rec status: OK
   CalculateApproverEmail(BatchTime);          // rec Status: exported
-  BuildEmployeeFile(BatchTime);
 
+(*
+  BuildEmployeeFile(BatchTime);
 
   LoadTripsIntoStartBucket;
 
@@ -228,6 +229,8 @@ begin
   CreateEmployeeErrorReport(BatchTime);
 
   SendStatusEmail;
+
+*)
 
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
   Application.ProcessMessages;
@@ -575,6 +578,7 @@ end;  {PaycomImportMain }
 procedure TufrmCertifyExpDataLoader.InsertIntoHistoryTable(const slInputFileRec: TStringList; BatchTimeIn: TDateTime);
 var
   recStatus : String;
+  i : integer;
 
 begin
 
@@ -592,6 +596,11 @@ Paycom file columns:
 9  CertifyGPVendor,
 10 CertifyRole
 *)
+
+  // Scrub data a little to eliminate leading & trialing spaces
+  for i := 0 to slInputFileRec.Count - 1 do begin
+    slInputFileRec[i] := Trim(slInputFileRec[i]);
+  end;
 
   try
     tblPayComHistory.Insert;
@@ -776,8 +785,8 @@ end;  { UpdateDupeEmailRecs }
 
 
 function TufrmCertifyExpDataLoader.GetApproverEmail(const SupervisorCode: String; BatchTimeIn: TDateTime): String;
-var
-  SC : String;
+//var
+//  SC : String;
 
 begin
 
@@ -787,13 +796,13 @@ begin
 //    Exit;
 //  end;
 
-  SC := SupervisorCode;
-  If Length(SC) = 3 then
-    SC := '0' + SupervisorCode;
+//  SC := SupervisorCode;
+//  If Length(SC) = 3 then
+//    SC := '0' + SupervisorCode;
 
   // use different technique to avoid repeated execution of qryGetApproverEmail;  ???JL
   qryGetApproverEmail.Close;
-  qryGetApproverEmail.ParamByName('parmEmpCode').AsString       := SC ;
+  qryGetApproverEmail.ParamByName('parmEmpCode').AsString       := SupervisorCode ;
   qryGetApproverEmail.ParamByName('parmBatchTimeIn').AsDateTime := BatchTimeIn ;
   qryGetApproverEmail.Open;
 
