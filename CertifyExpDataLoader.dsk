@@ -17,21 +17,21 @@ File_14=TSourceModule,'F:\XDrive\DCS\CLA\DataWarehouse\DataLoader\QuoteLoader\De
 
 [Modules]
 Module0=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-Module1=Main_Page
-Module2=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
+Module1=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
+Module2=Main_Page
 Count=3
 EditWindowCount=1
 
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas]
 ModuleType=TSourceModule
 FormState=1
-FormOnTop=1
-
-[Main_Page]
-ModuleType=TURLModule
+FormOnTop=0
 
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini]
 ModuleType=TSourceModule
+
+[Main_Page]
+ModuleType=TURLModule
 
 [EditWindow0]
 ViewCount=3
@@ -46,7 +46,6 @@ Docked=1
 State=0
 Left=0
 Top=0
-<<<<<<< HEAD
 Width=10000
 Height=9131
 MaxLeft=-1
@@ -65,26 +64,6 @@ RightPanelData=000008000101000000003E0F00000000000001080500000000000001000000004
 BottomPanelSize=896
 BottomPanelClients=DockSite1,MessageView
 BottomPanelData=0000080001020100000009000000446F636B5369746531F64D0000000000000280030000000000000100000000F64D00000F0000004D65737361676556696577466F726DFFFFFFFF
-=======
-Width=9335
-Height=8801
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=9335
-ClientHeight=8801
-DockedToMainForm=1
-BorlandEditorCodeExplorer=BorlandEditorCodeExplorer@EditWindow0
-TopPanelSize=0
-LeftPanelSize=1705
-LeftPanelClients=PropertyInspector,DockSite3
-LeftPanelData=000008000101000000009F0E00000000000001A90600000000000001000000005E0E000009000000446F636B536974653301000000002F1D00001100000050726F7065727479496E73706563746F72FFFFFFFF
-RightPanelSize=1288
-RightPanelClients=DockSite2,DockSite4
-RightPanelData=000008000101000000009F0E00000000000001080500000000000001000000004712000009000000446F636B536974653201000000002F1D000009000000446F636B5369746534FFFFFFFF
-BottomPanelSize=896
-BottomPanelClients=DockSite1,MessageView
-BottomPanelData=0000080001020100000009000000446F636B5369746531C6480000000000000280030000000000000100000000C64800000F0000004D65737361676556696577466F726DFFFFFFFF
->>>>>>> Branch_ver0.7
 BottomMiddlePanelSize=0
 BottomMiddlePanelClients=DockSite0,GraphDrawingModel
 BottomMiddelPanelData=0000080001020200000009000000446F636B536974653010000000477261706844726177696E6756696577981D00000000000002F506000000000000FFFFFFFF
@@ -96,27 +75,18 @@ WelcomePageURL=http://docwiki.embarcadero.com/RADStudio/Tokyo/en/Main_Page
 [View1]
 CustomEditViewType=TEditView
 Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-<<<<<<< HEAD
-CursorX=3
-CursorY=1511
-TopLine=1496
-LeftCol=1
-Elisions=
-Bookmarks={1,219,1}{2,849,1}{9,735,3}
-=======
 CursorX=1
-CursorY=252
-TopLine=178
+CursorY=233
+TopLine=202
 LeftCol=1
 Elisions=
-Bookmarks={1,455,43}{2,517,1}{9,781,1}
->>>>>>> Branch_ver0.7
-EditViewName=Borland.FormDesignerView
+Bookmarks={1,605,6}{2,858,1}{9,744,3}
+EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
 
 [View2]
 CustomEditViewType=TEditView
 Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
-CursorX=77
+CursorX=1
 CursorY=14
 TopLine=1
 LeftCol=1
@@ -138,19 +108,11 @@ State=0
 Left=0
 Top=0
 Width=3823
-<<<<<<< HEAD
-Height=517
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=3823
-ClientHeight=517
-=======
 Height=385
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=3823
 ClientHeight=385
->>>>>>> Branch_ver0.7
 TBDockHeight=220
 LRDockWidth=13601
 Dockable=1
@@ -170,7 +132,6 @@ PercentageSizes=1
 Create=1
 Visible=1
 Docked=0
-<<<<<<< HEAD
 State=2
 Left=158
 Top=275
@@ -183,18 +144,6 @@ MaxHeight=8526
 ClientWidth=10000
 ClientHeight=9747
 BottomPanelSize=8746
-=======
-State=0
-Left=359
-Top=0
-Width=9419
-Height=9846
-MaxLeft=-5
-MaxTop=-11
-ClientWidth=9335
-ClientHeight=9417
-BottomPanelSize=8430
->>>>>>> Branch_ver0.7
 BottomPanelClients=EditWindow0
 BottomPanelData=0000080000000000000000000000000000000000000000000000000100000000000000000C0000004564697457696E646F775F30FFFFFFFF
 
@@ -225,19 +174,11 @@ Docked=1
 State=0
 Left=0
 Top=23
-<<<<<<< HEAD
 Width=10000
 Height=682
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=10000
-=======
-Width=9335
-Height=682
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=9335
->>>>>>> Branch_ver0.7
 ClientHeight=682
 TBDockHeight=682
 LRDockWidth=2772
@@ -253,19 +194,11 @@ State=0
 Left=0
 Top=0
 Width=1288
-<<<<<<< HEAD
 Height=2992
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1288
 ClientHeight=2992
-=======
-Height=2662
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=1288
-ClientHeight=2662
->>>>>>> Branch_ver0.7
 TBDockHeight=7151
 LRDockWidth=1996
 Dockable=1
@@ -280,19 +213,11 @@ State=0
 Left=0
 Top=0
 Width=1288
-<<<<<<< HEAD
-Height=8537
+Height=7415
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1288
-ClientHeight=8537
-=======
-Height=5765
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=1288
-ClientHeight=5765
->>>>>>> Branch_ver0.7
+ClientHeight=7415
 TBDockHeight=4884
 LRDockWidth=5306
 Dockable=1
@@ -304,13 +229,8 @@ Create=1
 Visible=0
 Docked=1
 State=0
-<<<<<<< HEAD
 Left=-144
-Top=-106
-=======
-Left=-152
-Top=-138
->>>>>>> Branch_ver0.7
+Top=-102
 Width=1848
 Height=3135
 MaxLeft=-1
@@ -368,14 +288,13 @@ Docked=1
 State=0
 Left=0
 Top=372
-<<<<<<< HEAD
 Width=1521
 Height=4037
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1521
 ClientHeight=4037
-TBDockHeight=8834
+TBDockHeight=7712
 LRDockWidth=1521
 Dockable=1
 StayOnTop=0
@@ -383,26 +302,8 @@ SplitPos=90
 
 [PropInspDesignerSelection]
 ArrangeBy=Name
-SelectedItem=Active,
-ExpandedItems=Encryption=0,FilterOptions=0,"LiveBindings Designer=0"
-=======
-Width=1705
-Height=3707
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=1705
-ClientHeight=3707
-TBDockHeight=6062
-LRDockWidth=1705
-Dockable=1
-StayOnTop=0
-SplitPos=152
-
-[PropInspDesignerSelection]
-ArrangeBy=Name
-SelectedItem=Name,
-ExpandedItems=Encryption=0,ClientInfo=0,"LiveBindings Designer=0",NATKeepAlive=0,ProxySettings=0
->>>>>>> Branch_ver0.7
+SelectedItem=Action,
+ExpandedItems=Anchors=0,BorderIcons=0
 
 [frmDesignPreview]
 PercentageSizes=1
@@ -413,19 +314,11 @@ State=0
 Left=0
 Top=0
 Width=1288
-<<<<<<< HEAD
-Height=8537
+Height=7415
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1288
-ClientHeight=8537
-=======
-Height=5765
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=1288
-ClientHeight=5765
->>>>>>> Branch_ver0.7
+ClientHeight=7415
 TBDockHeight=5963
 LRDockWidth=2513
 Dockable=1
@@ -437,13 +330,8 @@ Create=1
 Visible=0
 Docked=1
 State=0
-<<<<<<< HEAD
-Left=-1650
-Top=-106
-=======
-Left=-1324
-Top=-62
->>>>>>> Branch_ver0.7
+Left=-1535
+Top=-26
 Width=2846
 Height=6205
 MaxLeft=-1
@@ -461,13 +349,8 @@ Create=1
 Visible=0
 Docked=1
 State=0
-<<<<<<< HEAD
 Left=-1772
-Top=-106
-=======
-Left=-1561
-Top=185
->>>>>>> Branch_ver0.7
+Top=221
 Width=275
 Height=363
 MaxLeft=-1
@@ -491,19 +374,11 @@ State=0
 Left=0
 Top=0
 Width=3823
-<<<<<<< HEAD
-Height=517
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=3823
-ClientHeight=517
-=======
 Height=385
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=3823
 ClientHeight=385
->>>>>>> Branch_ver0.7
 TBDockHeight=407
 LRDockWidth=4952
 Dockable=1
@@ -518,19 +393,11 @@ State=0
 Left=0
 Top=0
 Width=3823
-<<<<<<< HEAD
-Height=517
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=3823
-ClientHeight=517
-=======
 Height=385
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=3823
 ClientHeight=385
->>>>>>> Branch_ver0.7
 TBDockHeight=220
 LRDockWidth=7408
 Dockable=1
@@ -549,19 +416,11 @@ State=0
 Left=0
 Top=0
 Width=3823
-<<<<<<< HEAD
-Height=517
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=3823
-ClientHeight=517
-=======
 Height=385
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=3823
 ClientHeight=385
->>>>>>> Branch_ver0.7
 TBDockHeight=1540
 LRDockWidth=3479
 Dockable=1
@@ -576,19 +435,11 @@ State=0
 Left=0
 Top=0
 Width=3823
-<<<<<<< HEAD
-Height=517
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=3823
-ClientHeight=517
-=======
 Height=385
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=3823
 ClientHeight=385
->>>>>>> Branch_ver0.7
 TBDockHeight=2057
 LRDockWidth=3479
 Dockable=1
@@ -603,11 +454,11 @@ State=0
 Left=0
 Top=0
 Width=2334
-Height=1177
+Height=946
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=2334
-ClientHeight=1177
+ClientHeight=946
 TBDockHeight=2321
 LRDockWidth=2825
 Dockable=1
@@ -668,19 +519,11 @@ State=0
 Left=0
 Top=0
 Width=1288
-<<<<<<< HEAD
-Height=8537
+Height=7415
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1288
-ClientHeight=8537
-=======
-Height=5765
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=1288
-ClientHeight=5765
->>>>>>> Branch_ver0.7
+ClientHeight=7415
 TBDockHeight=4884
 LRDockWidth=7149
 Dockable=1
@@ -692,8 +535,8 @@ Create=1
 Visible=0
 Docked=1
 State=0
-Left=0
-Top=0
+Left=365
+Top=722
 Width=2856
 Height=3212
 MaxLeft=-1
@@ -714,19 +557,11 @@ State=0
 Left=0
 Top=0
 Width=3823
-<<<<<<< HEAD
-Height=517
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=3823
-ClientHeight=517
-=======
 Height=385
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=3823
 ClientHeight=385
->>>>>>> Branch_ver0.7
 TBDockHeight=1551
 LRDockWidth=8743
 Dockable=1
@@ -747,19 +582,11 @@ Docked=1
 State=0
 Left=0
 Top=0
-<<<<<<< HEAD
 Width=1521
 Height=3245
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1521
-=======
-Width=1705
-Height=3245
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=1705
->>>>>>> Branch_ver0.7
 ClientHeight=3245
 TBDockHeight=3685
 LRDockWidth=1895
@@ -813,19 +640,11 @@ State=0
 Left=0
 Top=0
 Width=760
-<<<<<<< HEAD
-Height=8834
+Height=7415
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=760
-ClientHeight=8834
-=======
-Height=5765
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=760
-ClientHeight=5765
->>>>>>> Branch_ver0.7
+ClientHeight=7415
 TBDockHeight=3685
 LRDockWidth=1895
 Dockable=1
@@ -886,23 +705,14 @@ Visible=0
 Docked=1
 State=0
 Left=0
-Top=0
+Top=23
 Width=3823
-<<<<<<< HEAD
-Height=814
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=3823
-ClientHeight=814
-TBDockHeight=814
-=======
 Height=682
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=3823
 ClientHeight=682
 TBDockHeight=682
->>>>>>> Branch_ver0.7
 LRDockWidth=3823
 Dockable=1
 StayOnTop=0
@@ -926,11 +736,7 @@ MaxLeft=-1
 MaxTop=-1
 ClientWidth=1288
 ClientHeight=4587
-<<<<<<< HEAD
-TBDockHeight=8834
-=======
-TBDockHeight=6062
->>>>>>> Branch_ver0.7
+TBDockHeight=7712
 LRDockWidth=1288
 Dockable=1
 StayOnTop=0
@@ -948,25 +754,14 @@ Docked=1
 State=0
 Left=0
 Top=23
-<<<<<<< HEAD
 Width=1521
 Height=3542
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1521
 ClientHeight=3542
-TBDockHeight=8834
+TBDockHeight=7712
 LRDockWidth=1521
-=======
-Width=1705
-Height=3542
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=1705
-ClientHeight=3542
-TBDockHeight=6062
-LRDockWidth=1705
->>>>>>> Branch_ver0.7
 Dockable=1
 StayOnTop=0
 TabPosition=1
@@ -984,21 +779,12 @@ State=0
 Left=0
 Top=467
 Width=1288
-<<<<<<< HEAD
 Height=2992
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1288
 ClientHeight=2992
-TBDockHeight=8834
-=======
-Height=2662
-MaxLeft=-1
-MaxTop=-1
-ClientWidth=1288
-ClientHeight=2662
-TBDockHeight=6062
->>>>>>> Branch_ver0.7
+TBDockHeight=7712
 LRDockWidth=1288
 Dockable=1
 StayOnTop=0

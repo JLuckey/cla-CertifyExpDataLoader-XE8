@@ -217,7 +217,7 @@ begin
   ValidateRecords(BatchTime);                 // rec status: OK
   CalculateApproverEmail(BatchTime);          // rec Status: exported
 
-(*
+
   BuildEmployeeFile(BatchTime);
 
   LoadTripsIntoStartBucket;
@@ -230,7 +230,7 @@ begin
 
   SendStatusEmail;
 
-*)
+
 
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
   Application.ProcessMessages;
