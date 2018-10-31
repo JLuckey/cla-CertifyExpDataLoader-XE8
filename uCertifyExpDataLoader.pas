@@ -230,11 +230,8 @@ begin
 
   SendStatusEmail;
 
-
-
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
   Application.ProcessMessages;
-
 
 end;  { Main }
 
@@ -663,9 +660,8 @@ begin
   Application.ProcessMessages;
 
   scrLoadTripData.Execute;
-  DaysForward := 30;
-  LoadFutureTripsIntoStartBucket(DaysForward);
-
+//  DaysForward := 30;
+//  LoadFutureTripsIntoStartBucket(DaysForward);        // This feature has been depricated
   qryGetAirCrewVendorNum.Execute;
 
 end;  { LoadTripsIntoStartBucket }
@@ -1607,11 +1603,12 @@ begin
   qryGetFutureTrips.Close;
   qryGetFutureTrips.paramByName('parmDaysForward').AsInteger := DaysForward + 1 ;
   qryGetFutureTrips.Open;
+    ShowMessage('step 2a');
+
   while not qryGetFutureTrips.eof do begin
     InsertCrewMemberRec(qryGetFutureTrips.FieldByName('PICPilotNo').AsInteger);
     InsertCrewMemberRec(qryGetFutureTrips.FieldByName('SICPilotNo').AsInteger);
     InsertCrewMemberRec(qryGetFutureTrips.FieldByName('FANo').AsInteger);
-
     qryGetFutureTrips.Next;
   end;
 
@@ -1623,13 +1620,19 @@ end;
 
 procedure TufrmCertifyExpDataLoader.InsertCrewMemberRec(Const CrewMemID: Integer);
 begin
-  tblStartBucket.Insert;
-  tblStartBucket.FieldByName('CrewMemberID').AsString   := IntToStr(CrewMemID);
-  tblStartBucket.FieldByName('QuoteNum').AsInteger      := qryGetFutureTrips.FieldByName('QUOTENO').AsInteger;
-  tblStartBucket.FieldByName('TailNum').AsString        := qryGetFutureTrips.FieldByName('ACREGNO').AsString;
-  tblStartBucket.FieldByName('FARPart').AsString        := ScrubFARPart(qryGetFutureTrips.FieldByName('PART135').AsString);
-  tblStartBucket.FieldByName('TripDepartDate').AsDateTime := qryGetFutureTrips.FieldByName('TRIP_START_DATE').AsDateTime;
-  tblStartBucket.Post;
+  try
+    tblStartBucket.Insert;
+    tblStartBucket.FieldByName('CrewMemberID').AsString   := IntToStr(CrewMemID);
+    tblStartBucket.FieldByName('QuoteNum').AsInteger      := qryGetFutureTrips.FieldByName('QUOTENO').AsInteger;
+    tblStartBucket.FieldByName('TailNum').AsString        := qryGetFutureTrips.FieldByName('ACREGNO').AsString;
+    tblStartBucket.FieldByName('FARPart').AsString        := ScrubFARPart(qryGetFutureTrips.FieldByName('PART135').AsString);
+    tblStartBucket.FieldByName('TripDepartDate').AsDateTime := qryGetFutureTrips.FieldByName('TRIP_START_DATE').AsDateTime;  // this causes "not a valid date time" error on Blackbird  31 Oct 2018 JL
+    tblStartBucket.Post;
+
+  except on E: Exception do
+    ShowMessage(E.Message + '  QuoteNum: ' + InttoStr(qryGetFutureTrips.FieldByName('QUOTENO').AsInteger));
+
+  end;
 
 end;
 
