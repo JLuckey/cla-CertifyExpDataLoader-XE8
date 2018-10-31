@@ -165,9 +165,6 @@ type
     Procedure SendStatusEmail;
     Procedure CreateEmployeeErrorReport(Const BatchTimeIn : TDateTime) ;
 
-    Procedure LoadFutureTripsIntoStartBucket(Const DaysForward: Integer);
-    Procedure InsertCrewMemberRec(Const CrewMemID: Integer);
-
     Procedure AppendSpecialUsers(Const FileToAppend: TextFile);
 
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
@@ -648,9 +645,6 @@ end;  { InsertIntoHistoryTable() }
 
 
 procedure TufrmCertifyExpDataLoader.LoadTripsIntoStartBucket;
-var
-  DaysForward : Integer;
-
 begin
 (*  1. Empty Start Bucket
     2. Load trips into Start Bucket from Trip tables
@@ -660,8 +654,6 @@ begin
   Application.ProcessMessages;
 
   scrLoadTripData.Execute;
-  DaysForward := 30;
-  LoadFutureTripsIntoStartBucket(DaysForward);
 
   qryGetAirCrewVendorNum.Execute;
 
@@ -1595,40 +1587,6 @@ begin
   CloseFile(ExtraEmployeeFile);
 
 end;  { AppendSpecialUsers }
-
-
-procedure TufrmCertifyExpDataLoader.LoadFutureTripsIntoStartBucket(const DaysForward: Integer);
-begin
-
-  tblStartBucket.Open;
-  qryGetFutureTrips.Close;
-  qryGetFutureTrips.paramByName('parmDaysForward').AsInteger := DaysForward + 1 ;
-  qryGetFutureTrips.Open;
-  while not qryGetFutureTrips.eof do begin
-    InsertCrewMemberRec(qryGetFutureTrips.FieldByName('PICPilotNo').AsInteger);
-    InsertCrewMemberRec(qryGetFutureTrips.FieldByName('SICPilotNo').AsInteger);
-    InsertCrewMemberRec(qryGetFutureTrips.FieldByName('FANo').AsInteger);
-
-    qryGetFutureTrips.Next;
-  end;
-
-  qryGetFutureTrips.Close;
-  tblStartBucket.Close;
-
-end;
-
-
-procedure TufrmCertifyExpDataLoader.InsertCrewMemberRec(Const CrewMemID: Integer);
-begin
-  tblStartBucket.Insert;
-  tblStartBucket.FieldByName('CrewMemberID').AsString   := IntToStr(CrewMemID);
-  tblStartBucket.FieldByName('QuoteNum').AsInteger      := qryGetFutureTrips.FieldByName('QUOTENO').AsInteger;
-  tblStartBucket.FieldByName('TailNum').AsString        := qryGetFutureTrips.FieldByName('ACREGNO').AsString;
-  tblStartBucket.FieldByName('FARPart').AsString        := ScrubFARPart(qryGetFutureTrips.FieldByName('PART135').AsString);
-  tblStartBucket.FieldByName('TripDepartDate').AsDateTime := qryGetFutureTrips.FieldByName('TRIP_START_DATE').AsDateTime;
-  tblStartBucket.Post;
-
-end;
 
 
 function TufrmCertifyExpDataLoader.ScrubFARPart(const FarPartIn: String): String;
