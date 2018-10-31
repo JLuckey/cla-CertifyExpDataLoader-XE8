@@ -222,15 +222,12 @@ begin
 
   LoadTripsIntoStartBucket;
 
-
   FilterTripsByCount;
   BuildValidationFiles;
 
   CreateEmployeeErrorReport(BatchTime);
 
   SendStatusEmail;
-
-
 
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
   Application.ProcessMessages;

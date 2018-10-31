@@ -2,7 +2,8 @@ program CertifyExpDataLoader;
 
 uses
   Vcl.Forms,
-  uCertifyExpDataLoader in 'uCertifyExpDataLoader.pas' {ufrmCertifyExpDataLoader};
+  uCertifyExpDataLoader in 'uCertifyExpDataLoader.pas' {ufrmCertifyExpDataLoader},
+  dmCertifyGroupClass_Corporate in 'dmCertifyGroupClass_Corporate.pas' {CertifyGroupClass_Corporate: TDataModule};
 
 {$R *.res}
 
