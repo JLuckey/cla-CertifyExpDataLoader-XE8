@@ -124,6 +124,7 @@ type
     Label5: TLabel;
     qryGetFutureTrips: TUniQuery;
     tblStartBucket: TUniTable;
+    qryUpdateHasCCField: TUniQuery;
     procedure btnGenerateFileClick(Sender: TObject);
     procedure btnTestEmailClick(Sender: TObject);
     procedure btnMainClick(Sender: TObject);
@@ -167,6 +168,8 @@ type
 
     Procedure AppendSpecialUsers(Const FileToAppend: TextFile);
 
+    Procedure UpdateCCField(Const BatchTimeIn: TDateTime);
+
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
     Function  GetTimeFromDBServer(): TDateTime;
@@ -205,11 +208,14 @@ begin
   BatchTime := GetTimeFromDBServer;
   ImportPayrollData(BatchTime);               // rec status: imported or error
 
+  UpdateCCField(BatchTime);
+
 
 //  AddContractorsNotInPaycom(BatchTime);  // Add Contractors that are Not-In Paycom
   // Add Tom's two testing recs
 
 
+(*
   IdentifyNonCertifyRecs(BatchTime);          // rec status: non-certify;     non-certify records flagged in record_status field
   ValidateRecords(BatchTime);                 // rec status: OK
   CalculateApproverEmail(BatchTime);          // rec Status: exported
@@ -225,7 +231,7 @@ begin
   CreateEmployeeErrorReport(BatchTime);
 
   SendStatusEmail;
-
+*)
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
   Application.ProcessMessages;
 
@@ -728,7 +734,7 @@ end;  { SplitEmployeeName }
 procedure TufrmCertifyExpDataLoader.ValidateRecords(const BatchTimeIn: Tdatetime);
 var
   Time_Stamp :  TDateTime;
-  
+
 begin
   StatusBar1.Panels[1].Text := 'Current Task:  Validating Employee Records';
   Application.ProcessMessages;
@@ -755,6 +761,16 @@ begin
   end;
 
 end;  { ValidateRecords }
+
+
+procedure TufrmCertifyExpDataLoader.UpdateCCField(const BatchTimeIn: TDateTime);
+begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Updating HasCC field';
+  qryUpdateHasCCField.Close;
+  qryUpdateHasCCField.ParamByName('parmImportedOn').AsDateTime := BatchTimeIn;
+  qryUpdateHasCCField.Execute;
+
+end;
 
 
 procedure TufrmCertifyExpDataLoader.UpdateDupeEmailRecs(const EMailIn: String; BatchTimeIn: TDateTime);
@@ -1190,7 +1206,6 @@ begin
   qryBuildValFile.Close;
 
 end;  { BuildGenericValidationFile2 }
-
 
 
 function TufrmCertifyExpDataLoader.CalcDepartmentName(const GroupValIn: String): String;
