@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'ufrmCertifyExpDataLoader-Ver 0.71'
+  Caption = 'ufrmCertifyExpDataLoader-Phase 2 v 0.1'
   ClientHeight = 391
   ClientWidth = 716
   Color = clBtnFace
@@ -384,7 +384,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryGetImportedRecs: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
-      'SELECT [id]'
+      'SELECT [ID]'
       '      ,[employee_code]'
       '      ,[employee_name]'
       '      ,[work_email]'
@@ -399,13 +399,31 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '      ,[status_timestamp]'
       '      ,[imported_on]'
       '      ,[error_text]'
-      #9'  ,[approver_email]'
-      #9'  ,[accountant_email]'
+      '      ,[approver_email]'
+      '      ,[accountant_email]'
+      '      ,[termination_date]'
+      '      ,[data_source]'
+      '      ,[certfile_work_email]'
+      '      ,[certfile_first_name]'
+      '      ,[certfile_last_name]'
+      '      ,[certfile_employee_id]'
+      '      ,[certfile_employee_type]'
+      '      ,[certfile_group]'
+      '      ,[certfile_department_name]'
+      '      ,[certfile_approver1_email]'
+      '      ,[certfile_approver2_email]'
+      '      ,[certfile_accountant_email]'
+      '      ,[certfile_record_status]'
+      '      ,[certfile_record_status_text]'
+      '      ,[has_credit_card]'
+      '      ,[paycom_approver1_email]'
+      '      ,[paycom_approver2_email]'
+      '      ,[paycom_assigned_ac]'
       '  FROM CertifyExp_PayComHistory'
       '  where imported_on =  :parmBatchTimeIn '
       '    and record_status = :parmRecStatusIn')
-    Left = 461
-    Top = 143
+    Left = 459
+    Top = 141
     ParamData = <
       item
         DataType = ftUnknown

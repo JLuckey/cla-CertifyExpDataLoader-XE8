@@ -170,6 +170,9 @@ type
 
     Procedure UpdateCCField(Const BatchTimeIn: TDateTime);
 
+    Procedure LoadCertFileFields(Const BatchTime: TDateTime);
+
+
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
     Function  GetTimeFromDBServer(): TDateTime;
@@ -215,12 +218,13 @@ begin
   // Add Tom's two testing recs
 
 
-(*
   IdentifyNonCertifyRecs(BatchTime);          // rec status: non-certify;     non-certify records flagged in record_status field
   ValidateRecords(BatchTime);                 // rec status: OK
-  CalculateApproverEmail(BatchTime);          // rec Status: exported
+
+  LoadCertFileFields(BatchTime);
 
 
+(*
   BuildEmployeeFile(BatchTime);
 
   LoadTripsIntoStartBucket;
@@ -232,8 +236,10 @@ begin
 
   SendStatusEmail;
 *)
+
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
   Application.ProcessMessages;
+
 
 
 end;  { Main }
@@ -347,41 +353,121 @@ begin
 end;  { BuildValidationFiles }
 
 
-procedure TufrmCertifyExpDataLoader.CalculateApproverEmail(Const BatchTimeIn : TDateTime);
-var
-  ApproverEmail : String;
+procedure TufrmCertifyExpDataLoader.LoadCertFileFields(const BatchTime: TDateTime);
+Var
+  slEmpRec : TStringList;          // Employee Record
+  LNameOut, FNameOut : String;
+  DeptName : String;
 
 begin
-  StatusBar1.Panels[1].Text := 'Current Task:  Calculating Approver Email ';
+  StatusBar1.Panels[1].Text := 'Current Task:  Loading Certify fields in PaycomHistory ';
   Application.ProcessMessages;
 
   qryGetImportedRecs.Close;
-  qryGetImportedRecs.ParamByName('parmBatchTimeIn').AsDateTime := BatchTimeIn ;
+  qryGetImportedRecs.ParamByName('parmBatchTimeIn').AsDateTime := BatchTime ;
   qryGetImportedRecs.ParamByName('parmRecStatusIn').AsString   := 'OK' ;
   qryGetImportedRecs.Open ;
   while not qryGetImportedRecs.eof do begin
     qryGetImportedRecs.Edit;
-    if qryGetImportedRecs.FieldByName('certify_department').AsString = 'Corporate' then begin
-      qryGetImportedRecs.FieldByName('accountant_email').AsString := 'QA-AP@ClayLacy.com';
 
-      ApproverEmail := GetApproverEmail(qryGetImportedRecs.FieldByName('supervisor_primary_code').AsString, BatchTimeIn);
-
-      if ApproverEmail = 'error' then begin
-        qryGetImportedRecs.FieldByName('record_status').AsString := 'error';
-        qryGetImportedRecs.FieldByName('error_text').AsString    := qryGetImportedRecs.FieldByName('error_text').AsString + ' missing supervisor email;';
-      end else begin
-        qryGetImportedRecs.FieldByName('approver_email').AsString := ApproverEmail;
-      end;
-
-      end else begin
-        qryGetImportedRecs.FieldByName('accountant_email').AsString := 'QA-135@ClayLacy.com';
+    SplitEmployeeName( qryGetImportedRecs.FieldByName('employee_name').AsString, LNameOut, FNameOut );
+    with qryGetImportedRecs do begin
+      FieldByName('certfile_work_email').AsString      := FieldByName('work_email').AsString;
+      FieldByName('certfile_last_name').AsString       := LNameOut;
+      FieldByName('certfile_first_name').AsString      := FNameOut;
+      FieldByName('certfile_employee_id').AsString     := FieldByName('certify_gp_vendornum').AsString;
+      FieldByName('certfile_employee_type').AsString   := FieldByName('certify_role').AsString;
+      FieldByName('certfile_group').AsString           := FieldByName('certify_department').AsString;
+      FieldByName('certfile_department_name').AsString := FieldByName('department_descrip').AsString;
     end;
+
+    CalculateApproverEmail(BatchTime);
 
     qryGetImportedRecs.Post;
     qryGetImportedRecs.Next;
-  end;  { While }
+  end;
 
   qryGetImportedRecs.Close;
+
+end;  { LoadCertFileFields }
+
+
+procedure TufrmCertifyExpDataLoader.CalculateApproverEmail(Const BatchTimeIn : TDateTime);
+var
+  ApproverEmail : String;
+  strAccountantEmail : String;
+  strCertDep : String;
+
+begin
+    strCertDep := qryGetImportedRecs.FieldByName('certify_department').AsString;
+
+    if Pos('|' + strCertDep + '|', '|Corporate|DOM-NonTrip|CorporateMaintenance|') > 0 then begin      // Pos is case-sensitive
+
+      // Assign Accountant Email
+      if qryGetImportedRecs.FieldByName('has_credit_card').AsString = 'T' then
+        strAccountantEmail := 'CorporateCC@ClayLacy.com'
+      else
+        strAccountantEmail := 'Corporate@ClayLacy.com';
+
+      qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := strAccountantEmail;
+
+      // Assign Approver1 Email
+      if qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString <> '' then
+        qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString
+      else
+        qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := strAccountantEmail;
+
+      // Assign Approver2 Email
+      if qryGetImportedRecs.FieldByName('paycom_approver2_email').AsString <> '' then
+        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := qryGetImportedRecs.FieldByName('paycom_approver2_email').AsString
+      else
+        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail;
+
+
+      if qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString = strAccountantEmail then
+         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
+
+
+    end else if Pos('|' + strCertDep + '|', '|FlightCrew|PoolPilot|PoolFA|IFS|DOM|FlightCrewCorp|FlightCrew-NonPCal|') > 0 then begin
+
+
+      // Assign Accountant Email
+      if qryGetImportedRecs.FieldByName('has_credit_card').AsString = 'T' then
+        strAccountantEmail := 'FlightCrewCC@ClayLacy.com'
+      else
+        strAccountantEmail := 'FlightCrew@ClayLacy.com';
+
+      qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := strAccountantEmail;
+
+
+      //  Assign Approver1 Email
+      qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := strAccountantEmail;
+
+      //  Assign Approver2 Email
+      qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
+
+
+    end else if Pos('|' + strCertDep + '|', '|Charter|') > 0 then begin
+
+
+      //  Assign Accountant Email
+      qryGetImportedRecs.FieldByName('certfile_accountant').AsString := 'CorporateCC@ClayLacy.com';
+
+      //  Assign Approver1 Email
+      qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := 'CorporateCC@ClayLacy.com';
+
+      //  Assign Approver2 Email
+      qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
+
+
+
+    end else begin       // error, unknown Certify Department
+
+
+      qryGetImportedRecs.FieldByName('certfile_record_status').AsString := 'error';
+      qryGetImportedRecs.FieldByName('certfile_record_status_text').AsString := 'unknown certify_department: ' + strCertDep;
+
+    end;
 
 end;  { CalculateApproverEmail }
 
@@ -465,7 +551,7 @@ begin
   Rewrite(CertifyEmployeeFile);
 
   // write file header
-  WriteLn(CertifyEmployeeFile, 'work_email,first_name,last_name,employee_id,employee_type,group,department_name,approver_email,accountant_email') ;
+  WriteLn(CertifyEmployeeFile, 'work_email,first_name,last_name,employee_id,employee_type,group,department_name,approver_email_1,approver_email_1,accountant_email') ;
 
   qryGetEmployees.Close;
   qryGetEmployees.ParamByName('parmImportDateIn').AsDateTime := BatchTimeIn;
@@ -630,11 +716,15 @@ Paycom file columns:
 //      tblPaycomHistory.FieldByName('certify_gp_vendornum').AsInteger := '' ;
     end;
 
-    tblPaycomHistory.FieldByName('certify_department').AsString  := slInputFileRec[8];
-    tblPaycomHistory.FieldByName('certify_role').AsString        := slInputFileRec[10];
-    tblPaycomHistory.FieldByName('record_status').AsString       := recStatus ;
-    tblPaycomHistory.FieldByName('status_timestamp').AsDateTime  := BatchTimeIn;
-    tblPaycomHistory.FieldByName('imported_on').AsDateTime       := BatchTimeIn;
+    tblPaycomHistory.FieldByName('certify_department').AsString     := slInputFileRec[8];
+    tblPaycomHistory.FieldByName('certify_role').AsString           := slInputFileRec[10];
+    tblPaycomHistory.FieldByName('paycom_approver1_email').AsString := slInputFileRec[11];
+    tblPaycomHistory.FieldByName('paycom_approver2_email').AsString := slInputFileRec[12];
+    tblPaycomHistory.FieldByName('paycom_assigned_ac').AsString     := slInputFileRec[13];
+    tblPaycomHistory.FieldByName('record_status').AsString          := recStatus ;
+    tblPaycomHistory.FieldByName('status_timestamp').AsDateTime     := BatchTimeIn;
+    tblPaycomHistory.FieldByName('imported_on').AsDateTime          := BatchTimeIn;
+    tblPaycomHistory.FieldByName('data_source').AsString            := 'paycom_file';
     tblPaycomHistory.post;
 
   except on E: Exception do begin
@@ -642,12 +732,17 @@ Paycom file columns:
     tblPaycomHistory.FieldByName('record_status').AsString := 'error';
     tblPaycomHistory.FieldByName('error_text').AsString    := tblPaycomHistory.FieldByName('error_text').AsString + '; ' + E.Message;
     tblPaycomHistory.FieldByName('imported_on').AsDateTime := BatchTimeIn;
+    tblPaycomHistory.FieldByName('data_source').AsString   := 'paycom_file';
     tblPaycomHistory.post;
   end;
 
   end;  { Try/Except }
 
 end;  { InsertIntoHistoryTable() }
+
+
+
+
 
 
 procedure TufrmCertifyExpDataLoader.LoadTripsIntoStartBucket;
@@ -765,7 +860,9 @@ end;  { ValidateRecords }
 
 procedure TufrmCertifyExpDataLoader.UpdateCCField(const BatchTimeIn: TDateTime);
 begin
-  StatusBar1.Panels[1].Text := 'Current Task:  Updating HasCC field';
+  StatusBar1.Panels[1].Text := 'Current Task:  Updating has_credit_card field';
+  Application.ProcessMessages;
+
   qryUpdateHasCCField.Close;
   qryUpdateHasCCField.ParamByName('parmImportedOn').AsDateTime := BatchTimeIn;
   qryUpdateHasCCField.Execute;
