@@ -547,7 +547,7 @@ begin
   Rewrite(CertifyEmployeeFile);
 
   // write file header
-  WriteLn(CertifyEmployeeFile, 'work_email,first_name,last_name,employee_id,employee_type,group,department_name,approver_email_1,approver_email_1,accountant_email') ;
+  WriteLn(CertifyEmployeeFile, 'work_email,first_name,last_name,employee_id,employee_type,group,department_name,approver_email_1,approver_email_2,accountant_email') ;
 
   qryGetEmployees.Close;
   qryGetEmployees.ParamByName('parmImportDateIn').AsDateTime := BatchTimeIn;
@@ -579,7 +579,6 @@ begin
     slEmpRec.add( qryGetEmployees.FieldByName('certfile_work_email').AsString ) ;
     slEmpRec.add( qryGetEmployees.FieldByName('certfile_first_name').AsString  ) ;
     slEmpRec.add( qryGetEmployees.FieldByName('certfile_last_name').AsString  ) ;
-    slEmpRec.add( qryGetEmployees.FieldByName('certfile_first_name').AsString  ) ;
     slEmpRec.add( qryGetEmployees.FieldByName('certfile_employee_id').AsString ) ;
     slEmpRec.add( qryGetEmployees.FieldByName('certfile_employee_type').AsString ) ;
     slEmpRec.add( qryGetEmployees.FieldByName('certfile_group').AsString ) ;
@@ -587,9 +586,6 @@ begin
     slEmpRec.add( qryGetEmployees.FieldByName('certfile_approver1_email').AsString ) ;
     slEmpRec.add( qryGetEmployees.FieldByName('certfile_approver2_email').AsString ) ;
     slEmpRec.add( qryGetEmployees.FieldByName('certfile_accountant_email').AsString ) ;
-
-    slEmpRec.add( qryGetEmployees.FieldByName('certify_role').AsString ) ;
-    slEmpRec.add( qryGetEmployees.FieldByName('certify_department').AsString ) ;  // aka group
 
     WriteLn(CertifyEmployeeFile, slEmpRec.CommaText) ;
 
