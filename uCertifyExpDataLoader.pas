@@ -181,8 +181,9 @@ type
     Function  CalcPilotName: String;
     Function  CalcDeptDescrip: String;
     Function  ScrubFARPart(Const FarPartIn: String): String;
-
+    Function  ScrubCertifyDept(Const DepartmentIn : String) : String;
     Function  CalcPaycomErrorFileName(Const BatchTimeIn: TDateTime): String;
+
 
   public
     { Public declarations }
@@ -223,8 +224,6 @@ begin
 
   LoadCertFileFields(BatchTime);
 
-
-(*
   BuildEmployeeFile(BatchTime);
 
   LoadTripsIntoStartBucket;
@@ -235,12 +234,9 @@ begin
   CreateEmployeeErrorReport(BatchTime);
 
   SendStatusEmail;
-*)
 
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
   Application.ProcessMessages;
-
-
 
 end;  { Main }
 
@@ -377,7 +373,7 @@ begin
       FieldByName('certfile_first_name').AsString      := FNameOut;
       FieldByName('certfile_employee_id').AsString     := FieldByName('certify_gp_vendornum').AsString;
       FieldByName('certfile_employee_type').AsString   := FieldByName('certify_role').AsString;
-      FieldByName('certfile_group').AsString           := FieldByName('certify_department').AsString;
+      FieldByName('certfile_group').AsString           := ScrubCertifyDept(FieldByName('certify_department').AsString);
       FieldByName('certfile_department_name').AsString := FieldByName('department_descrip').AsString;
     end;
 
@@ -399,7 +395,7 @@ var
   strCertDep : String;
 
 begin
-    strCertDep := qryGetImportedRecs.FieldByName('certify_department').AsString;
+    strCertDep := qryGetImportedRecs.FieldByName('certfile_group').AsString ;
 
     if Pos('|' + strCertDep + '|', '|Corporate|DOM-NonTrip|CorporateMaintenance|') > 0 then begin      // Pos is case-sensitive
 
@@ -490,7 +486,7 @@ begin
   while not qryGetStartBucketSorted.eof do begin
     if qryGetStartBucketSorted.FieldByName('CrewMemberID').AsString = PriorCrewID then begin
       counter := counter + 1;
-      if Counter > 15 then
+      if Counter > 10 then     // make this a param from .ini   ???JL  4 Nov 2018
         DeleteTrip(qryGetStartBucketSorted.FieldByName('LogSheet').AsInteger,
                    qryGetStartBucketSorted.FieldByName('CrewMemberID').AsInteger,
                    qryGetStartBucketSorted.FieldByName('QuoteNum').AsInteger );
@@ -578,34 +574,32 @@ Var
   DeptName : String;
 
 begin
-  SplitEmployeeName( qryGetEmployees.FieldByName('employee_name').AsString, LNameOut, FNameOut );
   slEmpRec := TStringList.Create;
   try
-    slEmpRec.add( qryGetEmployees.FieldByName('work_email').AsString ) ;
-    slEmpRec.add( FNameOut ) ;
-    slEmpRec.add( LNameOut ) ;
-    slEmpRec.add( qryGetEmployees.FieldByName('certify_gp_vendornum').AsString ) ;
+    slEmpRec.add( qryGetEmployees.FieldByName('certfile_work_email').AsString ) ;
+    slEmpRec.add( qryGetEmployees.FieldByName('certfile_first_name').AsString  ) ;
+    slEmpRec.add( qryGetEmployees.FieldByName('certfile_last_name').AsString  ) ;
+    slEmpRec.add( qryGetEmployees.FieldByName('certfile_first_name').AsString  ) ;
+    slEmpRec.add( qryGetEmployees.FieldByName('certfile_employee_id').AsString ) ;
+    slEmpRec.add( qryGetEmployees.FieldByName('certfile_employee_type').AsString ) ;
+    slEmpRec.add( qryGetEmployees.FieldByName('certfile_group').AsString ) ;
+    slEmpRec.add( qryGetEmployees.FieldByName('certfile_department_name').AsString ) ;
+    slEmpRec.add( qryGetEmployees.FieldByName('certfile_approver1_email').AsString ) ;
+    slEmpRec.add( qryGetEmployees.FieldByName('certfile_approver2_email').AsString ) ;
+    slEmpRec.add( qryGetEmployees.FieldByName('certfile_accountant_email').AsString ) ;
+
     slEmpRec.add( qryGetEmployees.FieldByName('certify_role').AsString ) ;
     slEmpRec.add( qryGetEmployees.FieldByName('certify_department').AsString ) ;  // aka group
 
-    DeptName := CalcDepartmentName( qryGetEmployees.FieldByName('certify_department').AsString );
-    if DeptName <> 'error' then begin
-      slEmpRec.add(DeptName);
-
-      slEmpRec.add( qryGetEmployees.FieldByName('approver_email').AsString ) ;
-      slEmpRec.add( qryGetEmployees.FieldByName('accountant_email').AsString ) ;
-
-      WriteLn(CertifyEmployeeFile, slEmpRec.CommaText) ;
-    end;
+    WriteLn(CertifyEmployeeFile, slEmpRec.CommaText) ;
 
     // update status fields
     qryGetEmployees.Edit;
-    if DeptName = 'error' then begin
-      qryGetEmployees.FieldByName('record_status').AsString := 'error';
-      qryGetEmployees.FieldByName('error_text').AsString    := qryGetEmployees.FieldByName('error_text').AsString + ' cannot find: ' + qryGetEmployees.FieldByName('certify_department').AsString + ' in Department_Name lookup; ';
-    end else
-      qryGetEmployees.FieldByName('record_status').AsString := 'exported';
-
+//    if DeptName = 'error' then begin
+//      qryGetEmployees.FieldByName('record_status').AsString := 'error';
+//      qryGetEmployees.FieldByName('error_text').AsString    := qryGetEmployees.FieldByName('error_text').AsString + ' cannot find: ' + qryGetEmployees.FieldByName('certify_department').AsString + ' in Department_Name lookup; ';
+//    end else
+    qryGetEmployees.FieldByName('record_status').AsString      := 'exported';
     qryGetEmployees.FieldByName('status_timestamp').AsDateTime := BatchTimeIn;
     qryGetEmployees.Post;
 
@@ -1030,6 +1024,23 @@ Var
   WorkFile : TextFile;
 
 begin
+{
+  query PaycomHistory for VendorNum of members of desired groups
+  join result w/ StartBucket to get TailNums
+
+select *
+from CertifyExp_Trips_StartBucket
+where CrewMemberVendorNum in (
+	select certfile_employee_id
+	from CertifyExp_PayComHistory
+	where certfile_group in ('FlightCrew','PoolPilot','PoolFA','FlightCrew-Corporate','FlightCrew-NonPCal')
+	  and imported_on = '2018-11-04 12:25:11.630'
+)
+order by CrewMemberVendorNum
+
+
+}
+
   StatusBar1.Panels[1].Text := 'Current Task:  Writing crew_tail.csv'  ;
   Application.ProcessMessages;
 
@@ -1049,21 +1060,6 @@ begin
     WriteLn(WorkFile, RowOut) ;
     qryBuildValFile.Next;
   end;
-
-
-  //Disabled code per Tom's request dated 8 Sep 2018
-(*  qryBuildValFile.Close;
-  qryBuildValFile.SQL.Text := 'select distinct CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null' ;
-  qryBuildValFile.Open ;
-
-  while not qryBuildValFile.eof do begin
-    RowOut := 'Future-Trip,' +
-              qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + 'Future-Trip';
-
-    WriteLn(WorkFile, RowOut) ;
-    qryBuildValFile.Next;
-  end;
-*)
 
   CloseFile(WorkFile);
   qryBuildValFile.Close;
@@ -1699,6 +1695,14 @@ begin
   CloseFile(ExtraEmployeeFile);
 
 end;  { AppendSpecialUsers }
+
+
+function TufrmCertifyExpDataLoader.ScrubCertifyDept(const DepartmentIn: String): String;
+begin
+
+  Result := DepartmentIn;     // need to implement ???JL
+
+end;
 
 
 function TufrmCertifyExpDataLoader.ScrubFARPart(const FarPartIn: String): String;

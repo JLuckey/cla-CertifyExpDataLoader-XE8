@@ -117,7 +117,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 53
     Height = 21
     TabOrder = 6
-    Text = '180'
+    Text = '60'
   end
   object edOutputDirectory: TEdit
     Left = 257
@@ -371,8 +371,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from QuoteSys_PilotMaster'
       'where CrewMemberID = QuoteSys_PilotMaster.PilotID'
       '')
-    Left = 269
-    Top = 180
+    Left = 139
+    Top = 297
   end
   object qryEmptyStartBucket: TUniQuery
     Connection = UniConnection1
