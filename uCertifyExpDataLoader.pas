@@ -397,7 +397,7 @@ var
 begin
     strCertDep := qryGetImportedRecs.FieldByName('certfile_group').AsString ;
 
-    if Pos('|' + strCertDep + '|', '|Corporate|DOM-NonTrip|CorporateMaintenance|') > 0 then begin      // Pos is case-sensitive
+    if Pos('|' + strCertDep + '|', '|Corporate|DOM|Maintenance|') > 0 then begin      // Pos is case-sensitive
 
       // Assign Accountant Email
       if qryGetImportedRecs.FieldByName('has_credit_card').AsString = 'T' then
@@ -411,7 +411,7 @@ begin
       if qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString <> '' then
         qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString
       else
-        qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := strAccountantEmail;
+        qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := 'error-approver1_not_provided';
 
       // Assign Approver2 Email
       if qryGetImportedRecs.FieldByName('paycom_approver2_email').AsString <> '' then
@@ -420,11 +420,11 @@ begin
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail;
 
 
-      if qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString = strAccountantEmail then
-         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
+//      if qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString = strAccountantEmail then     // depricated in 4 Nov rev of specs
+//         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
 
 
-    end else if Pos('|' + strCertDep + '|', '|FlightCrew|PoolPilot|PoolFA|IFS|DOM|FlightCrewCorp|FlightCrew-NonPCal|') > 0 then begin
+    end else if Pos('|' + strCertDep + '|', '|FlightCrew|PoolPilot|PoolFA|IFS|FlightCrewCorp|FlightCrewNonPCal|') > 0 then begin
 
 
       // Assign Accountant Email
@@ -443,7 +443,7 @@ begin
       qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
 
 
-    end else if Pos('|' + strCertDep + '|', '|Charter|') > 0 then begin
+    end else if Pos('|' + strCertDep + '|', '|CharterVISA|') > 0 then begin
 
 
       //  Assign Accountant Email
@@ -453,7 +453,7 @@ begin
       qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := 'CorporateCC@ClayLacy.com';
 
       //  Assign Approver2 Email
-      qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
+      qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := 'CorporateCC@ClayLacy.com';
 
 
 
