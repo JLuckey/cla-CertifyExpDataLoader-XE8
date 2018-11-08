@@ -117,7 +117,7 @@ type
     qryDeleteTrips: TUniQuery;
     qryContractorsNotInPaycom_Step1: TUniQuery;
     qryContractorsNotInPaycom_Step2: TUniQuery;
-    qryDropWorkingTable: TUniQuery;
+    qryPurgeWorkingTable: TUniQuery;
     qryGetPilotDetails: TUniQuery;
     qryGetEmployeeErrors: TUniQuery;
     edSpecialUsersFile: TEdit;
@@ -160,7 +160,7 @@ type
     Procedure DeleteTrip(Const LogSheetIn, CrewMemberIDIn, QuoteNumIn : Integer);
 
     Procedure AddContractorsNotInPaycom(Const BatchTimeIn: TDateTime);
-    Procedure WriteToPaycomTable(Const BatchTimeIn: TDateTime);
+    Procedure WriteContractorsToPaycomTable(Const BatchTimeIn: TDateTime);
 
     Procedure ConnectToDB();
     Procedure SendStatusEmail;
@@ -184,6 +184,7 @@ type
     Function  ScrubCertifyDept(Const DepartmentIn : String) : String;
     Function  CalcPaycomErrorFileName(Const BatchTimeIn: TDateTime): String;
 
+    Function CalcCertfileDepartmentName(Const GroupNameIn: String): String;
 
   public
     { Public declarations }
@@ -212,12 +213,9 @@ begin
   BatchTime := GetTimeFromDBServer;
   ImportPayrollData(BatchTime);               // rec status: imported or error
 
+  AddContractorsNotInPaycom(BatchTime);       // Add Contractors that are Not-In Paycom
+
   UpdateCCField(BatchTime);
-
-
-//  AddContractorsNotInPaycom(BatchTime);  // Add Contractors that are Not-In Paycom
-  // Add Tom's two testing recs
-
 
   IdentifyNonCertifyRecs(BatchTime);          // rec status: non-certify;     non-certify records flagged in record_status field
   ValidateRecords(BatchTime);                 // rec status: OK
@@ -226,6 +224,7 @@ begin
 
   BuildEmployeeFile(BatchTime);
 
+(*
   LoadTripsIntoStartBucket;
 
   FilterTripsByCount;
@@ -234,7 +233,7 @@ begin
   CreateEmployeeErrorReport(BatchTime);
 
   SendStatusEmail;
-
+*)
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
   Application.ProcessMessages;
 
@@ -374,10 +373,11 @@ begin
       FieldByName('certfile_employee_id').AsString     := FieldByName('certify_gp_vendornum').AsString;
       FieldByName('certfile_employee_type').AsString   := FieldByName('certify_role').AsString;
       FieldByName('certfile_group').AsString           := ScrubCertifyDept(FieldByName('certify_department').AsString);
-      FieldByName('certfile_department_name').AsString := FieldByName('department_descrip').AsString;
+      FieldByName('certfile_department_name').AsString := CalcCertfileDepartmentName( FieldByName('certfile_group').AsString );                                  // - depricated FieldByName('department_descrip').AsString;
     end;
 
-    CalculateApproverEmail(BatchTime);
+//    if qryGetImportedRecs.FieldByName('certify_role').AsString <> 'Contractor' then     // kinda klugey  ???JL
+      CalculateApproverEmail(BatchTime);
 
     qryGetImportedRecs.Post;
     qryGetImportedRecs.Next;
@@ -440,7 +440,10 @@ begin
       qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := strAccountantEmail;
 
       //  Assign Approver2 Email
-      qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
+      if qryGetImportedRecs.FieldByName('employee_code').AsString = 'contractor'  then
+        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail
+      else
+        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
 
 
     end else if Pos('|' + strCertDep + '|', '|CharterVISA|') > 0 then begin
@@ -522,7 +525,9 @@ begin
 
 //  SendStatusEmail;
 
-ShowMessage(DateToStr(StrToDate('00/00/2000')));
+//ShowMessage(DateToStr(StrToDate('00/00/2000')));
+
+  ShowMessage( CalcCertfileDepartmentName('IFS') );
 
 end;
 
@@ -729,8 +734,6 @@ Paycom file columns:
   end;  { Try/Except }
 
 end;  { InsertIntoHistoryTable() }
-
-
 
 
 
@@ -1297,6 +1300,27 @@ begin
 end;  { BuildGenericValidationFile2 }
 
 
+function TufrmCertifyExpDataLoader.CalcCertfileDepartmentName(const GroupNameIn: String): String;
+var
+  slGroupToDropdown : TStringList;
+  FoundIndex : Integer;
+
+begin
+  slGroupToDropdown := TStringList.Create;
+  slGroupToDropdown.StrictDelimiter := true;  // don't use space as delimeter;
+  try
+    slGroupToDropdown.CommaText := myIni.ReadString('Lookups', 'DepartmentName', '');
+    FoundIndex := slGroupToDropdown.IndexOf(GroupNameIn);
+    Result := slGroupToDropdown[FoundIndex + 1];
+
+  finally
+    slGroupToDropdown.Free;
+  end;
+
+end;
+
+
+
 function TufrmCertifyExpDataLoader.CalcDepartmentName(const GroupValIn: String): String;
 var
   slGroupDefault_Index : TStringList;
@@ -1489,7 +1513,7 @@ end;  { DeleteTrips() }
 procedure TufrmCertifyExpDataLoader.AddContractorsNotInPaycom(Const BatchTimeIn: TDateTime);
 begin
 
-  qryDropWorkingTable.Execute;
+  qryPurgeWorkingTable.Execute;
 
   qryContractorsNotInPaycom_Step1.Execute;    //  What date params should be added to these queries, if any  ???JL   when employee/contractor terminated - new scope
 
@@ -1502,17 +1526,17 @@ begin
   tblPaycomHistory.Open;
 
   while not qryGetPilotDetails.eof do begin
-    WriteToPaycomTable(BatchTimeIn);
+    WriteContractorsToPaycomTable(BatchTimeIn);
     qryGetPilotDetails.Next;
   end ;
 
   tblPaycomHistory.Close;
 
-end;
+end;  { AddContractorsNotInPaycom }
 
 
 
-procedure TufrmCertifyExpDataLoader.WriteToPaycomTable( Const BatchTimeIn: TDateTime ) ;
+procedure TufrmCertifyExpDataLoader.WriteContractorsToPaycomTable( Const BatchTimeIn: TDateTime ) ;
 begin
 
   tblPaycomHistory.Insert;
@@ -1524,18 +1548,24 @@ begin
   tblPaycomHistory.FieldByName('job_code_descrip').AsString        := 'Pilot-Designated' ;
   tblPaycomHistory.FieldByName('supervisor_primary_code').AsString := '';
   tblPaycomHistory.FieldByName('certify_gp_vendornum').AsInteger   := qryGetPilotDetails.FieldByName('VendorNumber').AsInteger;
-  tblPaycomHistory.FieldByName('approver_email').AsString          := '';
-  tblPaycomHistory.FieldByName('accountant_email').AsString        := 'QA-91@ClayLacy.com';
+  tblPaycomHistory.FieldByName('certify_department').AsString      := 'FlightCrew';
+  tblPaycomHistory.FieldByName('certify_role').AsString            := 'Employee';
 
-  tblPaycomHistory.FieldByName('certify_department').AsString      := 'Flight Crew';
-  tblPaycomHistory.FieldByName('certify_role').AsString            := 'Contractor';
+  tblPaycomHistory.FieldByName('certfile_approver1_email').AsString  := 'FlightCrew@ClayLacy.com';
+  tblPaycomHistory.FieldByName('certfile_approver2_email').AsString  := 'FlightCrew@ClayLacy.com';
+  tblPaycomHistory.FieldByName('accountant_email').AsString          := 'FlightCrew@ClayLacy.com';
+  tblPaycomHistory.FieldByName('certfile_accountant_email').AsString := 'FlightCrew@ClayLacy.com';
+
+  tblPaycomHistory.FieldByName('paycom_assigned_ac').AsString      := qryGetPilotDetails.FieldByName('AssignedAC').AsString ;
+
   tblPaycomHistory.FieldByName('record_status').AsString           := 'imported';
   tblPaycomHistory.FieldByName('status_timestamp').AsDateTime      := BatchTimeIn;
   tblPaycomHistory.FieldByName('imported_on').AsDateTime           := BatchTimeIn;
+  tblPaycomHistory.FieldByName('data_source').AsString             := 'pilot_master';
 
   tblPaycomHistory.Post;
 
-end;  { WriteToPaycomTable }
+end;  { WriteContractorsToPaycomTable }
 
 
 function TufrmCertifyExpDataLoader.CalcPilotName: String;
