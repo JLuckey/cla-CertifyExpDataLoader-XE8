@@ -657,6 +657,20 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '/* Step 2: -- Find VendorNums in #CertifyExp_Contractors45 that ' +
         'are not in CertifyExp_PaycomHistory'#39's current batch */'
       ''
+      'delete from CertifyExp_Contractors45'
+      'where CrewMemberVendorNum is not null'
+      '  and CrewMemberVendorNum  in ('
+      '        select distinct certify_gp_vendornum'
+      '        from CertifyExp_PayComHistory'
+      
+        '        where imported_on = :parmImportDateIn          -- '#39'2018-' +
+        '09-12 10:07:41.537'#39
+      '          and certify_gp_vendornum is not null'
+      #9#9'  and data_source = '#39'paycom_file'#39
+      '      )'
+      ''
+      ''
+      '/*'
       'select PilotID, CrewMemberVendorNum, Status, EmployeeStatus'
       'from CertifyExp_Contractors45'
       'where CrewMemberVendorNum is not null'
@@ -667,7 +681,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '        where imported_on = :parmImportDateIn           -- '#39'2018' +
         '-09-12 10:07:41.537'#39
       '          and certify_gp_vendornum is not null'
-      '      )')
+      '      )'
+      '*/')
     Left = 609
     Top = 26
     ParamData = <
