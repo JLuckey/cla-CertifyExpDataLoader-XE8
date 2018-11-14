@@ -125,6 +125,7 @@ type
     qryGetFutureTrips: TUniQuery;
     tblStartBucket: TUniTable;
     qryUpdateHasCCField: TUniQuery;
+    qryGetTailTripLog: TUniQuery;
     procedure btnGenerateFileClick(Sender: TObject);
     procedure btnTestEmailClick(Sender: TObject);
     procedure btnMainClick(Sender: TObject);
@@ -172,6 +173,8 @@ type
 
     Procedure LoadCertFileFields(Const BatchTime: TDateTime);
 
+    Procedure BuildTailTripLogFile;
+
 
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
@@ -211,29 +214,33 @@ var
 begin
 
   BatchTime := GetTimeFromDBServer;
+
   ImportPayrollData(BatchTime);               // rec status: imported or error
+
+  LoadTripsIntoStartBucket;
 
   AddContractorsNotInPaycom(BatchTime);       // Add Contractors that are Not-In Paycom
 
   UpdateCCField(BatchTime);
 
   IdentifyNonCertifyRecs(BatchTime);          // rec status: non-certify;     non-certify records flagged in record_status field
+
   ValidateRecords(BatchTime);                 // rec status: OK
 
   LoadCertFileFields(BatchTime);
 
   BuildEmployeeFile(BatchTime);
 
-(*
-  LoadTripsIntoStartBucket;
+//  LoadTripsIntoStartBucket;
 
   FilterTripsByCount;
+
   BuildValidationFiles;
 
   CreateEmployeeErrorReport(BatchTime);
 
-  SendStatusEmail;
-*)
+//  SendStatusEmail;
+
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
   Application.ProcessMessages;
 
@@ -339,6 +346,8 @@ begin
   BuildTailTripFile;
   BuildTailLogFile;
 
+  BuildTailTripLogFile;
+
   BuildTripAccountantFile(TargetDirectory + 'trip_accountant.csv');
 
   scrLoadTripStopData.Execute;
@@ -376,8 +385,7 @@ begin
       FieldByName('certfile_department_name').AsString := CalcCertfileDepartmentName( FieldByName('certfile_group').AsString );                                  // - depricated FieldByName('department_descrip').AsString;
     end;
 
-//    if qryGetImportedRecs.FieldByName('certify_role').AsString <> 'Contractor' then     // kinda klugey  ???JL
-      CalculateApproverEmail(BatchTime);
+    CalculateApproverEmail(BatchTime);
 
     qryGetImportedRecs.Post;
     qryGetImportedRecs.Next;
@@ -463,8 +471,8 @@ begin
     end else begin       // error, unknown Certify Department
 
 
-      qryGetImportedRecs.FieldByName('certfile_record_status').AsString := 'error';
-      qryGetImportedRecs.FieldByName('certfile_record_status_text').AsString := 'unknown certify_department: ' + strCertDep;
+      qryGetImportedRecs.FieldByName('record_status').AsString := 'error';
+      qryGetImportedRecs.FieldByName('error_text').AsString := 'unknown certify_department: ' + strCertDep;
 
     end;
 
@@ -1220,25 +1228,40 @@ begin
     qryBuildValFile.Next;
   end;
 
-(* disabled per Tom's request dated 8 Sep 2018
-
-  qryBuildValFile.Close;
-  qryBuildValFile.SQL.Text := 'select distinct TailNum from CertifyExp_Trips_StartBucket where QuoteNum is not null' ;
-  qryBuildValFile.Open ;
-
-  while not qryBuildValFile.eof do begin
-    RowOut := Trim(qryBuildValFile.FieldByName('TailNum').AsString) + ',' + 'Future-Trip';
-    WriteLn(WorkFile, RowOut) ;
-    RowOut := Trim(qryBuildValFile.FieldByName('TailNum').AsString) + ',' + 'Non-Trip';
-    WriteLn(WorkFile, RowOut) ;
-    qryBuildValFile.Next;
-  end;
-*)
-
   CloseFile(WorkFile);
   qryBuildValFile.Close;
 
 end;  { BuildTailTripFile }
+
+
+procedure TufrmCertifyExpDataLoader.BuildTailTripLogFile;
+Var
+  RowOut : String;
+  WorkFile : TextFile;
+
+begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Writing tail_trip_log.csv'  ;
+  Application.ProcessMessages;
+
+  AssignFile(WorkFile, edOutputDirectory.Text + 'tail_trip_log.csv');
+  Rewrite(WorkFile);
+  RowOut := 'TailNum,TripNum,LogSheet';
+  WriteLn(WorkFile, RowOut) ;
+
+  qryGetTailTripLog.Close;
+  qryGetTailTripLog.Open;
+  while Not qryGetTailTripLog.eof do Begin
+    RowOut := Trim(qryGetTailTripLog.FieldByName('TailNum').AsString) + ',' +
+                   qryGetTailTripLog.FieldByName('QuoteNum').AsString + ',' +
+                   qryGetTailTripLog.FieldByName('LogSheet').AsString;
+    WriteLn(WorkFile, RowOut) ;
+    qryGetTailTripLog.Next;
+  end;
+
+  CloseFile(WorkFile);
+  qryGetTailTripLog.Close;
+
+end;  { BuildTailTripLogFile }
 
 
 
@@ -1520,11 +1543,9 @@ begin
   qryContractorsNotInPaycom_Step2.ParamByName('parmImportDateIn').AsDateTime := BatchTimeIn ;
   qryContractorsNotInPaycom_Step2.Execute;    //  Contractor Pilot IDs now in #Contractors45 table
 
+  tblPaycomHistory.Open;
   qryGetPilotDetails.close;
   qryGetPilotDetails.open;
-
-  tblPaycomHistory.Open;
-
   while not qryGetPilotDetails.eof do begin
     WriteContractorsToPaycomTable(BatchTimeIn);
     qryGetPilotDetails.Next;

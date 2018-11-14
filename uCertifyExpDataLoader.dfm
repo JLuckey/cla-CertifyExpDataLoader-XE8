@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'ufrmCertifyExpDataLoader-Phase 2 v 0.1'
+  Caption = 'ufrmCertifyExpDataLoader-Phase 2A v 0.1'
   ClientHeight = 391
   ClientWidth = 716
   Color = clBtnFace
@@ -354,7 +354,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '    and FANO > 0')
     Connection = UniConnection1
     DataSet = qryLoadTripData
-    Left = 43
+    Left = 42
     Top = 10
   end
   object qryLoadTripData: TUniQuery
@@ -645,7 +645,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '  and (P.ArchiveFlag is null or P.ArchiveFlag = '#39#39')             ' +
         '          -- Currrently employed/not terminated'
-      '  and S.TripDepartDate > CURRENT_TIMESTAMP - 45'
+      '  and S.TripDepartDate > CURRENT_TIMESTAMP - 30'
       '')
     Left = 491
     Top = 5
@@ -668,8 +668,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '-09-12 10:07:41.537'#39
       '          and certify_gp_vendornum is not null'
       '      )')
-    Left = 618
-    Top = 24
+    Left = 609
+    Top = 26
     ParamData = <
       item
         DataType = ftUnknown
@@ -791,5 +791,15 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Name = 'parmImportedOn'
         Value = nil
       end>
+  end
+  object qryGetTailTripLog: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select distinct TailNum, QuoteNum, LogSheet'
+      'from CertifyExp_Trips_StartBucket'
+      'order by LogSheet'
+      '')
+    Left = 357
+    Top = 319
   end
 end
