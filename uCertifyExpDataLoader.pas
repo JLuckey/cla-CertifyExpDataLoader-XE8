@@ -1538,10 +1538,9 @@ begin
 
   qryPurgeWorkingTable.Execute;
 
-  qryContractorsNotInPaycom_Step1.Execute;    //  What date params should be added to these queries, if any  ???JL   when employee/contractor terminated - new scope
-
+  qryContractorsNotInPaycom_Step1.Execute;    //  hard-coded 30 days back  ???JL   when employee/contractor terminated - new scope
   qryContractorsNotInPaycom_Step2.ParamByName('parmImportDateIn').AsDateTime := BatchTimeIn ;
-  qryContractorsNotInPaycom_Step2.Execute;    //  Contractor Pilot IDs now in #Contractors45 table
+  qryContractorsNotInPaycom_Step2.Execute;    //  remove contractors that are common w/ Paycom File from Contractors45 table
 
   tblPaycomHistory.Open;
   qryGetPilotDetails.close;
@@ -1552,6 +1551,7 @@ begin
   end ;
 
   tblPaycomHistory.Close;
+  qryGetPilotDetails.Close;
 
 end;  { AddContractorsNotInPaycom }
 
