@@ -219,7 +219,7 @@ begin
 
   LoadTripsIntoStartBucket;
 
-  AddContractorsNotInPaycom(BatchTime);       // Add Contractors that are Not-In Paycom
+  AddContractorsNotInPaycom(BatchTime);
 
   UpdateCCField(BatchTime);
 
@@ -231,15 +231,13 @@ begin
 
   BuildEmployeeFile(BatchTime);
 
-//  LoadTripsIntoStartBucket;
-
   FilterTripsByCount;
 
   BuildValidationFiles;
 
   CreateEmployeeErrorReport(BatchTime);
 
-//  SendStatusEmail;
+  SendStatusEmail;
 
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
   Application.ProcessMessages;
@@ -530,9 +528,6 @@ Var
   myAttach  : TIdAttachment;
 
 begin
-
-//  SendStatusEmail;
-
 //ShowMessage(DateToStr(StrToDate('00/00/2000')));
 
   ShowMessage( CalcCertfileDepartmentName('IFS') );
@@ -748,8 +743,7 @@ end;  { InsertIntoHistoryTable() }
 
 procedure TufrmCertifyExpDataLoader.LoadTripsIntoStartBucket;
 begin
-(*  1. Empty Start Bucket
-    2. Load trips into Start Bucket from Trip tables
+(*  1. Empty Start Bucket & Load trips into Start Bucket from Trip tables
     3. Add Vendor number for air crew
 *)
   StatusBar1.Panels[1].Text := 'Current Task:  Loading Trips into StartBucket ' ;
@@ -764,7 +758,9 @@ end;  { LoadTripsIntoStartBucket }
 
 procedure TufrmCertifyExpDataLoader.qryLoadTripDataBeforeExecute(Sender: TObject);
 begin
-  scrLoadTripData.Params.ParamByName('parmDaysBack').AsInteger := StrToInt(edDaysBack.Text);
+//  scrLoadTripData.Params.ParamByName('parmDaysBack').AsInteger := StrToInt(edDaysBack.Text);
+
+  //  scrLoadTripData.Params[0].AsInteger := StrToInt(edDaysBack.Text);
 
 end;
 
@@ -943,27 +939,6 @@ begin
   qryBuildValFile.SQL.Text := 'select distinct LogSheet, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null order by LogSheet';
   qryBuildValFile.Open ;
 
-(*  Disabled because requrirement for minimum LogSheet per Quote has been depricated  -- 11Sep2018 JL
-  qryBuildValFile.SQL.Add( ' select QuoteNum, min(LogSheet) as MinLogSheet ' );
-  qryBuildValFile.SQL.Add( ' into #CertifyExp_Work20 '  );
-  qryBuildValFile.SQL.Add( ' from CertifyExp_Trips_StartBucket '  );
-  qryBuildValFile.SQL.Add( ' where QuoteNum is not null '  );
-  qryBuildValFile.SQL.Add( ' group by QuoteNum ' );
-  qryBuildValFile.SQL.Add( ' order by QuoteNum ' );
-
-  qryBuildValFile.Execute;
-
-  qryBuildValFile.Close ;
-  qryBuildValFile.SQL.Clear;
-  qryBuildValFile.SQL.Add( ' select distinct CrewMemberVendorNum, LogSheet ' );
-  qryBuildValFile.SQL.Add( ' from CertifyExp_Trips_StartBucket '  );
-  qryBuildValFile.SQL.Add( ' where CrewMemberVendorNum is not null '  );
-  qryBuildValFile.SQL.Add( '      and LogSheet in ' );
-  qryBuildValFile.SQL.Add( '       (select distinct MinLogSheet ' );
-  qryBuildValFile.SQL.Add( '        from #CertifyExp_Work20)' );
-  qryBuildValFile.Open ;
-*)
-
   RowOut := 'LogSheet,CrewMemberVendorNum';
   WriteLn(WorkFile, RowOut) ;
   while ( not qryBuildValFile.eof ) do begin
@@ -974,52 +949,8 @@ begin
     qryBuildValFile.Next;
   end;
 
-(*  Disable code per Tom's request 8 Sep 2018
-  // Writing Future & Non Trip rows for each Crew Member
-  qryBuildValFile.Close;
-  qryBuildValFile.SQL.Text := 'select distinct CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null' ;
-  qryBuildValFile.Open ;
-
-  while not qryBuildValFile.eof do begin
-    RowOut := 'Future-Trip,' + qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + 'Future-Trip';
-    WriteLn(WorkFile, RowOut) ;
-    RowOut := 'Non-Trip,' + qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + 'Non-Trip';
-    WriteLn(WorkFile, RowOut) ;
-
-    qryBuildValFile.Next;
-  end;
-*)
-
   CloseFile(WorkFile);
   qryBuildValFile.Close;
-
-
-//**************************************************************
-//
-//Var
-//  RowOut : String;
-//  CrewLogFile : TextFile;
-//
-//begin
-//  AssignFile(CrewLogFile, 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CrewLog.csv');
-//  Rewrite(CrewLogFile);
-//
-//  qryBuildValFile.Close;
-//  qryBuildValFile.SQL.Text := 'select distinct LogSheet, CrewMemberID from CertifyExp_Trips_StartBucket';
-//  qryBuildValFile.Open ;
-//
-//  RowOut := 'LogSheet,CrewMemberID';
-//  WriteLn(CrewLogFile, RowOut) ;
-//  while not qryBuildValFile.eof do begin
-//    RowOut := qryBuildValFile.FieldByName('LogSheet').AsString + ',' +
-//              qryBuildValFile.FieldByName('CrewMemberID').AsString + '|' + qryBuildValFile.FieldByName('LogSheet').AsString;
-//
-//    WriteLn(CrewLogFile, RowOut) ;
-//    qryBuildValFile.Next;
-//  end;
-//
-//  CloseFile(CrewLogFile);
-//  qryBuildValFile.Close;
 
 end;  { BuildCrewLogFile }
 
@@ -1031,22 +962,6 @@ Var
   WorkFile : TextFile;
 
 begin
-{
-  query PaycomHistory for VendorNum of members of desired groups
-  join result w/ StartBucket to get TailNums
-
-select *
-from CertifyExp_Trips_StartBucket
-where CrewMemberVendorNum in (
-	select certfile_employee_id
-	from CertifyExp_PayComHistory
-	where certfile_group in ('FlightCrew','PoolPilot','PoolFA','FlightCrew-Corporate','FlightCrew-NonPCal')
-	  and imported_on = '2018-11-04 12:25:11.630'
-)
-order by CrewMemberVendorNum
-
-
-}
 
   StatusBar1.Panels[1].Text := 'Current Task:  Writing crew_tail.csv'  ;
   Application.ProcessMessages;
@@ -1102,55 +1017,8 @@ begin
     qryBuildValFile.Next;
   end;
 
-(* disabled per Tom's request dated 8 Sep 2018
-
-  qryBuildValFile.Close;
-  qryBuildValFile.SQL.Text := 'select distinct CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null' ;
-  qryBuildValFile.Open ;
-
-  while not qryBuildValFile.eof do begin
-    RowOut := 'Future-Trip,' + qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + 'Future-Trip';
-    WriteLn(WorkFile, RowOut) ;
-    RowOut := 'Non-Trip,' + qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + 'Non-Trip';
-    WriteLn(WorkFile, RowOut) ;
-
-    qryBuildValFile.Next;
-  end;
-*)
-
   CloseFile(WorkFile);
   qryBuildValFile.Close;
-
-
-//***************************************************************************
-//
-//Var
-//  RowOut : String;
-//  WorkFile : TextFile;
-//
-//begin
-//  AssignFile(WorkFile, 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CrewTrip.csv');
-//  Rewrite(WorkFile);
-//
-//  qryBuildValFile.Close;
-//  qryBuildValFile.SQL.Text := 'select distinct QuoteNum, CrewMemberID from CertifyExp_Trips_StartBucket where QuoteNum is not null';
-//  qryBuildValFile.Open ;
-//
-//  RowOut := 'TripNumber,CrewMemberID';
-//  WriteLn(WorkFile, RowOut) ;
-//  while not qryBuildValFile.eof do begin
-//    RowOut := qryBuildValFile.FieldByName('QuoteNum').AsString + ',' +
-//              qryBuildValFile.FieldByName('CrewMemberID').AsString + '|' + qryBuildValFile.FieldByName('QuoteNum').AsString;
-//
-//    WriteLn(WorkFile, RowOut) ;
-//    qryBuildValFile.Next;
-//  end;
-//
-//  ShowMessage(qryBuildValFile.Fields[0].FieldName);
-//
-//
-//  CloseFile(WorkFile);
-//  qryBuildValFile.Close;
 
 end;  { BuildCrewTripFile }
 
@@ -1189,13 +1057,6 @@ begin
     WriteLn(WorkFile, RowOut) ;
     qryBuildValFile.Next;
   end;
-
-(* disabled per Tom's request dated 8 Sep 2018
-  RowOut := 'Future-Trip,Future-Trip' ;
-  WriteLn(WorkFile, RowOut) ;
-  RowOut := 'Non-Trip,Non-Trip' ;
-  WriteLn(WorkFile, RowOut) ;
-*)
 
   CloseFile(WorkFile);
   qryBuildValFile.Close;
@@ -1431,31 +1292,7 @@ begin
   qryBuildValFile.SQL.Add( ' from CertifyExp_Trips_StartBucket '  );
   qryBuildValFile.SQL.Add( ' where TailNum is not null '  );
   qryBuildValFile.SQL.Add( ' order by TailNum ' );
-//  ShowMessage(qryBuildValFile.SQL.Text);
   qryBuildValFile.Open ;
-
-
-(*  Disabled because requrirement for "minimum LogSheet per Quote" has been depricated  -- 11Sep2018 JL
-
-  qryBuildValFile.SQL.Add( ' select QuoteNum, min(LogSheet) as MinLogSheet ' );
-  qryBuildValFile.SQL.Add( ' into #CertifyExp_Work30 '  );
-  qryBuildValFile.SQL.Add( ' from CertifyExp_Trips_StartBucket '  );
-  qryBuildValFile.SQL.Add( ' where QuoteNum is not null '  );
-  qryBuildValFile.SQL.Add( ' group by QuoteNum ' );
-  qryBuildValFile.SQL.Add( ' order by QuoteNum ' );
-
-  qryBuildValFile.Execute;
-
-  qryBuildValFile.Close ;
-  qryBuildValFile.SQL.Clear;
-  qryBuildValFile.SQL.Add( ' select distinct TailNum, LogSheet ' );
-  qryBuildValFile.SQL.Add( ' from CertifyExp_Trips_StartBucket '  );
-  qryBuildValFile.SQL.Add( ' where TailNum is not null '  );
-  qryBuildValFile.SQL.Add( '      and LogSheet in ' );
-  qryBuildValFile.SQL.Add( '       (select distinct MinLogSheet ' );
-  qryBuildValFile.SQL.Add( '        from #CertifyExp_Work30)' );
-  qryBuildValFile.Open ;
-*)
 
   RowOut := 'TailNumber,LogSheet';
   WriteLn(WorkFile, RowOut) ;
@@ -1464,21 +1301,6 @@ begin
     WriteLn(WorkFile, RowOut) ;
     qryBuildValFile.Next;
   end;
-
-(* disabled per Tom's request dated 8 Sep 2018
-
-  qryBuildValFile.Close;
-  qryBuildValFile.SQL.Text := 'select distinct TailNum from CertifyExp_Trips_StartBucket where TailNum is not null' ;
-  qryBuildValFile.Open ;
-
-  while not qryBuildValFile.eof do begin
-    RowOut := Trim(qryBuildValFile.FieldByName('TailNum').AsString) + ',Future-Trip' ;
-    WriteLn(WorkFile, RowOut) ;
-    RowOut := Trim(qryBuildValFile.FieldByName('TailNum').AsString) + ',Non-Trip' ;
-    WriteLn(WorkFile, RowOut) ;
-    qryBuildValFile.Next;
-  end;
-*)
 
   CloseFile(WorkFile);
   qryBuildValFile.Close;
@@ -1540,7 +1362,7 @@ begin
 
   qryContractorsNotInPaycom_Step1.Execute;    //  hard-coded 30 days back  ???JL   when employee/contractor terminated - new scope
   qryContractorsNotInPaycom_Step2.ParamByName('parmImportDateIn').AsDateTime := BatchTimeIn ;
-  qryContractorsNotInPaycom_Step2.Execute;    //  remove contractors that are common w/ Paycom File from Contractors45 table
+  qryContractorsNotInPaycom_Step2.Execute;    //  remove contractors from Contractors45 table that are common w/ Paycom File
 
   tblPaycomHistory.Open;
   qryGetPilotDetails.close;
@@ -1762,8 +1584,6 @@ begin
     Result := '91' ;
 
 end;  { ScrubFARPart }
-
-
 
 
 end.

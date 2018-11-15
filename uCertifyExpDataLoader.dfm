@@ -142,6 +142,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Database = 'WarehouseDEV'
     Username = 'sa'
     Server = '192.168.1.122'
+    Connected = True
     LoginPrompt = False
     Left = 37
     Top = 242
@@ -321,7 +322,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object scrLoadTripData: TUniScript
     SQL.Strings = (
-      'delete from CertifyExp_Trips_StartBucket'
+      'delete from CertifyExp_Trips_StartBucket;'
       ''
       'insert into CertifyExp_Trips_StartBucket'
       
@@ -330,8 +331,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '  from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.' +
         'ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)'
-      '  where DEPARTURE > CURRENT_TIMESTAMP - :parmDaysBack'
-      '    and PICPILOTNO > 0'
+      '  where DEPARTURE > CURRENT_TIMESTAMP - 60'
+      '    and PICPILOTNO > 0;'
       ''
       'insert into CertifyExp_Trips_StartBucket'
       
@@ -340,8 +341,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '  from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.' +
         'ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)'
-      '  where DEPARTURE > CURRENT_TIMESTAMP - :parmDaysBack'
-      '    and SICPILOTNO > 0'
+      '  where DEPARTURE > CURRENT_TIMESTAMP - 60'
+      '    and SICPILOTNO > 0;'
       ''
       'insert into CertifyExp_Trips_StartBucket'
       
@@ -350,12 +351,12 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '  from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.' +
         'ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)'
-      '  where DEPARTURE > CURRENT_TIMESTAMP - :parmDaysBack'
-      '    and FANO > 0')
+      '  where DEPARTURE > CURRENT_TIMESTAMP - 60'
+      '    and FANO > 0;')
     Connection = UniConnection1
     DataSet = qryLoadTripData
     Left = 42
-    Top = 10
+    Top = 9
   end
   object qryLoadTripData: TUniQuery
     Connection = UniConnection1
@@ -370,8 +371,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '23 Aug 2018 - Jeff Luckey, Jeff@dcsit.com'
       '*/')
     BeforeExecute = qryLoadTripDataBeforeExecute
-    Left = 188
-    Top = 22
+    Left = 125
   end
   object qryBuildValFile: TUniQuery
     Connection = UniConnection1
@@ -516,8 +516,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     SQL.Strings = (
       'select distinct TripNum, AirportID'
       'from CertifyExp_TripStop_Step1')
-    Left = 112
-    Top = 38
+    Left = 187
+    Top = 22
   end
   object qryGetStartBucketSorted: TUniQuery
     Connection = UniConnection1
