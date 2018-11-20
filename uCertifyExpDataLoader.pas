@@ -126,6 +126,9 @@ type
     tblStartBucket: TUniTable;
     qryUpdateHasCCField: TUniQuery;
     qryGetTailTripLog: TUniQuery;
+    qryValidateVendorNum: TUniQuery;
+    qryFlagMissingFlightCrews: TUniQuery;
+    qryFlagTerminatedEmployees: TUniQuery;
     procedure btnGenerateFileClick(Sender: TObject);
     procedure btnTestEmailClick(Sender: TObject);
     procedure btnMainClick(Sender: TObject);
@@ -169,7 +172,7 @@ type
 
     Procedure AppendSpecialUsers(Const FileToAppend: TextFile);
 
-    Procedure UpdateCCField(Const BatchTimeIn: TDateTime);
+    Procedure UpdateCCField(Const BatchTimeIn: TDateTime);    // rename CC to CreditCard here & query  - ???JL
 
     Procedure LoadCertFileFields(Const BatchTime: TDateTime);
 
@@ -398,12 +401,12 @@ procedure TufrmCertifyExpDataLoader.CalculateApproverEmail(Const BatchTimeIn : T
 var
   ApproverEmail : String;
   strAccountantEmail : String;
-  strCertDep : String;
+  strCertifyGroup : String;
 
 begin
-    strCertDep := qryGetImportedRecs.FieldByName('certfile_group').AsString ;
+    strCertifyGroup := qryGetImportedRecs.FieldByName('certfile_group').AsString ;
 
-    if Pos('|' + strCertDep + '|', '|Corporate|DOM|Maintenance|') > 0 then begin      // Pos is case-sensitive
+    if Pos('|' + strCertifyGroup + '|', '|Corporate|DOM|Maintenance|') > 0 then begin      // Pos is case-sensitive
 
       // Assign Accountant Email
       if qryGetImportedRecs.FieldByName('has_credit_card').AsString = 'T' then
@@ -430,7 +433,7 @@ begin
 //         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
 
 
-    end else if Pos('|' + strCertDep + '|', '|FlightCrew|PoolPilot|PoolFA|IFS|FlightCrewCorp|FlightCrewNonPCal|') > 0 then begin
+    end else if Pos('|' + strCertifyGroup + '|', '|FlightCrew|PoolPilot|PoolFA|IFS|FlightCrewCorp|FlightCrewNonPCal|') > 0 then begin
 
 
       // Assign Accountant Email
@@ -452,7 +455,7 @@ begin
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
 
 
-    end else if Pos('|' + strCertDep + '|', '|CharterVISA|') > 0 then begin
+    end else if Pos('|' + strCertifyGroup + '|', '|CharterVISA|') > 0 then begin
 
 
       //  Assign Accountant Email
@@ -468,9 +471,8 @@ begin
 
     end else begin       // error, unknown Certify Department
 
-
-      qryGetImportedRecs.FieldByName('record_status').AsString := 'error';
-      qryGetImportedRecs.FieldByName('error_text').AsString := 'unknown certify_department: ' + strCertDep;
+       qryGetImportedRecs.FieldByName('record_status').AsString := 'error';
+      qryGetImportedRecs.FieldByName('error_text').AsString := 'unknown certify_department: ' + strCertifyGroup;
 
     end;
 
@@ -617,7 +619,7 @@ end;  { WriteToCertifyEmployeeFile }
 
 procedure TufrmCertifyExpDataLoader.IdentifyNonCertifyRecs( Const BatchTimeIn : TDateTime );
 begin
-  StatusBar1.Panels[1].Text := 'Current Task:  Flaggin Non-Certify Records in PaycomHistory ';
+  StatusBar1.Panels[1].Text := 'Current Task:  Flagging Non-Certify Records in PaycomHistory ';
   Application.ProcessMessages;
 
   qryIdentifyNonCertifyRecs.close;
@@ -697,6 +699,7 @@ Paycom file columns:
 
 
     tblPaycomHistory.FieldByName('work_email').AsString              := slInputFileRec[3];
+
     tblPaycomHistory.FieldByName('position').AsString                := slInputFileRec[4];
     tblPaycomHistory.FieldByName('department_descrip').AsString      := slInputFileRec[5];
     tblPaycomHistory.FieldByName('job_code_descrip').AsString        := slInputFileRec[6];
@@ -778,15 +781,23 @@ begin
   if qryGetEmployees.FieldByName('certify_department').AsString = '' then
     strErrorText := strErrorText + 'missing certify_department; ';
 
-  if qryGetEmployees.FieldByName('certify_role').AsString = '' then
-    strErrorText := strErrorText + 'missing certify_role; ';
+  if Pos( '|' + qryGetEmployees.FieldByName('certify_role').AsString + '|', '|Accountant|Employee|Executive|Manager|') = 0 then
+    strErrorText := strErrorText + 'invalid certify_role; ';
+
+//  if qryGetEmployees.FieldByName('certify_role').AsString = '' then
+//    strErrorText := strErrorText + 'missing certify_role; ';
+
+
+  if qryGetEmployees.FieldByName('work_email').AsString = '' then
+    strErrorText := strErrorText + 'missing work_email; ';
+
 
   qryGetEmployees.Edit;
   qryGetEmployees.FieldByName('status_timestamp').AsDateTime := TimeStampIn;
 
   if strErrorText <> '' then begin
-    qryGetEmployees.FieldByName('record_status').AsString := 'error';
     qryGetEmployees.FieldByName('error_text').AsString    := qryGetEmployees.FieldByName('error_text').AsString + '; ' + strErrorText;
+    qryGetEmployees.FieldByName('record_status').AsString := 'error';
     Result := False;
   end else begin
     qryGetEmployees.FieldByName('record_status').AsString := 'OK';
@@ -851,6 +862,21 @@ begin
     UpdateDupeEmailRecs( qryGetDupeEmails.FieldByName('work_email').AsString, BatchTimeIn);
     qryGetDupeEmails.Next;
   end;
+
+  // Validate Vendor Number w/ an Update query
+  qryValidateVendorNum.Close;     // checks if vendornum exists in Great Plains and sets
+  qryValidateVendorNum.ParamByName('parmImportedOn').AsDateTime := BatchTimeIn;
+  qryValidateVendorNum.Execute;   //   record_status = 'error' & error_text = 'certify_gp_vendornum not found' if not
+
+  // Set status = 'error' for flight crews that are missing values for important Certify fields, see query
+  qryFlagMissingFlightCrews.Close;
+  qryFlagMissingFlightCrews.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
+  qryFlagMissingFlightCrews.Execute;
+
+  //
+  qryFlagTerminatedEmployees.Close;
+  qryFlagTerminatedEmployees.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
+  qryFlagTerminatedEmployees.Execute;
 
 end;  { ValidateRecords }
 

@@ -814,7 +814,72 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from CertifyExp_Trips_StartBucket'
       'order by LogSheet'
       '')
-    Left = 357
-    Top = 319
+    Left = 358
+    Top = 277
+  end
+  object qryValidateVendorNum: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'update CertifyExp_PayComHistory'
+      
+        'set record_status = '#39'error'#39', error_text = '#39'certify_gp_vendornum ' +
+        'not found;'#39
+      
+        'where cast(certify_gp_vendornum as char(15)) not in (select dist' +
+        'inct vendorid from V_DynamicsGP_Vendors)'
+      '  and imported_on = :parmImportedOn'
+      '')
+    Left = 642
+    Top = 309
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmImportedOn'
+        Value = nil
+      end>
+  end
+  object qryFlagMissingFlightCrews: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'update CertifyExp_PayComHistory'
+      
+        'set record_status = '#39'error'#39', error_text = '#39'flight crew missing C' +
+        'ertify fields: gp_vendornum, department, role;'#39
+      'where imported_on = :parmImportDate'
+      
+        '  and job_code_descrip in ('#39'Pilot Designated'#39','#39'Pilot-Designated'#39 +
+        ','#39'FA Designated'#39','#39'Pilot Not-Designated'#39','#39'FA Non-Designated'#39')'
+      '  and record_status = '#39'non-certify'#39
+      
+        '  and ((termination_date is null) or (termination_date > CURRENT' +
+        '_TIMESTAMP - 14))')
+    Left = 361
+    Top = 334
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmImportDate'
+        Value = nil
+      end>
+  end
+  object qryFlagTerminatedEmployees: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'update CertifyExp_PayComHistory'
+      
+        'set record_status = '#39'terminated'#39', error_text = '#39'employee termina' +
+        'ted more than 14 days ago'#39
+      'FROM [WarehouseDEV].[dbo].[CertifyExp_PayComHistory]'
+      'where imported_on = :parmImportDate'
+      '  and termination_date < (CURRENT_TIMESTAMP - 14)'
+      '  and record_status = '#39'OK'#39)
+    Left = 507
+    Top = 323
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmImportDate'
+        Value = nil
+      end>
   end
 end
