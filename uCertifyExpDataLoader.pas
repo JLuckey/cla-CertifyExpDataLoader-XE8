@@ -471,8 +471,8 @@ begin
 
     end else begin       // error, unknown Certify Department
 
-       qryGetImportedRecs.FieldByName('record_status').AsString := 'error';
-      qryGetImportedRecs.FieldByName('error_text').AsString := 'unknown certify_department: ' + strCertifyGroup;
+      qryGetImportedRecs.FieldByName('record_status').AsString := 'error';
+      qryGetImportedRecs.FieldByName('error_text').AsString    := 'unknown certify_department: ' + strCertifyGroup;
 
     end;
 

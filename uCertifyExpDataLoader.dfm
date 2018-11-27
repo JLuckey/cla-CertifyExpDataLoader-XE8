@@ -402,7 +402,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryGetImportedRecs: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
-      'SELECT [ID]'
+      'SELECT [id]'
       '      ,[employee_code]'
       '      ,[employee_name]'
       '      ,[work_email]'
