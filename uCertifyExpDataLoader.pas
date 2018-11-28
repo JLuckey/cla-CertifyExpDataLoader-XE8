@@ -783,6 +783,15 @@ begin
   qryLoadTripData.Execute;
   qryLoadTripData.SQL.Clear;
 
+  // Load TIC data into StartBucket
+  qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
+  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.TICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, T.TR_DEPART');
+  qryLoadTripData.SQL.Append('from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
+  qryLoadTripData.SQL.Append('where T.TR_DEPART > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
+  qryLoadTripData.SQL.Append('and L.TICPILOTNO > 0');
+  qryLoadTripData.Execute;
+  qryLoadTripData.SQL.Clear;
+
   // Load FA (Flight Attendant) data into StartBucket
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
   qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.FANO, T.QUOTENO, L.ACREGNO, FARPART, 0, T.TR_DEPART');
