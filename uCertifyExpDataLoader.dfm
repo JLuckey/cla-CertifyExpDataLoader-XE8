@@ -355,7 +355,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '    and FANO > 0;')
     Connection = UniConnection1
     DataSet = qryLoadTripData
-    Left = 42
+    Left = 43
     Top = 9
   end
   object qryLoadTripData: TUniQuery

@@ -218,10 +218,11 @@ begin
 
   BatchTime := GetTimeFromDBServer;
 
-  ImportPayrollData(BatchTime);               // rec status: imported or error
+//  ImportPayrollData(BatchTime);               // rec status: imported or error
 
   LoadTripsIntoStartBucket;
 
+(*
   AddContractorsNotInPaycom(BatchTime);
 
   UpdateCCField(BatchTime);
@@ -241,7 +242,7 @@ begin
   CreateEmployeeErrorReport(BatchTime);
 
   SendStatusEmail;
-
+*)
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
   Application.ProcessMessages;
 
@@ -743,16 +744,54 @@ end;  { InsertIntoHistoryTable() }
 
 
 
-
 procedure TufrmCertifyExpDataLoader.LoadTripsIntoStartBucket;
+var
+  strDaysBack: String;
+
 begin
 (*  1. Empty Start Bucket & Load trips into Start Bucket from Trip tables
     3. Add Vendor number for air crew
 *)
+
   StatusBar1.Panels[1].Text := 'Current Task:  Loading Trips into StartBucket ' ;
   Application.ProcessMessages;
 
-  scrLoadTripData.Execute;
+  qryLoadTripData.SQL.Clear;
+  strDaysBack := edDaysBack.Text;
+
+  // Empty the working table
+  qryLoadTripData.SQL.Append('delete from CertifyExp_Trips_StartBucket');
+  qryLoadTripData.Execute;
+  qryLoadTripData.SQL.Clear;
+
+  // Load PIC data into StartBucket
+  qryLoadTripData.SQL.Clear;
+  qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
+  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.PICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, T.TR_DEPART');
+  qryLoadTripData.SQL.Append('from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
+  qryLoadTripData.SQL.Append('where T.TR_DEPART > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
+  qryLoadTripData.SQL.Append('and L.PICPILOTNO > 0');
+  qryLoadTripData.Execute;
+  qryLoadTripData.SQL.Clear;
+
+  // Load SIC data into StartBucket
+  qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
+  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.SICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, T.TR_DEPART');
+  qryLoadTripData.SQL.Append('from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
+  qryLoadTripData.SQL.Append('where T.TR_DEPART > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
+  qryLoadTripData.SQL.Append('and L.SICPILOTNO > 0');
+  qryLoadTripData.Execute;
+  qryLoadTripData.SQL.Clear;
+
+  // Load FA (Flight Attendant) data into StartBucket
+  qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
+  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.FANO, T.QUOTENO, L.ACREGNO, FARPART, 0, T.TR_DEPART');
+  qryLoadTripData.SQL.Append('from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
+  qryLoadTripData.SQL.Append('where T.TR_DEPART > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
+  qryLoadTripData.SQL.Append('and L.FANO > 0');
+  qryLoadTripData.Execute;
+  qryLoadTripData.SQL.Clear;
+
 
   qryGetAirCrewVendorNum.Execute;
 
