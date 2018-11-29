@@ -509,7 +509,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '')
     Connection = UniConnection1
     Left = 40
-    Top = 65
+    Top = 64
   end
   object qryGetTripStopRecs: TUniQuery
     Connection = UniConnection1
