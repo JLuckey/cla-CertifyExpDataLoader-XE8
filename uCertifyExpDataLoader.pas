@@ -8,6 +8,8 @@ imported -> OK -> exported
 imported -> error               [missing data for required field, duplicate email]
 imported -> non-Certify employee
 
+ShowMessage(DateTimeToStr(ISO8601ToDate('2018-08-21T16:40:45.723')));
+
 
 Depricated Minimum LogSheet queries/calcs
 
@@ -82,12 +84,10 @@ type
     SQLServerUniProvider1: TSQLServerUniProvider;
     edPayComInputFile: TEdit;
     Label1: TLabel;
-    btnGenerateFile: TButton;
     StatusBar1: TStatusBar;
     tblPaycomHistory: TUniTable;
     IdSMTP1: TIdSMTP;
     IdMessage1: TIdMessage;
-    btnTestEmail: TButton;
     Label2: TLabel;
     edOutputFileName: TEdit;
     qryIdentifyNonCertifyRecs: TUniQuery;
@@ -95,13 +95,11 @@ type
     btnMain: TButton;
     qryGetDupeEmails: TUniQuery;
     qryUpdateDupeEmailRecStatus: TUniQuery;
-    scrLoadTripData: TUniScript;
     qryLoadTripData: TUniQuery;
     qryBuildValFile: TUniQuery;
     edDaysBack: TEdit;
     Label3: TLabel;
     qryGetAirCrewVendorNum: TUniQuery;
-    qryEmptyStartBucket: TUniQuery;
     edOutputDirectory: TEdit;
     Label4: TLabel;
     qryGetImportedRecs: TUniQuery;
@@ -110,7 +108,6 @@ type
     scrLoadTripStopData: TUniScript;
     qryGetTripStopRecs: TUniQuery;
     qryGetStartBucketSorted: TUniQuery;
-    scrGetCrewLogData: TUniScript;
     qryPilotsNotInPaycom: TUniQuery;
     qryGetPilotsNotInPaycom: TUniQuery;
     qryEmptyPilotsNotInPaycom: TUniQuery;
@@ -129,10 +126,20 @@ type
     qryValidateVendorNum: TUniQuery;
     qryFlagMissingFlightCrews: TUniQuery;
     qryFlagTerminatedEmployees: TUniQuery;
-    procedure btnGenerateFileClick(Sender: TObject);
-    procedure btnTestEmailClick(Sender: TObject);
+    edLastNTrips: TEdit;
+    edTerminatedDaysBack: TEdit;
+    edContractorDaysBack: TEdit;
+    Label6: TLabel;
+    Label7: TLabel;
+    Label8: TLabel;
+    Label9: TLabel;
+    Label10: TLabel;
+    Label11: TLabel;
+    Label12: TLabel;
+    Label13: TLabel;
+    Label14: TLabel;
+    Label15: TLabel;
     procedure btnMainClick(Sender: TObject);
-    procedure qryLoadTripDataBeforeExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
 
@@ -479,16 +486,17 @@ begin
 end;  { CalculateApproverEmail }
 
 
-
 procedure TufrmCertifyExpDataLoader.FilterTripsByCount;
 var
   PriorCrewID : String;
   Counter : Integer;
+  Limit : Integer;
 
 begin
   StatusBar1.Panels[1].Text := 'Current Task:  Filtering Trips by Max Count per person';
   Application.ProcessMessages;
 
+  Limit := StrToInt(edLastNTrips.Text);
   qryGetStartBucketSorted.close;
   qryGetStartBucketSorted.Open;
 
@@ -497,7 +505,7 @@ begin
   while not qryGetStartBucketSorted.eof do begin
     if qryGetStartBucketSorted.FieldByName('CrewMemberID').AsString = PriorCrewID then begin
       counter := counter + 1;
-      if Counter > 15 then     // make this a param from .ini   ???JL  4 Nov 2018
+      if Counter > Limit then
         DeleteTrip(qryGetStartBucketSorted.FieldByName('LogSheet').AsInteger,
                    qryGetStartBucketSorted.FieldByName('CrewMemberID').AsInteger,
                    qryGetStartBucketSorted.FieldByName('QuoteNum').AsInteger );
@@ -511,30 +519,8 @@ begin
 
   end;  { While }
 
-end;
+end;  {FilterTripsByCount}
 
-
-
-procedure TufrmCertifyExpDataLoader.btnGenerateFileClick(Sender: TObject);
-begin
-
-  ShowMessage(DateTimeToStr(ISO8601ToDate('2018-08-21T16:40:45.723')));
-
-end;
-
-
-procedure TufrmCertifyExpDataLoader.btnTestEmailClick(Sender: TObject);
-Var
-  mySMTP    : TIdSMTP;
-  myMessage : TIDMessage;
-  myAttach  : TIdAttachment;
-
-begin
-//ShowMessage(DateToStr(StrToDate('00/00/2000')));
-
-  ShowMessage( CalcCertfileDepartmentName('IFS') );
-
-end;
 
 
 procedure TufrmCertifyExpDataLoader.BuildEmployeeFile(Const BatchTimeIn: TDateTime)  ;
@@ -806,15 +792,6 @@ begin
 end;  { LoadTripsIntoStartBucket }
 
 
-procedure TufrmCertifyExpDataLoader.qryLoadTripDataBeforeExecute(Sender: TObject);
-begin
-//  scrLoadTripData.Params.ParamByName('parmDaysBack').AsInteger := StrToInt(edDaysBack.Text);
-
-  //  scrLoadTripData.Params[0].AsInteger := StrToInt(edDaysBack.Text);
-
-end;
-
-
 function TufrmCertifyExpDataLoader.RecIsValid(Const TimeStampIn:TDateTime): Boolean;
 var
   strErrorText : String;
@@ -920,8 +897,9 @@ begin
   qryFlagMissingFlightCrews.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
   qryFlagMissingFlightCrews.Execute;
 
-  //
+  // Set status = 'terminated' for employees terminated more than edTerminatedDaysBack.Text days ago so that they don't get procesed
   qryFlagTerminatedEmployees.Close;
+  qryFlagTerminatedEmployees.ParamByName('parmDaysBackTerminated').AsString := edTerminatedDaysBack.Text;
   qryFlagTerminatedEmployees.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
   qryFlagTerminatedEmployees.Execute;
 
@@ -1433,7 +1411,9 @@ begin
 
   qryPurgeWorkingTable.Execute;
 
-  qryContractorsNotInPaycom_Step1.Execute;    //  hard-coded 30 days back  ???JL   when employee/contractor terminated - new scope
+  qryContractorsNotInPaycom_Step1.ParamByName('parmDaysBack').AsInteger := StrToInt(edContractorDaysBack.text);
+  qryContractorsNotInPaycom_Step1.Execute;    //  ???JL   when employee/contractor terminated - new scope
+
   qryContractorsNotInPaycom_Step2.ParamByName('parmImportDateIn').AsDateTime := BatchTimeIn ;
   qryContractorsNotInPaycom_Step2.Execute;    //  remove contractors from Contractors45 table that are common w/ Paycom File
 

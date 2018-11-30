@@ -30,11 +30,11 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Caption = 'Certify Employee File (output):'
   end
   object Label3: TLabel
-    Left = 257
-    Top = 184
-    Width = 53
+    Left = 13
+    Top = 33
+    Width = 127
     Height = 13
-    Caption = 'Days Back:'
+    Caption = 'Include trips from the past'
   end
   object Label4: TLabel
     Left = 257
@@ -50,6 +50,76 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Height = 13
     Caption = 'Special Users File:'
   end
+  object Label6: TLabel
+    Left = 14
+    Top = 109
+    Width = 48
+    Height = 13
+    Caption = 'Show the '
+  end
+  object Label7: TLabel
+    Left = 14
+    Top = 141
+    Width = 161
+    Height = 12
+    Caption = 'Process expenses for Employees:'
+  end
+  object Label8: TLabel
+    Left = 13
+    Top = 64
+    Width = 103
+    Height = 13
+    Caption = 'Contract Flight Crew:'
+  end
+  object Label9: TLabel
+    Left = 187
+    Top = 33
+    Width = 27
+    Height = 13
+    Caption = 'days.'
+  end
+  object Label10: TLabel
+    Left = 104
+    Top = 109
+    Width = 140
+    Height = 13
+    Caption = 'most recent trips per person.'
+  end
+  object Label11: TLabel
+    Left = 14
+    Top = 159
+    Width = 102
+    Height = 12
+    Caption = 'terminated in the last'
+  end
+  object Label12: TLabel
+    Left = 164
+    Top = 159
+    Width = 27
+    Height = 12
+    Caption = 'days.'
+  end
+  object Label13: TLabel
+    Left = 13
+    Top = 77
+    Width = 127
+    Height = 13
+    Caption = 'Include trips from the past'
+  end
+  object Label14: TLabel
+    Left = 187
+    Top = 77
+    Width = 27
+    Height = 13
+    Caption = 'days.'
+  end
+  object Label15: TLabel
+    Left = 13
+    Top = 20
+    Width = 107
+    Height = 13
+    Caption = 'Employee Flight Crew:'
+  end
   object edPayComInputFile: TEdit
     Left = 257
     Top = 24
@@ -59,15 +129,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Text = 
       'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\InputFiles\PaycomFi' +
       'le_withErrors.csv'
-  end
-  object btnGenerateFile: TButton
-    Left = 13
-    Top = 20
-    Width = 107
-    Height = 25
-    Caption = 'btnGenerateFile'
-    TabOrder = 1
-    OnClick = btnGenerateFileClick
   end
   object StatusBar1: TStatusBar
     Left = 0
@@ -85,21 +146,12 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Width = 200
       end>
   end
-  object btnTestEmail: TButton
-    Left = 8
-    Top = 60
-    Width = 75
-    Height = 25
-    Caption = 'Test SMTP'
-    TabOrder = 3
-    OnClick = btnTestEmailClick
-  end
   object edOutputFileName: TEdit
     Left = 257
     Top = 70
     Width = 451
     Height = 21
-    TabOrder = 4
+    TabOrder = 2
     Text = 'certify_employees.csv'
   end
   object btnMain: TButton
@@ -108,15 +160,16 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 99
     Height = 25
     Caption = 'btnMain'
-    TabOrder = 5
+    TabOrder = 3
     OnClick = btnMainClick
   end
   object edDaysBack: TEdit
-    Left = 257
-    Top = 200
-    Width = 53
+    Left = 149
+    Top = 30
+    Width = 32
     Height = 21
-    TabOrder = 6
+    Alignment = taRightJustify
+    TabOrder = 4
     Text = '60'
   end
   object edOutputDirectory: TEdit
@@ -124,7 +177,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Top = 115
     Width = 451
     Height = 21
-    TabOrder = 7
+    TabOrder = 5
     Text = 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\OutputFiles\'
   end
   object edSpecialUsersFile: TEdit
@@ -132,10 +185,37 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Top = 157
     Width = 451
     Height = 21
-    TabOrder = 8
+    TabOrder = 6
     Text = 
       'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\InputFiles\certify_' +
       'special_users.csv'
+  end
+  object edLastNTrips: TEdit
+    Left = 63
+    Top = 106
+    Width = 35
+    Height = 21
+    Alignment = taRightJustify
+    TabOrder = 7
+    Text = '10'
+  end
+  object edTerminatedDaysBack: TEdit
+    Left = 121
+    Top = 156
+    Width = 37
+    Height = 21
+    Alignment = taRightJustify
+    TabOrder = 8
+    Text = '14'
+  end
+  object edContractorDaysBack: TEdit
+    Left = 149
+    Top = 74
+    Width = 32
+    Height = 21
+    Alignment = taRightJustify
+    TabOrder = 9
+    Text = '45'
   end
   object UniConnection1: TUniConnection
     ProviderName = 'SQL Server'
@@ -144,8 +224,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Server = '192.168.1.122'
     Connected = True
     LoginPrompt = False
-    Left = 37
-    Top = 242
+    Left = 20
+    Top = 256
     EncryptedPassword = '9CFF93FF9EFF8CFF8EFF93FF8CFF8DFF89FFCDFFCFFFCEFFC9FF'
   end
   object qryGetEmployees: TUniQuery
@@ -206,14 +286,14 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       end>
   end
   object SQLServerUniProvider1: TSQLServerUniProvider
-    Left = 44
-    Top = 198
+    Left = 46
+    Top = 217
   end
   object tblPaycomHistory: TUniTable
     TableName = 'CertifyExp_PayComHistory'
     Connection = UniConnection1
-    Left = 131
-    Top = 245
+    Left = 121
+    Top = 305
   end
   object IdSMTP1: TIdSMTP
     SASLMechanisms = <>
@@ -231,8 +311,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Recipients = <>
     ReplyTo = <>
     ConvertPreamble = True
-    Left = 622
-    Top = 211
+    Left = 666
+    Top = 279
   end
   object qryIdentifyNonCertifyRecs: TUniQuery
     Connection = UniConnection1
@@ -249,8 +329,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  and (certify_role is null or certify_role = '#39#39')'
       '  and (record_status <> '#39'error'#39')'
       '')
-    Left = 263
-    Top = 247
+    Left = 272
+    Top = 254
     ParamData = <
       item
         DataType = ftUnknown
@@ -262,8 +342,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       'select CURRENT_TIMESTAMP as DateTimeOut;')
-    Left = 364
-    Top = 137
+    Left = 348
+    Top = 145
   end
   object qryGetDupeEmails: TUniQuery
     Connection = UniConnection1
@@ -278,8 +358,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '.780'#39'*/'
       'group by work_email'
       'having COUNT(*) > 1')
-    Left = 443
-    Top = 248
+    Left = 456
+    Top = 253
     ParamData = <
       item
         DataType = ftUnknown
@@ -301,8 +381,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '  and imported_on = :parmImportDateIn                          /' +
         '* '#39'2018-08-22 12:34:18.780'#39' */'
       '  and record_status = '#39'OK'#39)
-    Left = 572
-    Top = 162
+    Left = 502
+    Top = 63
     ParamData = <
       item
         DataType = ftUnknown
@@ -320,44 +400,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Value = nil
       end>
   end
-  object scrLoadTripData: TUniScript
-    SQL.Strings = (
-      'delete from CertifyExp_Trips_StartBucket;'
-      ''
-      'insert into CertifyExp_Trips_StartBucket'
-      
-        '  select distinct L.LOGSHEET, L.PICPILOTNO, T.QUOTENO, L.ACREGNO' +
-        ', FARPART, 0, T.TR_DEPART'
-      
-        '  from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.' +
-        'ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)'
-      '  where DEPARTURE > CURRENT_TIMESTAMP - 60'
-      '    and PICPILOTNO > 0;'
-      ''
-      'insert into CertifyExp_Trips_StartBucket'
-      
-        '  select distinct L.LOGSHEET, L.SICPILOTNO, T.QUOTENO, L.ACREGNO' +
-        ', FARPART, 0, T.TR_DEPART'
-      
-        '  from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.' +
-        'ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)'
-      '  where DEPARTURE > CURRENT_TIMESTAMP - 60'
-      '    and SICPILOTNO > 0;'
-      ''
-      'insert into CertifyExp_Trips_StartBucket'
-      
-        '  select distinct L.LOGSHEET, L.FANO, T.QUOTENO, L.ACREGNO, FARP' +
-        'ART, 0, T.TR_DEPART'
-      
-        '  from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.' +
-        'ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)'
-      '  where DEPARTURE > CURRENT_TIMESTAMP - 60'
-      '    and FANO > 0;')
-    Connection = UniConnection1
-    DataSet = qryLoadTripData
-    Left = 43
-    Top = 9
-  end
   object qryLoadTripData: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
@@ -370,16 +412,16 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       '23 Aug 2018 - Jeff Luckey, Jeff@dcsit.com'
       '*/')
-    BeforeExecute = qryLoadTripDataBeforeExecute
-    Left = 125
+    Left = 399
+    Top = 188
   end
   object qryBuildValFile: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
       'select distinct LogSheet, CrewMemberID'
       'from CertifyExp_Trips_StartBucket')
-    Left = 26
-    Top = 116
+    Left = 78
+    Top = 284
   end
   object qryGetAirCrewVendorNum: TUniQuery
     Connection = UniConnection1
@@ -389,15 +431,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from QuoteSys_PilotMaster'
       'where CrewMemberID = QuoteSys_PilotMaster.PilotID'
       '')
-    Left = 139
-    Top = 297
-  end
-  object qryEmptyStartBucket: TUniQuery
-    Connection = UniConnection1
-    SQL.Strings = (
-      'delete from CertifyExp_Trips_StartBucket;')
-    Left = 189
-    Top = 70
+    Left = 182
+    Top = 324
   end
   object qryGetImportedRecs: TUniQuery
     Connection = UniConnection1
@@ -440,8 +475,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  FROM CertifyExp_PayComHistory'
       '  where imported_on =  :parmBatchTimeIn '
       '    and record_status = :parmRecStatusIn')
-    Left = 459
-    Top = 141
+    Left = 480
+    Top = 153
     ParamData = <
       item
         DataType = ftUnknown
@@ -461,8 +496,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from CertifyExp_PayComHistory'
       'where employee_code = :parmEmpCode'
       '  and imported_on   = :parmBatchTimeIn')
-    Left = 75
-    Top = 142
+    Left = 603
+    Top = 184
     ParamData = <
       item
         DataType = ftUnknown
@@ -483,8 +518,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'where QuoteNum is not null'
       '  and CrewMemberVendorNum is not null'
       '')
-    Left = 130
-    Top = 179
+    Left = 172
+    Top = 268
   end
   object scrLoadTripStopData: TUniScript
     SQL.Strings = (
@@ -508,16 +543,16 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       '')
     Connection = UniConnection1
-    Left = 40
-    Top = 64
+    Left = 127
+    Top = 198
   end
   object qryGetTripStopRecs: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
       'select distinct TripNum, AirportID'
       'from CertifyExp_TripStop_Step1')
-    Left = 187
-    Top = 22
+    Left = 291
+    Top = 189
   end
   object qryGetStartBucketSorted: TUniQuery
     Connection = UniConnection1
@@ -526,31 +561,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  FROM CertifyExp_Trips_StartBucket'
       '  ORDER By crewmemberid , TripDepartDate desc'
       '')
-    Left = 185
-    Top = 133
-  end
-  object scrGetCrewLogData: TUniScript
-    SQL.Strings = (
-      'select QuoteNum, min(LogSheet) as MinLogSheet'
-      'into #CertifyExp_Work20'
-      'from CertifyExp_Trips_StartBucket'
-      'where QuoteNum is not null'
-      'group by QuoteNum'
-      'order by QuoteNum'
-      ''
-      'select distinct CrewMemberVendorNum, LogSheet'
-      'from CertifyExp_Trips_StartBucket'
-      'where CrewMemberVendorNum is not null'
-      '  and LogSheet in '
-      '     (select distinct MinLogSheet'
-      '      from #CertifyExp_Work20)'
-      ''
-      'drop table #CertifyExp_Work20'
-      ''
-      '')
-    Connection = UniConnection1
-    Left = 125
-    Top = 83
+    Left = 468
+    Top = 203
   end
   object qryPilotsNotInPaycom: TUniQuery
     Connection = UniConnection1
@@ -564,8 +576,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       #9'where imported_on = :parmBatchTimeIn'
       #9'  and certify_department = '#39'Flight Crew'#39
       #9'  and certify_gp_vendornum is not null    )')
-    Left = 363
-    Top = 184
+    Left = 27
+    Top = 320
     ParamData = <
       item
         DataType = ftUnknown
@@ -586,8 +598,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  and EmployeeStatus in ('#39'Part 91'#39', '#39'Part 135'#39', '#39'Cabin Serv'#39')'
       '  and ArchiveFlag is null'
       'order by LastName')
-    Left = 459
-    Top = 197
+    Left = 365
+    Top = 232
   end
   object qryEmptyPilotsNotInPaycom: TUniQuery
     Connection = UniConnection1
@@ -626,8 +638,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       
-        '/* Step 1:  -- Contractors who have flown in last 30 days by Cre' +
-        'wMemberID: */'
+        '/* Step 1:  -- Contractors who have flown in last parmDaysBack d' +
+        'ays by CrewMemberID: */'
       ''
       'insert into CertifyExp_Contractors45'
       
@@ -645,10 +657,16 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '  and (P.ArchiveFlag is null or P.ArchiveFlag = '#39#39')             ' +
         '          -- Currrently employed/not terminated'
-      '  and S.TripDepartDate > CURRENT_TIMESTAMP - 30'
+      '  and S.TripDepartDate > (CURRENT_TIMESTAMP - :parmDaysBack)'
       '')
     Left = 491
     Top = 5
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmDaysBack'
+        Value = nil
+      end>
   end
   object qryContractorsNotInPaycom_Step2: TUniQuery
     Connection = UniConnection1
@@ -663,26 +681,11 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '        select distinct certify_gp_vendornum'
       '        from CertifyExp_PayComHistory'
       
-        '        where imported_on = :parmImportDateIn          -- '#39'2018-' +
-        '09-12 10:07:41.537'#39
+        '        where imported_on = :parmImportDateIn          -- identi' +
+        'fy the batch of records'
       '          and certify_gp_vendornum is not null'
       #9#9'  and data_source = '#39'paycom_file'#39
-      '      )'
-      ''
-      ''
-      '/*'
-      'select PilotID, CrewMemberVendorNum, Status, EmployeeStatus'
-      'from CertifyExp_Contractors45'
-      'where CrewMemberVendorNum is not null'
-      '  and CrewMemberVendorNum not in ('
-      '        select distinct certify_gp_vendornum'
-      '        from CertifyExp_PayComHistory'
-      
-        '        where imported_on = :parmImportDateIn           -- '#39'2018' +
-        '-09-12 10:07:41.537'#39
-      '          and certify_gp_vendornum is not null'
-      '      )'
-      '*/')
+      '      )')
     Left = 609
     Top = 26
     ParamData = <
@@ -701,8 +704,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'if OBJECT_ID('#39'CertifyExp_Contractors45'#39') is not null'
       '  drop table CertifyExp_Contractors45'
       '*/')
-    Left = 480
-    Top = 58
+    Left = 411
+    Top = 51
   end
   object qryGetPilotDetails: TUniQuery
     Connection = UniConnection1
@@ -829,8 +832,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'inct vendorid from V_DynamicsGP_Vendors)'
       '  and imported_on = :parmImportedOn'
       '')
-    Left = 642
-    Top = 309
+    Left = 641
+    Top = 326
     ParamData = <
       item
         DataType = ftUnknown
@@ -868,10 +871,12 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'update CertifyExp_PayComHistory'
       
         'set record_status = '#39'terminated'#39', error_text = '#39'employee termina' +
-        'ted more than 14 days ago'#39
-      'FROM [WarehouseDEV].[dbo].[CertifyExp_PayComHistory]'
+        'ted more than n days ago'#39
+      'FROM CertifyExp_PayComHistory'
       'where imported_on = :parmImportDate'
-      '  and termination_date < (CURRENT_TIMESTAMP - 14)'
+      
+        '  and termination_date < (CURRENT_TIMESTAMP - :parmDaysBackTermi' +
+        'nated)'
       '  and record_status = '#39'OK'#39)
     Left = 507
     Top = 323
@@ -879,6 +884,11 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       item
         DataType = ftUnknown
         Name = 'parmImportDate'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmDaysBackTerminated'
         Value = nil
       end>
   end
