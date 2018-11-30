@@ -66,7 +66,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object Label8: TLabel
     Left = 13
-    Top = 64
+    Top = 60
     Width = 103
     Height = 13
     Caption = 'Contract Flight Crew:'
@@ -88,12 +88,12 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object Label11: TLabel
     Left = 14
     Top = 159
-    Width = 102
-    Height = 12
-    Caption = 'terminated in the last'
+    Width = 122
+    Height = 13
+    Caption = 'terminated within the last'
   end
   object Label12: TLabel
-    Left = 164
+    Left = 185
     Top = 159
     Width = 27
     Height = 12
@@ -115,7 +115,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object Label15: TLabel
     Left = 13
-    Top = 20
+    Top = 16
     Width = 107
     Height = 13
     Caption = 'Employee Flight Crew:'
@@ -200,7 +200,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Text = '10'
   end
   object edTerminatedDaysBack: TEdit
-    Left = 121
+    Left = 142
     Top = 156
     Width = 37
     Height = 21

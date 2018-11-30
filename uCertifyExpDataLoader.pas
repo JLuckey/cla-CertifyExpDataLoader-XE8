@@ -899,7 +899,7 @@ begin
 
   // Set status = 'terminated' for employees terminated more than edTerminatedDaysBack.Text days ago so that they don't get procesed
   qryFlagTerminatedEmployees.Close;
-  qryFlagTerminatedEmployees.ParamByName('parmDaysBackTerminated').AsString := edTerminatedDaysBack.Text;
+  qryFlagTerminatedEmployees.ParamByName('parmDaysBackTerminated').AsInteger := StrToInt(edTerminatedDaysBack.Text);
   qryFlagTerminatedEmployees.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
   qryFlagTerminatedEmployees.Execute;
 
