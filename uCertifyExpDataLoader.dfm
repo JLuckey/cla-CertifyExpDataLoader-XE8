@@ -60,9 +60,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object Label7: TLabel
     Left = 14
     Top = 141
-    Width = 161
-    Height = 12
-    Caption = 'Process expenses for Employees:'
+    Width = 216
+    Height = 13
+    Caption = 'Process expenses for terminated Employees:'
   end
   object Label8: TLabel
     Left = 13
@@ -96,7 +96,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Left = 185
     Top = 159
     Width = 27
-    Height = 12
+    Height = 13
     Caption = 'days.'
   end
   object Label13: TLabel

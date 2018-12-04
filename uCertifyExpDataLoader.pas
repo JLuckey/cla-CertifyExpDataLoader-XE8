@@ -167,7 +167,7 @@ type
     Procedure BuildTripAccountantFile(Const FileNameIn: String);
     Procedure CalculateApproverEmail(Const BatchTimeIn: TDateTime) ;
     Procedure FilterTripsByCount;
-    Procedure FindPilotsNotInPaycom(Const BatchTimeIn : TDateTime);
+    Procedure FindPilotsNotInPaycom(Const BatchTimeIn : TDateTime);               // de-cruft, appears not to be called  ???JL  3 dec 2018
     Procedure DeleteTrip(Const LogSheetIn, CrewMemberIDIn, QuoteNumIn : Integer);
 
     Procedure AddContractorsNotInPaycom(Const BatchTimeIn: TDateTime);
