@@ -182,7 +182,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object edSpecialUsersFile: TEdit
     Left = 257
-    Top = 157
+    Top = 158
     Width = 451
     Height = 21
     TabOrder = 6

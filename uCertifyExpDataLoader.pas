@@ -413,7 +413,9 @@ var
 begin
     strCertifyGroup := qryGetImportedRecs.FieldByName('certfile_group').AsString ;
 
-    if Pos('|' + strCertifyGroup + '|', '|Corporate|DOM|Maintenance|') > 0 then begin      // Pos is case-sensitive
+// Note 12 : removing groups that are not implemented in version 2A (this verision)
+//    if Pos('|' + strCertifyGroup + '|', '|Corporate|DOM|Maintenance|') > 0 then begin      // Pos is case-sensitive
+    if Pos('|' + strCertifyGroup + '|', '|Corporate|') > 0 then begin      // Pos is case-sensitive
 
       // Assign Accountant Email
       if qryGetImportedRecs.FieldByName('has_credit_card').AsString = 'T' then
@@ -426,8 +428,13 @@ begin
       // Assign Approver1 Email
       if qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString <> '' then
         qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString
-      else
-        qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := 'error-approver1_not_provided';
+      else begin
+//        qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := 'error-approver1_not_provided';
+
+        qryGetImportedRecs.FieldByName('record_status').AsString := 'error';
+        qryGetImportedRecs.FieldByName('error_text').AsString    := 'error-approver1_email_not_provided ' + strCertifyGroup;
+      end;
+
 
       // Assign Approver2 Email
       if qryGetImportedRecs.FieldByName('paycom_approver2_email').AsString <> '' then
@@ -435,12 +442,9 @@ begin
       else
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail;
 
-
-//      if qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString = strAccountantEmail then     // depricated in 4 Nov rev of specs
-//         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
-
-
-    end else if Pos('|' + strCertifyGroup + '|', '|FlightCrew|PoolPilot|PoolFA|IFS|FlightCrewCorp|FlightCrewNonPCal|') > 0 then begin
+// see Note 12 above
+//    end else if Pos('|' + strCertifyGroup + '|', '|FlightCrew|PoolPilot|PoolFA|IFS|FlightCrewCorp|FlightCrewNonPCal|') > 0 then begin
+    end else if Pos('|' + strCertifyGroup + '|', '|FlightCrew|PoolPilot|PoolFA|FlightCrewCorp|FlightCrewNonPCal|') > 0 then begin         // make comparisons non-case-sensitive  ???JL
 
 
       // Assign Accountant Email
@@ -462,24 +466,23 @@ begin
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
 
 
-    end else if Pos('|' + strCertifyGroup + '|', '|CharterVISA|') > 0 then begin
-
-
-      //  Assign Accountant Email
-      qryGetImportedRecs.FieldByName('certfile_accountant').AsString := 'CorporateCC@ClayLacy.com';
-
-      //  Assign Approver1 Email
-      qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := 'CorporateCC@ClayLacy.com';
-
-      //  Assign Approver2 Email
-      qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := 'CorporateCC@ClayLacy.com';
-
-
+//  See Note 12 above
+//    end else if Pos('|' + strCertifyGroup + '|', '|CharterVisa|') > 0 then begin
+//
+//
+//      //  Assign Accountant Email
+//      qryGetImportedRecs.FieldByName('certfile_accountant').AsString := 'CorporateCC@ClayLacy.com';
+//
+//      //  Assign Approver1 Email
+//      qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := 'CorporateCC@ClayLacy.com';
+//
+//      //  Assign Approver2 Email
+//      qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := 'CorporateCC@ClayLacy.com';
 
     end else begin       // error, unknown Certify Department
 
       qryGetImportedRecs.FieldByName('record_status').AsString := 'error';
-      qryGetImportedRecs.FieldByName('error_text').AsString    := 'unknown certify_department: ' + strCertifyGroup;
+      qryGetImportedRecs.FieldByName('error_text').AsString    := 'unknown certify_department/Group: ' + strCertifyGroup;
 
     end;
 
@@ -1498,7 +1501,7 @@ begin
   myMessage.Recipients.EMailAddresses := myIni.ReadString('OutputFiles', 'EMailRecipientList', '');   //jeff@dcsit.com,jluckey@pacbell.net';   //,thomasfduffy@gmail.com';
 
   //  Load Attachments
-  OutPutFileDir  := myIni.ReadString('OutputFiles', 'OutputFileDir', '');
+  OutPutFileDir  := edOutputDirectory.Text;          // myIni.ReadString('OutputFiles', 'OutputFileDir', '');
   stlOutputFiles := TStringList.Create();
   stlOutputFiles.CommaText := myIni.ReadString('OutputFiles', 'EmailAttachFileList', '');
   for i := 0 to stlOutputFiles.Count - 1 do begin

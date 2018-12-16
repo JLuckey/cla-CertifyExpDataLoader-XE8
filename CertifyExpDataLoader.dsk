@@ -17,8 +17,8 @@ File_14=TSourceModule,'F:\XDrive\DCS\CLA\DataWarehouse\DataLoader\QuoteLoader.pa
 
 [Modules]
 Module0=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-Module1=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
-Module2=Main_Page
+Module1=Main_Page
+Module2=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
 Count=3
 EditWindowCount=1
 
@@ -27,11 +27,11 @@ ModuleType=TSourceModule
 FormState=1
 FormOnTop=0
 
-[F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini]
-ModuleType=TSourceModule
-
 [Main_Page]
 ModuleType=TURLModule
+
+[F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini]
+ModuleType=TSourceModule
 
 [EditWindow0]
 ViewCount=3
@@ -77,7 +77,7 @@ CustomEditViewType=TEditView
 Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
 CursorX=2
 CursorY=556
-TopLine=447
+TopLine=534
 LeftCol=1
 Elisions=
 Bookmarks={1,801,18}{2,392,1}{6,1004,1}{8,368,1}{9,736,6}
@@ -299,6 +299,11 @@ LRDockWidth=1521
 Dockable=1
 StayOnTop=0
 SplitPos=90
+
+[PropInspDesignerSelection]
+ArrangeBy=Name
+SelectedItem=Action,
+ExpandedItems=Anchors=0,BorderIcons=0
 
 [frmDesignPreview]
 PercentageSizes=1
