@@ -17,8 +17,8 @@ File_14=TSourceModule,'F:\XDrive\DCS\CLA\DataWarehouse\DataLoader\QuoteLoader.pa
 
 [Modules]
 Module0=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-Module1=Main_Page
-Module2=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
+Module1=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
+Module2=Main_Page
 Count=3
 EditWindowCount=1
 
@@ -27,11 +27,11 @@ ModuleType=TSourceModule
 FormState=1
 FormOnTop=0
 
-[Main_Page]
-ModuleType=TURLModule
-
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini]
 ModuleType=TSourceModule
+
+[Main_Page]
+ModuleType=TURLModule
 
 [EditWindow0]
 ViewCount=3
@@ -75,21 +75,21 @@ WelcomePageURL=http://docwiki.embarcadero.com/RADStudio/Tokyo/en/Main_Page
 [View1]
 CustomEditViewType=TEditView
 Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-CursorX=2
-CursorY=556
-TopLine=534
+CursorX=60
+CursorY=1257
+TopLine=416
 LeftCol=1
 Elisions=
-Bookmarks={1,801,18}{2,392,1}{6,1004,1}{8,368,1}{9,736,6}
+Bookmarks={1,801,1}{2,392,1}{6,1004,1}{8,368,1}{9,736,4}
 EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
 
 [View2]
 CustomEditViewType=TEditView
 Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
-CursorX=34
-CursorY=15
+CursorX=152
+CursorY=20
 TopLine=1
-LeftCol=1
+LeftCol=35
 Elisions=
 Bookmarks=
 EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
@@ -299,11 +299,6 @@ LRDockWidth=1521
 Dockable=1
 StayOnTop=0
 SplitPos=90
-
-[PropInspDesignerSelection]
-ArrangeBy=Name
-SelectedItem=Action,
-ExpandedItems=Anchors=0,BorderIcons=0
 
 [frmDesignPreview]
 PercentageSizes=1
