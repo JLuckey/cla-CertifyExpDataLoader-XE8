@@ -1510,13 +1510,14 @@ begin
 
   end ; { for }
 
-  if FileExists( OutPutFileDir + gloPaycomErrorFile ) then
-    TIDAttachmentFile.Create(myMessage.MessageParts, OutPutFileDir + gloPaycomErrorFile );
+  // Add the Paycom Error file to attachemnt list
+  if FileExists( gloPaycomErrorFile ) then
+    TIDAttachmentFile.Create(myMessage.MessageParts, gloPaycomErrorFile );
 
   mySMTP := TIdSMTP.Create(nil);
   mySMTP.Host     := '192.168.1.73';
-  mySMTP.Username := 'tkvassay@claylacy.com';                // 'lmirakian@claylacy.com' ;
-  mySMTP.Password := '';                                     //'28lalal37';
+  mySMTP.Username := 'tkvassay@claylacy.com';
+  mySMTP.Password := '';
 
   Try
     mySMTP.Connect;
@@ -1542,14 +1543,14 @@ begin
   slErrorRec := TStringList.Create;
 
   // Prep Output File
-  AssignFile(PaycomErrorFile, edOutputDirectory.Text + CalcPaycomErrorFileName(BatchTimeIn));
+  AssignFile(PaycomErrorFile, CalcPaycomErrorFileName(BatchTimeIn));
 
 //  ShowMessage( edOutputDirectory.Text + CalcPaycomErrorFileName(BatchTimeIn) );
 
   Rewrite(PaycomErrorFile);
 
   qryGetImportedRecs.Close;
-//  qryGetImportedRecs.ParamByName('parmBatchTimeIn').AsDateTime := BatchTimeIn ;
+  qryGetImportedRecs.ParamByName('parmBatchTimeIn').AsDateTime := BatchTimeIn ;
   qryGetImportedRecs.ParamByName('parmRecStatusIn').AsString   := 'error' ;
   qryGetImportedRecs.Open ;
 
@@ -1593,7 +1594,8 @@ begin
   if myDay < 10 then
     strDay := '0' + strDay;
 
-  Result := 'PaycomErrors_' + IntToStr(myYear) + strMonth + strDay + '.csv';
+  Result :=   'C:\CertifyExpense\OutputFiles\PaycomErrors_' + IntToStr(myYear) + strMonth + strDay + '.csv';
+               // get this prefix from .ini  ???JL 2 Jan 2019
 
   gloPaycomErrorFile := Result;
 

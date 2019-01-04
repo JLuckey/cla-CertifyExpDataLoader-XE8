@@ -222,7 +222,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Database = 'WarehouseDEV'
     Username = 'sa'
     Server = '192.168.1.122'
-    Connected = True
     LoginPrompt = False
     Left = 20
     Top = 256
