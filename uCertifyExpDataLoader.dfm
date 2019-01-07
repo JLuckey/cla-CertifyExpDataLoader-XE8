@@ -120,6 +120,13 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Height = 13
     Caption = 'Employee Flight Crew:'
   end
+  object Label16: TLabel
+    Left = 14
+    Top = 192
+    Width = 172
+    Height = 13
+    Caption = 'CharterVisa Users Vendor Numbers:'
+  end
   object edPayComInputFile: TEdit
     Left = 257
     Top = 24
@@ -217,11 +224,30 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     TabOrder = 9
     Text = '45'
   end
+  object btnTest: TButton
+    Left = 192
+    Top = 185
+    Width = 75
+    Height = 25
+    Caption = 'btnTest'
+    TabOrder = 10
+    OnClick = btnTestClick
+  end
+  object edCharterVisaUsers: TEdit
+    Left = 14
+    Top = 208
+    Width = 172
+    Height = 21
+    Alignment = taRightJustify
+    TabOrder = 11
+    Text = '12779,14220'
+  end
   object UniConnection1: TUniConnection
     ProviderName = 'SQL Server'
     Database = 'WarehouseDEV'
     Username = 'sa'
     Server = '192.168.1.122'
+    Connected = True
     LoginPrompt = False
     Left = 20
     Top = 256
@@ -889,6 +915,31 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         DataType = ftUnknown
         Name = 'parmDaysBackTerminated'
         Value = nil
+      end>
+  end
+  object qryInsertCharterVisa: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'insert into CertifyExp_Trips_StartBucket'
+      
+        'select distinct L.logsheet, '#39'CharterVisa'#39', T.QUOTENO, L.acregno,' +
+        ' null, :parmCrewMemberVendorNum, null'
+      
+        'from QuoteSys_TripLeg L LEFT OUTER JOIN QuoteSys_Trip T ON L.ACR' +
+        'EGNO = T.ACREGNO AND L.LOGSHEET = T.LOGSHEET'
+      
+        'where ( (departure < CURRENT_TIMESTAMP)        and (arrival > CU' +
+        'RRENT_TIMESTAMP) )   -- in-progress'
+      
+        '   OR ( (departure > (CURRENT_TIMESTAMP - 10)) and (arrival < CU' +
+        'RRENT_TIMESTAMP) )   -- ended within the past 10 days')
+    Left = 131
+    Top = 251
+    ParamData = <
+      item
+        DataType = ftInteger
+        Name = 'parmCrewMemberVendorNum'
+        Value = 77777
       end>
   end
 end

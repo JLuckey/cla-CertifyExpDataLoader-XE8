@@ -139,9 +139,14 @@ type
     Label13: TLabel;
     Label14: TLabel;
     Label15: TLabel;
+    qryInsertCharterVisa: TUniQuery;
+    btnTest: TButton;
+    edCharterVisaUsers: TEdit;
+    Label16: TLabel;
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure btnTestClick(Sender: TObject);
 
   private
     Procedure Main();
@@ -184,6 +189,9 @@ type
     Procedure LoadCertFileFields(Const BatchTime: TDateTime);
 
     Procedure BuildTailTripLogFile;
+
+
+    Procedure LoadCharterVisaTripsIntoStartBucket;
 
 
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
@@ -254,6 +262,12 @@ begin
 
 end;  { Main }
 
+
+procedure TufrmCertifyExpDataLoader.btnTestClick(Sender: TObject);
+begin
+  LoadCharterVisaTripsIntoStartBucket;
+
+end;
 
 
 procedure TufrmCertifyExpDataLoader.FormCreate(Sender: TObject);
@@ -789,8 +803,9 @@ begin
   qryLoadTripData.Execute;
   qryLoadTripData.SQL.Clear;
 
-
   qryGetAirCrewVendorNum.Execute;
+
+  LoadCharterVisaTripsIntoStartBucket;
 
 end;  { LoadTripsIntoStartBucket }
 
@@ -1385,7 +1400,6 @@ begin
 end;  { FindPilotsNotInPaycom }
 
 
-
 procedure TufrmCertifyExpDataLoader.DeleteTrip(const LogSheetIn, CrewMemberIDIn, QuoteNumIn: Integer);
 begin
   qryDeleteTrips.Close;
@@ -1642,6 +1656,31 @@ begin
     Result := '91' ;
 
 end;  { ScrubFARPart }
+
+
+
+procedure TufrmCertifyExpDataLoader.LoadCharterVisaTripsIntoStartBucket;
+var
+  stlCharterVisaUsers : TStringList;
+  i : Integer;
+
+begin
+  stlCharterVisaUsers := TStringList.Create;
+  stlCharterVisaUsers.CommaText := edCharterVisaUsers.Text;
+  try
+    for i := 0 to stlCharterVisaUsers.Count - 1 do Begin
+      qryInsertCharterVisa.Close;
+      qryInsertCharterVisa.ParamByName('parmCrewMemberVendorNum').AsInteger := StrToInt(stlCharterVisaUsers[i]);
+      qryInsertCharterVisa.Execute;
+    End;
+
+  finally
+    stlCharterVisaUsers.Free;
+  end;
+
+end;  { LoadCharterVisaTripsIntoStartBucket }
+
+
 
 
 end.
