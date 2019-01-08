@@ -143,6 +143,7 @@ type
     btnTest: TButton;
     edCharterVisaUsers: TEdit;
     Label16: TLabel;
+    qryGetDOMEmployees: TUniQuery;
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -192,6 +193,9 @@ type
 
 
     Procedure LoadCharterVisaTripsIntoStartBucket;
+    Procedure LoadDOMsIntoStartBucket(Const BatchTimeIn: TDatetime);
+    Procedure InsertCrewTail(Const TailNumIn:String; VendorNumIn: Integer);
+
 
 
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
@@ -265,7 +269,8 @@ end;  { Main }
 
 procedure TufrmCertifyExpDataLoader.btnTestClick(Sender: TObject);
 begin
-  LoadCharterVisaTripsIntoStartBucket;
+  // LoadCharterVisaTripsIntoStartBucket;
+  LoadDOMsIntoStartBucket(StrToDateTime('12/20/2018 12:44:42'));
 
 end;
 
@@ -427,7 +432,7 @@ var
 begin
     strCertifyGroup := qryGetImportedRecs.FieldByName('certfile_group').AsString ;
 
-// Note 12 : removing groups that are not implemented in version 2A (this verision)
+// Note 12 : removing groups that are not implemented in version 2A (this version)
 //    if Pos('|' + strCertifyGroup + '|', '|Corporate|DOM|Maintenance|') > 0 then begin      // Pos is case-sensitive
     if Pos('|' + strCertifyGroup + '|', '|Corporate|') > 0 then begin      // Pos is case-sensitive
 
@@ -1680,6 +1685,61 @@ begin
 
 end;  { LoadCharterVisaTripsIntoStartBucket }
 
+
+
+
+(*
+  must handle the case where multiple aircraft could be listed in the paycom_assigned_ac field, separated by a forward slash '/'
+    for example:  N225MC/N8241W  or  N225MC/N8241W/N550WT
+
+  However most of the time there is only one aircraft listed.
+
+*)
+procedure TufrmCertifyExpDataLoader.LoadDOMsIntoStartBucket(Const BatchTimeIn: TDatetime);
+var
+  strTailNum : String;
+  intVendorNum : Integer;
+  strAssignedAC : String;
+  stlACList : TStringList;
+  i : Integer;
+
+begin
+  stlACList := TStringList.Create;
+  stlACList.Delimiter := '/';
+
+  tblStartBucket.Open;
+
+  qryGetDOMEmployees.Close;
+  qryGetDOMEmployees.ParamByName('parmImportDate').AsString := '2018-12-20 12:44:42.020';
+//  qryGetDOMEmployees.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
+  qryGetDOMEmployees.Open;
+
+  while not qryGetDOMEmployees.eof do begin
+    stlACList.DelimitedText := qryGetDOMEmployees.FieldByName('paycom_assigned_ac').AsString;
+    for i := 0 to stlACList.Count - 1 do begin
+      InsertCrewTail(Trim(stlACList[i]), qryGetDOMEmployees.FieldByName('certify_gp_vendornum').AsInteger);
+    end;  {for}
+    qryGetDOMEmployees.Next;
+  end;  { while }
+
+  qryGetDOMEmployees.Close;
+  tblStartBucket.CLose;
+  stlACList.Free;
+
+end;  { LoadDOMsIntoStartBucket }
+
+
+procedure TufrmCertifyExpDataLoader.InsertCrewTail(const TailNumIn: String; VendorNumIn: Integer);
+begin
+
+//  ShowMessage( TailNumIn + #13 + IntToStr(VendorNumIn) );
+  tblStartBucket.Insert;
+  tblStartBucket.FieldByName('TailNum').AsString              := TailNumIn;
+  tblStartBucket.FieldByName('CrewMemberVendorNum').AsInteger := VendorNumIn;
+  tblStartBucket.FieldByName('CrewMemberID').AsString         := 'DOM_processing';
+  tblStartBucket.Post;
+
+end;
 
 
 

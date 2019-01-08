@@ -815,8 +815,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object tblStartBucket: TUniTable
     TableName = 'CertifyExp_Trips_StartBucket'
     Connection = UniConnection1
-    Left = 558
-    Top = 299
+    Left = 567
+    Top = 285
   end
   object qryUpdateHasCCField: TUniQuery
     Connection = UniConnection1
@@ -940,6 +940,22 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         DataType = ftInteger
         Name = 'parmCrewMemberVendorNum'
         Value = 77777
+      end>
+  end
+  object qryGetDOMEmployees: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select certify_gp_vendornum, paycom_assigned_ac'
+      'from CertifyExp_PayComHistory'
+      'where imported_on = :parmImportDate'
+      '  and certify_department = '#39'DOM'#39)
+    Left = 161
+    Top = 65534
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmImportDate'
+        Value = nil
       end>
   end
 end
