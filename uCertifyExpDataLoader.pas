@@ -148,6 +148,8 @@ type
     Label17: TLabel;
     tblTailLeadPilot: TUniTable;
     btnLoadTailLeadPilotTable: TButton;
+    qryFindLeadPilotEmail: TUniQuery;
+    qryGetTerminationDate: TUniQuery;
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -217,6 +219,10 @@ type
     Function  CalcPaycomErrorFileName(Const BatchTimeIn: TDateTime): String;
 
     Function CalcCertfileDepartmentName(Const GroupNameIn: String): String;
+
+
+    Function FindLeadPilot(Const AssignedACString: String; BatchTimeIn: TDateTime): String;
+    Function EmployeeTerminated(Const EMailIn: String; ImportDateIn: TDateTime): Boolean;
 
   public
     { Public declarations }
@@ -439,8 +445,6 @@ var
 begin
     strCertifyGroup := qryGetImportedRecs.FieldByName('certfile_group').AsString ;
 
-// Note 12 : removing groups that are not implemented in version 2A (this version)
-//    if Pos('|' + strCertifyGroup + '|', '|Corporate|DOM|Maintenance|') > 0 then begin      // Pos is case-sensitive
     if Pos('|' + strCertifyGroup + '|', '|Corporate|') > 0 then begin      // Pos is case-sensitive
 
       // Assign Accountant Email
@@ -468,8 +472,7 @@ begin
       else
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail;
 
-// see Note 12 above
-//    end else if Pos('|' + strCertifyGroup + '|', '|FlightCrew|PoolPilot|PoolFA|IFS|FlightCrewCorp|FlightCrewNonPCal|') > 0 then begin
+
     end else if Pos('|' + strCertifyGroup + '|', '|FlightCrew|PoolPilot|PoolFA|FlightCrewCorp|FlightCrewNonPCal|') > 0 then begin         // make comparisons non-case-sensitive  ???JL
 
 
@@ -492,21 +495,27 @@ begin
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
 
 
-//  See Note 12 above
-//    end else if Pos('|' + strCertifyGroup + '|', '|CharterVisa|') > 0 then begin
-//
-//
-//      //  Assign Accountant Email
-//      qryGetImportedRecs.FieldByName('certfile_accountant').AsString := 'CorporateCC@ClayLacy.com';
-//
-//      //  Assign Approver1 Email
-//      qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := 'CorporateCC@ClayLacy.com';
-//
-//      //  Assign Approver2 Email
-//      qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := 'CorporateCC@ClayLacy.com';
+    end else if Pos('|' + strCertifyGroup + '|', '|DOM|') > 0 then begin
+
+
+      if LowerCase(qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString) = 'leadpilot' then
+        qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString :=
+            FindLeadPilot(qryGetImportedRecs.FieldByName('paycom_assigned_ac').AsString, BatchTimeIn) ;
+
+(*
+      //  Assign Accountant Email
+      qryGetImportedRecs.FieldByName('certfile_accountant').AsString := 'CorporateCC@ClayLacy.com';
+
+      //  Assign Approver1 Email
+      qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := 'CorporateCC@ClayLacy.com';
+
+      //  Assign Approver2 Email
+      qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := 'CorporateCC@ClayLacy.com';
+*)
 
     end else begin       // error, unknown Certify Department
 
+      // refactor this into a proc ???JL and use it in FindLeadPilot() also
       qryGetImportedRecs.FieldByName('record_status').AsString := 'error';
       qryGetImportedRecs.FieldByName('error_text').AsString    := 'unknown certify_department/Group: ' + strCertifyGroup;
 
@@ -770,7 +779,6 @@ var
   FileIn: TextFile;
   sl : TStringList;
   s: string;
-  //i: Integer;
 
 begin
   StatusBar1.Panels[1].Text := 'Current Task:  Importing Tail_LeadPilot Data' ;
@@ -1442,6 +1450,7 @@ begin
 end;  { BuildTailLogFile }
 
 
+
 procedure TufrmCertifyExpDataLoader.FindPilotsNotInPaycom(Const BatchTimeIn : TDateTime);
 begin
 
@@ -1791,7 +1800,6 @@ end;  { LoadDOMsIntoStartBucket }
 
 procedure TufrmCertifyExpDataLoader.InsertCrewTail(const TailNumIn: String; VendorNumIn: Integer);
 begin
-
 //  ShowMessage( TailNumIn + #13 + IntToStr(VendorNumIn) );
   tblStartBucket.Insert;
   tblStartBucket.FieldByName('TailNum').AsString              := TailNumIn;
@@ -1800,6 +1808,63 @@ begin
   tblStartBucket.Post;
 
 end;
+
+
+function TufrmCertifyExpDataLoader.FindLeadPilot(const AssignedACString: String; BatchTimeIn: TDateTime): String;
+var
+  stlACList : TStringList;
+  AssignedAC: String;        // Assigned Aircraft
+  EmployeeEMail : String;
+
+begin
+  Result := 'NoPilotAssigned@fubar.com';
+
+  // step 1: parse AssignedACString, it could contain multiple aircraft seperated by forward slash: 'N855LD/N5504B'
+  stlACList := TStringList.Create;
+  stlACList.Delimiter := '/';
+  stlACList.DelimitedText := AssignedACString ;
+  AssignedAC := stlACList[0];   // we only care about the first tail number in the string
+  stlACList.Free;
+
+  // step 2: Find email for that AC's lead pilot
+  qryFindLeadPilotEMail.Close;
+  qryFindLeadPilotEmail.ParamByName('parmTailNumIn').AsString := AssignedAC;
+  qryFindLeadPilotEmail.Open;
+  EmployeeEMail := qryFindLeadPilotEMail.FieldByName('EMail').AsString;
+
+  if (qryFindLeadPilotEmail.RecordCount > 0) and (EmployeeEMail <> '' ) then begin
+    if Not EmployeeTerminated(EmployeeEMail, BatchTimeIn) then
+      Result := EmployeeEMail
+    else begin
+      qryGetImportedRecs.FieldByName('record_status').AsString := 'error';
+      qryGetImportedRecs.FieldByName('error_text').AsString    := 'Lead Pilot: ' + EmployeeEMail + ' terminated' ;
+    end;
+
+  end else begin
+    qryGetImportedRecs.FieldByName('record_status').AsString := 'error';
+    qryGetImportedRecs.FieldByName('error_text').AsString    := 'Lead Pilot: ' + EmployeeEMail + ' not found in Tail_LeadPilot table' ;
+
+  end;
+
+end;  { FindLeadPilot }
+
+
+function TufrmCertifyExpDataLoader.EmployeeTerminated(const EMailIn: String; ImportDateIn: TDateTime): Boolean;
+begin
+
+  Result := False;
+
+  qryGetTerminationDate.Close;
+  qryGetTerminationDate.ParamByName('parmEMail').AsString      := EMailIn;
+  qryGetTerminationDate.ParamByName('parmImportOn').AsDateTime := ImportDateIn;
+  qryGetTerminationDate.Open;
+
+  if Not qryGetTerminationDate.FieldByName('').IsNull then
+    Result := True;
+
+  qryGetTerminationDate.Close;
+
+end;  { EmployeeTerminated }
 
 
 

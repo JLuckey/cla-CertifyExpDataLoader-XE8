@@ -322,7 +322,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '    AND imported_on = :parmImportDateIn'
       ''
       '')
-    Left = 195
+    Left = 194
     Top = 221
     ParamData = <
       item
@@ -989,5 +989,41 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     Left = 587
     Top = 300
+  end
+  object qryFindLeadPilotEmail: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'SELECT Email'
+      'FROM   CertifyExp_Tail_LeadPilot'
+      'WHERE Tail = :parmTailNumIn')
+    Left = 60
+    Top = 94
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmTailNumIn'
+        Value = nil
+      end>
+  end
+  object qryGetTerminationDate: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select termination_date'
+      'from CertifyExp_PayComHistory'
+      'where imported_on = :parmImportedOn'
+      '  and work_email  = :parmEMail')
+    Left = 49
+    Top = 14
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmImportedOn'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmEMail'
+        Value = nil
+      end>
   end
 end
