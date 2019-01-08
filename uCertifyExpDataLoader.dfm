@@ -127,6 +127,13 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Height = 13
     Caption = 'CharterVisa Users Vendor Numbers:'
   end
+  object Label17: TLabel
+    Left = 257
+    Top = 192
+    Width = 88
+    Height = 13
+    Caption = 'Tail_LeadPilot File:'
+  end
   object edPayComInputFile: TEdit
     Left = 257
     Top = 24
@@ -225,8 +232,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Text = '45'
   end
   object btnTest: TButton
-    Left = 192
-    Top = 185
+    Left = 176
+    Top = 175
     Width = 75
     Height = 25
     Caption = 'btnTest'
@@ -241,6 +248,25 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Alignment = taRightJustify
     TabOrder = 11
     Text = '12779,14220'
+  end
+  object edTailLeadPilotFile: TEdit
+    Left = 257
+    Top = 208
+    Width = 451
+    Height = 21
+    TabOrder = 12
+    Text = 
+      'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\InputFiles\tail_lea' +
+      'dpilot_20190107.csv'
+  end
+  object btnLoadTailLeadPilotTable: TButton
+    Left = 569
+    Top = 235
+    Width = 139
+    Height = 25
+    Caption = 'btnLoadTailLeadPilotTable'
+    TabOrder = 13
+    OnClick = btnLoadTailLeadPilotTableClick
   end
   object UniConnection1: TUniConnection
     ProviderName = 'SQL Server'
@@ -383,8 +409,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '.780'#39'*/'
       'group by work_email'
       'having COUNT(*) > 1')
-    Left = 456
-    Top = 253
+    Left = 447
+    Top = 250
     ParamData = <
       item
         DataType = ftUnknown
@@ -576,8 +602,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     SQL.Strings = (
       'select distinct TripNum, AirportID'
       'from CertifyExp_TripStop_Step1')
-    Left = 291
-    Top = 189
+    Left = 213
+    Top = 44
   end
   object qryGetStartBucketSorted: TUniQuery
     Connection = UniConnection1
@@ -630,8 +656,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       'delete from CertifyExp_PilotsNotInPaycom')
-    Left = 547
-    Top = 233
+    Left = 593
+    Top = 260
   end
   object qryDeleteTrips: TUniQuery
     Connection = UniConnection1
@@ -815,8 +841,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object tblStartBucket: TUniTable
     TableName = 'CertifyExp_Trips_StartBucket'
     Connection = UniConnection1
-    Left = 567
-    Top = 285
+    Left = 508
+    Top = 274
   end
   object qryUpdateHasCCField: TUniQuery
     Connection = UniConnection1
@@ -957,5 +983,11 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Name = 'parmImportDate'
         Value = nil
       end>
+  end
+  object tblTailLeadPilot: TUniTable
+    TableName = 'CertifyExp_Tail_LeadPilot'
+    Connection = UniConnection1
+    Left = 587
+    Top = 300
   end
 end

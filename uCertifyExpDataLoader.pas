@@ -144,10 +144,15 @@ type
     edCharterVisaUsers: TEdit;
     Label16: TLabel;
     qryGetDOMEmployees: TUniQuery;
+    edTailLeadPilotFile: TEdit;
+    Label17: TLabel;
+    tblTailLeadPilot: TUniTable;
+    btnLoadTailLeadPilotTable: TButton;
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnTestClick(Sender: TObject);
+    procedure btnLoadTailLeadPilotTableClick(Sender: TObject);
 
   private
     Procedure Main();
@@ -196,6 +201,8 @@ type
     Procedure LoadDOMsIntoStartBucket(Const BatchTimeIn: TDatetime);
     Procedure InsertCrewTail(Const TailNumIn:String; VendorNumIn: Integer);
 
+    Procedure LoadTailLeadPilot;
+    Procedure InsertTailLeadPilot(Const TailNumIn, EMailIn: String);
 
 
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
@@ -748,6 +755,59 @@ Paycom file columns:
   end;  { Try/Except }
 
 end;  { InsertIntoHistoryTable() }
+
+
+
+procedure TufrmCertifyExpDataLoader.btnLoadTailLeadPilotTableClick(Sender: TObject);
+begin
+  LoadTailLeadPilot;
+end;
+
+
+
+procedure TufrmCertifyExpDataLoader.LoadTailLeadPilot;
+var
+  FileIn: TextFile;
+  sl : TStringList;
+  s: string;
+  //i: Integer;
+
+begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Importing Tail_LeadPilot Data' ;
+  Application.ProcessMessages;
+
+  sl := TStringList.Create;
+  sl.StrictDelimiter := true;      { tell stringList to not use space as delimeter }
+
+  AssignFile(FileIn, edTailLeadPilotFile.Text) ;
+  Reset(FileIn);
+  tblTailLeadPilot.open;
+  tblTailLeadPilot.EmptyTable;
+
+  Readln(FileIn, s);  // skip first/header row
+  while not Eof(FileIn) do begin
+    Readln(FileIn, s);
+    sl.CommaText := s;
+    InsertTailLeadPilot(sl[0], sl[1]);
+  end;
+
+  tblTailLeadPilot.close;
+  CloseFile(FileIn);
+  sl.Free;
+
+end;  { LoadTailLeadPilot }
+
+
+procedure TufrmCertifyExpDataLoader.InsertTailLeadPilot(const TailNumIn, EMailIn: String);
+begin
+//  ShowMessage( TailNumIn + #13 + EMailIn );
+  tblTailLeadPilot.Insert;
+  tblTailLeadPilot.FieldByName('Tail').AsString  := Trim(TailNumIn);
+  tblTailLeadPilot.FieldByName('Email').AsString := Trim(EmailIn);
+  tblTailLeadPilot.Post;
+
+end;  { InsertTailLeadPilot }
+
 
 
 
