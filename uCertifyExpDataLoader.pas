@@ -283,7 +283,9 @@ end;  { Main }
 procedure TufrmCertifyExpDataLoader.btnTestClick(Sender: TObject);
 begin
   // LoadCharterVisaTripsIntoStartBucket;
-  LoadDOMsIntoStartBucket(StrToDateTime('12/20/2018 12:44:42'));
+   LoadDOMsIntoStartBucket(StrToDateTime('12/20/2018 12:44:42'));
+
+  // ShowMessage(UpperCase('|FlightCrew|'));
 
 end;
 
@@ -441,6 +443,7 @@ var
   ApproverEmail : String;
   strAccountantEmail : String;
   strCertifyGroup : String;
+  strAssignedAC : String;
 
 begin
     strCertifyGroup := qryGetImportedRecs.FieldByName('certfile_group').AsString ;
@@ -495,23 +498,30 @@ begin
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
 
 
-    end else if Pos('|' + strCertifyGroup + '|', '|DOM|') > 0 then begin
+    end else if Pos('|' + strCertifyGroup + '|', '|CharterVisa|') > 0 then begin
 
-
-      if LowerCase(qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString) = 'leadpilot' then
-        qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString :=
-            FindLeadPilot(qryGetImportedRecs.FieldByName('paycom_assigned_ac').AsString, BatchTimeIn) ;
-
-(*
-      //  Assign Accountant Email
-      qryGetImportedRecs.FieldByName('certfile_accountant').AsString := 'CorporateCC@ClayLacy.com';
 
       //  Assign Approver1 Email
       qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := 'CorporateCC@ClayLacy.com';
 
       //  Assign Approver2 Email
       qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := 'CorporateCC@ClayLacy.com';
-*)
+
+      // Assign Accountant Email
+      qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := 'CorporateCC@ClayLacy.com';
+
+
+
+    end else if Pos('|' + strCertifyGroup + '|', '|DOM|') > 0 then begin
+
+      strAssignedAC := qryGetImportedRecs.FieldByName('paycom_assigned_ac').AsString;
+
+      if UpperCase(qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString) = 'LEADPILOT' then
+        qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn) ;
+
+      if UpperCase(qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString) = 'LEADPILOT' then
+        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn) ;
+
 
     end else begin       // error, unknown Certify Department
 
@@ -1757,13 +1767,11 @@ end;  { LoadCharterVisaTripsIntoStartBucket }
 
 
 
-(*
-  must handle the case where multiple aircraft could be listed in the paycom_assigned_ac field, separated by a forward slash '/'
+
+(*  must handle the case where multiple aircraft could be listed in the paycom_assigned_ac field, separated by a forward slash '/'
     for example:  N225MC/N8241W  or  N225MC/N8241W/N550WT
 
-  However most of the time there is only one aircraft listed.
-
-*)
+      However most of the time there is only one aircraft listed,  N225MC              *)
 procedure TufrmCertifyExpDataLoader.LoadDOMsIntoStartBucket(Const BatchTimeIn: TDatetime);
 var
   strTailNum : String;
@@ -1859,7 +1867,10 @@ begin
   qryGetTerminationDate.ParamByName('parmImportOn').AsDateTime := ImportDateIn;
   qryGetTerminationDate.Open;
 
-  if Not qryGetTerminationDate.FieldByName('').IsNull then
+  if Not( qryGetTerminationDate.FieldByName('termination_date').IsNull          or
+         (qryGetTerminationDate.FieldByName('termination_date').AsString = '' ) or
+         (qryGetTerminationDate.RecordCount = 0)                                        // How to handle when email is not found   ???JL
+        )                                                                       then
     Result := True;
 
   qryGetTerminationDate.Close;

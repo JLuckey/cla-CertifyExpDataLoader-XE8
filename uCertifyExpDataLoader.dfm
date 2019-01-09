@@ -2,7 +2,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
   Caption = 'ufrmCertifyExpDataLoader-Phase 2A v 0.1'
-  ClientHeight = 391
+  ClientHeight = 446
   ClientWidth = 716
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -146,7 +146,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 372
+    Top = 427
     Width = 716
     Height = 19
     Panels = <
@@ -232,8 +232,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Text = '45'
   end
   object btnTest: TButton
-    Left = 176
-    Top = 175
+    Left = 633
+    Top = 396
     Width = 75
     Height = 25
     Caption = 'btnTest'
@@ -526,8 +526,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  FROM CertifyExp_PayComHistory'
       '  where imported_on =  :parmBatchTimeIn '
       '    and record_status = :parmRecStatusIn')
-    Left = 480
-    Top = 153
+    Left = 471
+    Top = 146
     ParamData = <
       item
         DataType = ftUnknown
@@ -547,8 +547,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from CertifyExp_PayComHistory'
       'where employee_code = :parmEmpCode'
       '  and imported_on   = :parmBatchTimeIn')
-    Left = 603
-    Top = 184
+    Left = 559
+    Top = 162
     ParamData = <
       item
         DataType = ftUnknown
@@ -594,16 +594,16 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       '')
     Connection = UniConnection1
-    Left = 127
-    Top = 198
+    Left = 221
+    Top = 12
   end
   object qryGetTripStopRecs: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
       'select distinct TripNum, AirportID'
       'from CertifyExp_TripStop_Step1')
-    Left = 213
-    Top = 44
+    Left = 282
+    Top = 380
   end
   object qryGetStartBucketSorted: TUniQuery
     Connection = UniConnection1
@@ -666,8 +666,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'where LogSheet     = :parmLogSheetIn'
       '  and CrewMemberID = :parmCrewMemberIDIn'
       '  and QuoteNum     = :parmQuoteNumIn')
-    Left = 642
-    Top = 128
+    Left = 639
+    Top = 145
     ParamData = <
       item
         DataType = ftUnknown
@@ -803,8 +803,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  FROM CertifyExp_PayComHistory'
       '  where imported_on = :parmBatchTimeIn'
       '    and record_status = :parmRecStatusIn')
-    Left = 533
-    Top = 111
+    Left = 360
+    Top = 371
     ParamData = <
       item
         DataType = ftUnknown
@@ -907,8 +907,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '  and ((termination_date is null) or (termination_date > CURRENT' +
         '_TIMESTAMP - 14))')
-    Left = 361
-    Top = 334
+    Left = 357
+    Top = 321
     ParamData = <
       item
         DataType = ftUnknown
@@ -975,8 +975,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from CertifyExp_PayComHistory'
       'where imported_on = :parmImportDate'
       '  and certify_department = '#39'DOM'#39)
-    Left = 161
-    Top = 65534
+    Left = 48
+    Top = 368
     ParamData = <
       item
         DataType = ftUnknown
@@ -996,8 +996,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'SELECT Email'
       'FROM   CertifyExp_Tail_LeadPilot'
       'WHERE Tail = :parmTailNumIn')
-    Left = 60
-    Top = 94
+    Left = 209
+    Top = 368
     ParamData = <
       item
         DataType = ftUnknown
@@ -1012,8 +1012,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from CertifyExp_PayComHistory'
       'where imported_on = :parmImportedOn'
       '  and work_email  = :parmEMail')
-    Left = 49
-    Top = 14
+    Left = 127
+    Top = 380
     ParamData = <
       item
         DataType = ftUnknown
