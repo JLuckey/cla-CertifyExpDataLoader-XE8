@@ -169,8 +169,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Text = 'certify_employees.csv'
   end
   object btnMain: TButton
-    Left = 257
-    Top = 240
+    Left = 396
+    Top = 305
     Width = 99
     Height = 25
     Caption = 'btnMain'
@@ -264,7 +264,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Top = 235
     Width = 139
     Height = 25
-    Caption = 'btnLoadTailLeadPilotTable'
+    Caption = 'Load Tail_LeadPilot Table'
     TabOrder = 13
     OnClick = btnLoadTailLeadPilotTableClick
   end
@@ -996,7 +996,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'SELECT Email'
       'FROM   CertifyExp_Tail_LeadPilot'
       'WHERE Tail = :parmTailNumIn')
-    Left = 209
+    Left = 208
     Top = 368
     ParamData = <
       item
@@ -1012,7 +1012,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from CertifyExp_PayComHistory'
       'where imported_on = :parmImportedOn'
       '  and work_email  = :parmEMail')
-    Left = 127
+    Left = 126
     Top = 380
     ParamData = <
       item
