@@ -255,6 +255,11 @@ begin
 
   LoadTripsIntoStartBucket;
 
+    LoadCharterVisaTripsIntoStartBucket;
+
+    LoadDOMsIntoStartBucket(BatchTime);
+
+
   AddContractorsNotInPaycom(BatchTime);
 
   UpdateCCField(BatchTime);                   // Update Credit Card Field
@@ -449,7 +454,16 @@ var
 begin
     strCertifyGroup := qryGetImportedRecs.FieldByName('certfile_group').AsString ;
 
-    if Pos(UpperCase('|' + strCertifyGroup + '|'), UpperCase('|Corporate|') ) > 0 then begin      // Pos is case-sensitive
+    if Pos(UpperCase('|' + strCertifyGroup + '|'), UpperCase('|Corporate|DOM|') ) > 0 then begin      // Pos() is case-sensitive
+
+      if strCertifyGroup = 'DOM' then begin
+        strAssignedAC := qryGetImportedRecs.FieldByName('paycom_assigned_ac').AsString;
+        if UpperCase(qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString) = 'LEADPILOT' then
+          qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn) ;
+
+        if UpperCase(qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString) = 'LEADPILOT' then
+          qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn) ;
+      end;
 
       // Assign Accountant Email
       if qryGetImportedRecs.FieldByName('has_credit_card').AsString = 'T' then
@@ -459,13 +473,12 @@ begin
 
       qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := strAccountantEmail;
 
+
       // Assign Approver1 Email
       if qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString <> '' then
         qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString
       else begin
         FlagRecordAsError('error-approver1_email_not_provided ' + strCertifyGroup);
-//        qryGetImportedRecs.FieldByName('record_status').AsString := 'error';
-//        qryGetImportedRecs.FieldByName('error_text').AsString    := 'error-approver1_email_not_provided ' + strCertifyGroup;
       end;
 
 
@@ -513,8 +526,9 @@ begin
 
 
 
-    end else if Pos(UpperCase('|' + strCertifyGroup + '|'), UpperCase('|DOM|') ) > 0 then begin
+(*  moved DOM code up to Corporate section
 
+end else if Pos(UpperCase('|' + strCertifyGroup + '|'), UpperCase('|DOM|') ) > 0 then begin
 
 
       strAssignedAC := qryGetImportedRecs.FieldByName('paycom_assigned_ac').AsString;
@@ -525,14 +539,12 @@ begin
       if UpperCase(qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString) = 'LEADPILOT' then
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn) ;
 
-
+*)
     end else begin       // error, unknown Certify Department
 
 
       FlagRecordAsError('unknown certify_department/Group: ' + strCertifyGroup);
 
-//      qryGetImportedRecs.FieldByName('record_status').AsString := 'error';
-//      qryGetImportedRecs.FieldByName('error_text').AsString    := 'unknown certify_department/Group: ' + strCertifyGroup;
 
     end;
 
@@ -893,8 +905,6 @@ begin
 
   qryGetAirCrewVendorNum.Execute;
 
-  LoadCharterVisaTripsIntoStartBucket;
-
 end;  { LoadTripsIntoStartBucket }
 
 
@@ -1093,7 +1103,7 @@ begin
 
   qryBuildValFile.Close;
   qryBuildValFile.SQL.Clear;
-  qryBuildValFile.SQL.Text := 'select distinct LogSheet, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null order by LogSheet';
+  qryBuildValFile.SQL.Text := 'select distinct LogSheet, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null AND LogSheet is not null order by LogSheet';
   qryBuildValFile.Open ;
 
   RowOut := 'LogSheet,CrewMemberVendorNum';
@@ -1199,6 +1209,7 @@ begin
 
   qryBuildValFile.SQL.Add( ' select distinct QuoteNum, LogSheet ' ) ;
   qryBuildValFile.SQL.Add( ' from   CertifyExp_Trips_StartBucket '  ) ;
+  qryBuildValFile.SQL.Add( ' where  LogSheet is not null '  ) ;
   qryBuildValFile.SQL.Add( ' order by LogSheet ' );
   qryBuildValFile.Open ;
 
@@ -1448,6 +1459,7 @@ begin
   qryBuildValFile.SQL.Add( ' select distinct TailNum, LogSheet ' );
   qryBuildValFile.SQL.Add( ' from CertifyExp_Trips_StartBucket '  );
   qryBuildValFile.SQL.Add( ' where TailNum is not null '  );
+  qryBuildValFile.SQL.Add( '   and LogSheet is not null '  );
   qryBuildValFile.SQL.Add( ' order by TailNum ' );
   qryBuildValFile.Open ;
 
@@ -1792,7 +1804,6 @@ begin
   tblStartBucket.Open;
 
   qryGetDOMEmployees.Close;
-//  qryGetDOMEmployees.ParamByName('parmImportDate').AsString := '2018-12-20 12:44:42.020';
   qryGetDOMEmployees.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
   qryGetDOMEmployees.Open;
 

@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'ufrmCertifyExpDataLoader-Phase 2A v 0.1'
+  Caption = 'ufrmCertifyExpDataLoader-Phase 2B v 0.1'
   ClientHeight = 446
   ClientWidth = 716
   Color = clBtnFace
@@ -238,6 +238,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Height = 25
     Caption = 'btnTest'
     TabOrder = 10
+    Visible = False
     OnClick = btnTestClick
   end
   object edCharterVisaUsers: TEdit
@@ -568,7 +569,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from CertifyExp_Trips_StartBucket'
       'where QuoteNum is not null'
       '  and CrewMemberVendorNum is not null'
-      '')
+      '  and FarPart is not null')
     Left = 172
     Top = 268
   end
@@ -608,11 +609,11 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryGetStartBucketSorted: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
-      '  SELECT *     '
+      'SELECT *     '
       '  FROM CertifyExp_Trips_StartBucket'
-      '  ORDER By crewmemberid , TripDepartDate desc'
-      '')
-    Left = 468
+      '  WHERE CrewMemberID not in ('#39'CharterVisa'#39', '#39'DOM_processing'#39')'
+      '  ORDER By crewmemberid , TripDepartDate desc ')
+    Left = 467
     Top = 203
   end
   object qryPilotsNotInPaycom: TUniQuery
@@ -627,8 +628,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       #9'where imported_on = :parmBatchTimeIn'
       #9'  and certify_department = '#39'Flight Crew'#39
       #9'  and certify_gp_vendornum is not null    )')
-    Left = 27
-    Top = 320
+    Left = 40
+    Top = 325
     ParamData = <
       item
         DataType = ftUnknown
@@ -866,6 +867,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     SQL.Strings = (
       'select distinct TailNum, QuoteNum, LogSheet'
       'from CertifyExp_Trips_StartBucket'
+      'where QuoteNum is not Null'
+      '  and LogSheet is not Null'
       'order by LogSheet'
       '')
     Left = 358
