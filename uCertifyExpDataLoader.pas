@@ -225,6 +225,7 @@ type
     Function FindLeadPilot(Const AssignedACString: String; BatchTimeIn: TDateTime): String;
     Function EmployeeTerminated(Const EMailIn: String; ImportDateIn: TDateTime): Boolean;
 
+    Function GroupIsIn(Const GroupIn, GroupSetIn: String): Boolean;
   public
     { Public declarations }
   end;
@@ -272,13 +273,15 @@ begin
 
   BuildEmployeeFile(BatchTime);
 
+(*
   FilterTripsByCount;
 
   BuildValidationFiles;
 
+*)
   CreateEmployeeErrorReport(BatchTime);
 
-  SendStatusEmail;
+//  SendStatusEmail;
 
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
   Application.ProcessMessages;
@@ -289,10 +292,10 @@ end;  { Main }
 procedure TufrmCertifyExpDataLoader.btnTestClick(Sender: TObject);
 begin
   // LoadCharterVisaTripsIntoStartBucket;
-  LoadDOMsIntoStartBucket(StrToDateTime('12/20/2018 12:44:42.020'));
+// LoadDOMsIntoStartBucket(StrToDateTime('12/20/2018 12:44:42.020'));
 
 //  ShowMessage(FindLeadPilot('N32MJ',  StrToDateTime('12/20/2018 12:44:42.020')));
-
+  LoadCertFileFields(StrToDateTime('01/11/2019 11:36:58.410'));
 end;
 
 
@@ -418,6 +421,8 @@ begin
   qryGetImportedRecs.Close;
   qryGetImportedRecs.ParamByName('parmBatchTimeIn').AsDateTime := BatchTime ;
   qryGetImportedRecs.ParamByName('parmRecStatusIn').AsString   := 'OK' ;
+//  qryGetImportedRecs.ParamByName('parmRecStatusIn').AsString   := 'Exported' ;
+
   qryGetImportedRecs.Open ;
   while not qryGetImportedRecs.eof do begin
     qryGetImportedRecs.Edit;
@@ -444,26 +449,153 @@ begin
 end;  { LoadCertFileFields }
 
 
+//procedure TufrmCertifyExpDataLoader.CalculateApproverEmail(Const BatchTimeIn : TDateTime);
+//var
+//  ApproverEmail : String;
+//  strAccountantEmail : String;
+//  strCertifyGroup : String;
+//  strAssignedAC : String;
+//
+//begin
+//    strCertifyGroup := qryGetImportedRecs.FieldByName('certfile_group').AsString ;
+//
+//    if GroupIsIn(strCertifyGroup, '|Corporate|') then
+//
+//      // Assign Accountant Email
+//      if qryGetImportedRecs.FieldByName('has_credit_card').AsString = 'T' then
+//        strAccountantEmail := 'CorporateCC@ClayLacy.com'
+//      else
+//        strAccountantEmail := 'Corporate@ClayLacy.com';
+//
+//      qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := strAccountantEmail;
+//
+//
+//      // Assign Approver1 Email
+//      if qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString <> '' then
+//        qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString
+//      else begin
+//        FlagRecordAsError('error-approver1_email_not_provided ' + strCertifyGroup);
+//      end;
+//
+//
+//      // Assign Approver2 Email
+//      if qryGetImportedRecs.FieldByName('paycom_approver2_email').AsString <> '' then
+//        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := qryGetImportedRecs.FieldByName('paycom_approver2_email').AsString
+//      else
+//        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail;
+//
+//
+//
+//
+//    if Pos(UpperCase('|' + strCertifyGroup + '|'), UpperCase('|Corporate|DOM|') ) > 0 then begin      // Pos() is case-sensitive
+//
+//      if strCertifyGroup = 'DOM' then begin
+//        strAssignedAC := qryGetImportedRecs.FieldByName('paycom_assigned_ac').AsString;
+//        if UpperCase(qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString) = 'LEADPILOT' then
+//          qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn) ;
+//
+//        if UpperCase(qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString) = 'LEADPILOT' then
+//          qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn) ;
+//      end;
+//
+//      // Assign Accountant Email
+//      if qryGetImportedRecs.FieldByName('has_credit_card').AsString = 'T' then
+//        strAccountantEmail := 'CorporateCC@ClayLacy.com'
+//      else
+//        strAccountantEmail := 'Corporate@ClayLacy.com';
+//
+//      qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := strAccountantEmail;
+//
+//
+//      // Assign Approver1 Email
+//      if qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString <> '' then
+//        qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString
+//      else begin
+//        FlagRecordAsError('error-approver1_email_not_provided ' + strCertifyGroup);
+//      end;
+//
+//
+//      // Assign Approver2 Email
+//      if qryGetImportedRecs.FieldByName('paycom_approver2_email').AsString <> '' then
+//        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := qryGetImportedRecs.FieldByName('paycom_approver2_email').AsString
+//      else
+//        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail;
+//
+//
+//
+//    end else if Pos(UpperCase('|' + strCertifyGroup + '|'), UpperCase('|FlightCrew|PoolPilot|PoolFA|FlightCrewCorp|FlightCrewNonPCal|') ) > 0 then begin
+//
+//
+//      // Assign Accountant Email
+//      if qryGetImportedRecs.FieldByName('has_credit_card').AsString = 'T' then
+//        strAccountantEmail := 'FlightCrewCC@ClayLacy.com'
+//      else
+//        strAccountantEmail := 'FlightCrew@ClayLacy.com';
+//
+//      qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := strAccountantEmail;
+//
+//      //  Assign Approver1 Email
+//      qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := strAccountantEmail;
+//
+//      //  Assign Approver2 Email
+//      if qryGetImportedRecs.FieldByName('employee_code').AsString = 'contractor'  then
+//        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail
+//      else
+//        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
+//
+//
+//
+//    end else if Pos(UpperCase('|' + strCertifyGroup + '|'), UpperCase('|CharterVisa|')) > 0 then begin
+//
+//
+//
+//      //  Assign Approver1 Email
+//      qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := 'CorporateCC@ClayLacy.com';
+//
+//      //  Assign Approver2 Email
+//      qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := 'CorporateCC@ClayLacy.com';
+//
+//      // Assign Accountant Email
+//      qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := 'CorporateCC@ClayLacy.com';
+//
+//
+//
+//(*  moved DOM code up to Corporate section
+//
+//end else if Pos(UpperCase('|' + strCertifyGroup + '|'), UpperCase('|DOM|') ) > 0 then begin
+//
+//
+//      strAssignedAC := qryGetImportedRecs.FieldByName('paycom_assigned_ac').AsString;
+//
+//      if UpperCase(qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString) = 'LEADPILOT' then
+//        qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn) ;
+//
+//      if UpperCase(qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString) = 'LEADPILOT' then
+//        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn) ;
+//
+//*)
+//    end else begin       // error, unknown Certify Department
+//
+//
+//      FlagRecordAsError('unknown certify_department/Group: ' + strCertifyGroup);
+//
+//
+//    end;
+//
+//end;  { CalculateApproverEmail }
+
 procedure TufrmCertifyExpDataLoader.CalculateApproverEmail(Const BatchTimeIn : TDateTime);
 var
   ApproverEmail : String;
   strAccountantEmail : String;
   strCertifyGroup : String;
   strAssignedAC : String;
+  PaycomApprover1, PaycomApprover2: String;
 
 begin
     strCertifyGroup := qryGetImportedRecs.FieldByName('certfile_group').AsString ;
 
-    if Pos(UpperCase('|' + strCertifyGroup + '|'), UpperCase('|Corporate|DOM|') ) > 0 then begin      // Pos() is case-sensitive
-
-      if strCertifyGroup = 'DOM' then begin
-        strAssignedAC := qryGetImportedRecs.FieldByName('paycom_assigned_ac').AsString;
-        if UpperCase(qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString) = 'LEADPILOT' then
-          qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn) ;
-
-        if UpperCase(qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString) = 'LEADPILOT' then
-          qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn) ;
-      end;
+    if GroupIsIn(strCertifyGroup, '|Corporate|FBO|Maintenance|Marketing|AircraftManagement|HR|') then begin
 
       // Assign Accountant Email
       if qryGetImportedRecs.FieldByName('has_credit_card').AsString = 'T' then
@@ -489,7 +621,45 @@ begin
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail;
 
 
-    end else if Pos(UpperCase('|' + strCertifyGroup + '|'), UpperCase('|FlightCrew|PoolPilot|PoolFA|FlightCrewCorp|FlightCrewNonPCal|') ) > 0 then begin
+    end else if GroupIsIn(strCertifyGroup, '|DOM|') then begin
+
+
+      strAssignedAC   := qryGetImportedRecs.FieldByName('paycom_assigned_ac').AsString;
+      PaycomApprover1 := qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString;
+      PaycomApprover2 := qryGetImportedRecs.FieldByName('paycom_approver2_email').AsString;
+
+      // Assign Accountant Email
+      if UpperCase(qryGetImportedRecs.FieldByName('has_credit_card').AsString) = 'T' then
+        strAccountantEmail := 'CorporateCC@ClayLacy.com'
+      else
+        strAccountantEmail := 'Corporate@ClayLacy.com';
+
+      qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := strAccountantEmail;
+
+
+      //  Assign Approver1
+      if PaycomApprover1 = '' then
+        FlagRecordAsError('paycom_approver1_email is blank')
+
+      else if UpperCase(PaycomApprover1) = 'LEADPILOT' then
+        qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn)
+
+      else   // Contains a email address
+        qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := PaycomApprover1;
+
+
+      //  Assign Approver2
+      if PaycomApprover2 = '' then
+        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString
+
+      else if UpperCase(PaycomApprover2) = 'LEADPILOT' then
+        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn)
+
+      else  // Contains a email address
+        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := PaycomApprover2 ;
+
+
+    end else if GroupIsIn(strCertifyGroup, '|FlightCrew|PoolPilot|PoolFA|FlightCrewCorp|FlightCrewNonPCal|IFS|') then begin
 
 
       // Assign Accountant Email
@@ -511,8 +681,7 @@ begin
 
 
 
-    end else if Pos(UpperCase('|' + strCertifyGroup + '|'), UpperCase('|CharterVisa|')) > 0 then begin
-
+    end else if GroupIsIn(strCertifyGroup, '|CharterVisa|') then begin
 
 
       //  Assign Approver1 Email
@@ -525,21 +694,6 @@ begin
       qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := 'CorporateCC@ClayLacy.com';
 
 
-
-(*  moved DOM code up to Corporate section
-
-end else if Pos(UpperCase('|' + strCertifyGroup + '|'), UpperCase('|DOM|') ) > 0 then begin
-
-
-      strAssignedAC := qryGetImportedRecs.FieldByName('paycom_assigned_ac').AsString;
-
-      if UpperCase(qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString) = 'LEADPILOT' then
-        qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn) ;
-
-      if UpperCase(qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString) = 'LEADPILOT' then
-        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn) ;
-
-*)
     end else begin       // error, unknown Certify Department
 
 
@@ -549,6 +703,20 @@ end else if Pos(UpperCase('|' + strCertifyGroup + '|'), UpperCase('|DOM|') ) > 0
     end;
 
 end;  { CalculateApproverEmail }
+
+
+
+
+function TufrmCertifyExpDataLoader.GroupIsIn(const GroupIn, GroupSetIn: String): Boolean;
+begin
+
+  Result := False;
+
+  If Pos(UpperCase('|' + GroupIn + '|'), UpperCase(GroupSetIn) ) > 0 Then
+    Result := True;
+
+end;
+
 
 
 procedure TufrmCertifyExpDataLoader.FilterTripsByCount;
@@ -1090,6 +1258,7 @@ begin
   qryGetDBServerTime.Close;
 
 end;
+
 
 
 procedure TufrmCertifyExpDataLoader.BuildCrewLogFile;
@@ -1886,7 +2055,7 @@ begin
       Result := True;
 
   end else
-    FlagRecordAsError('Cannot find ' + EMailIn + ' in PayComHistory table - (check for differences in Tail_LeadPilot table)');
+    FlagRecordAsError('Cannot find ' + EMailIn + ' in PaycomHistory table - (check for differences in Tail_LeadPilot table)');
 
   qryGetTerminationDate.Close;
 

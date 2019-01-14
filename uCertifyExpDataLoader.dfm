@@ -238,7 +238,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Height = 25
     Caption = 'btnTest'
     TabOrder = 10
-    Visible = False
     OnClick = btnTestClick
   end
   object edCharterVisaUsers: TEdit
@@ -526,7 +525,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '      ,[paycom_assigned_ac]'
       '  FROM CertifyExp_PayComHistory'
       '  where imported_on =  :parmBatchTimeIn '
-      '    and record_status = :parmRecStatusIn')
+      '    and record_status = :parmRecStatusIn'
+      ' ')
     Left = 471
     Top = 146
     ParamData = <
