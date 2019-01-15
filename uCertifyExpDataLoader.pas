@@ -150,6 +150,8 @@ type
     btnLoadTailLeadPilotTable: TButton;
     qryFindLeadPilotEmail: TUniQuery;
     qryGetTerminationDate: TUniQuery;
+    qryInsertIFS: TUniQuery;
+    qryGetIFS: TUniQuery;
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -199,14 +201,15 @@ type
     Procedure BuildTailTripLogFile;
 
 
-    Procedure LoadCharterVisaTripsIntoStartBucket;
-    Procedure LoadDOMsIntoStartBucket(Const BatchTimeIn: TDatetime);
+    Procedure Load_CharterVisa_IntoStartBucket;
+    Procedure Load_DOM_IntoStartBucket(Const BatchTimeIn: TDatetime);
     Procedure InsertCrewTail(Const TailNumIn:String; VendorNumIn: Integer);
 
     Procedure LoadTailLeadPilot;
     Procedure InsertTailLeadPilot(Const TailNumIn, EMailIn: String);
     Procedure FlagRecordAsError(Const ErrorMsgIn : String);
 
+    Procedure Load_IFS_IntoStartBucket(BatchTime: TDateTime);
 
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
@@ -256,10 +259,9 @@ begin
 
   LoadTripsIntoStartBucket;
 
-    LoadCharterVisaTripsIntoStartBucket;
+    Load_CharterVisa_IntoStartBucket;
 
-    LoadDOMsIntoStartBucket(BatchTime);
-
+    Load_DOM_IntoStartBucket(BatchTime);
 
   AddContractorsNotInPaycom(BatchTime);
 
@@ -271,17 +273,17 @@ begin
 
   LoadCertFileFields(BatchTime);
 
+    Load_IFS_IntoStartBucket(BatchTime);
+
   BuildEmployeeFile(BatchTime);
 
-(*
   FilterTripsByCount;
 
   BuildValidationFiles;
 
-*)
   CreateEmployeeErrorReport(BatchTime);
 
-//  SendStatusEmail;
+  SendStatusEmail;
 
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
   Application.ProcessMessages;
@@ -295,7 +297,9 @@ begin
 // LoadDOMsIntoStartBucket(StrToDateTime('12/20/2018 12:44:42.020'));
 
 //  ShowMessage(FindLeadPilot('N32MJ',  StrToDateTime('12/20/2018 12:44:42.020')));
-  LoadCertFileFields(StrToDateTime('01/11/2019 11:36:58.410'));
+//  LoadCertFileFields(StrToDateTime('01/11/2019 11:36:58.410'));
+
+  Load_IFS_IntoStartBucket(StrToDateTime('01/13/2019 13:45:30.227'));
 end;
 
 
@@ -449,140 +453,6 @@ begin
 end;  { LoadCertFileFields }
 
 
-//procedure TufrmCertifyExpDataLoader.CalculateApproverEmail(Const BatchTimeIn : TDateTime);
-//var
-//  ApproverEmail : String;
-//  strAccountantEmail : String;
-//  strCertifyGroup : String;
-//  strAssignedAC : String;
-//
-//begin
-//    strCertifyGroup := qryGetImportedRecs.FieldByName('certfile_group').AsString ;
-//
-//    if GroupIsIn(strCertifyGroup, '|Corporate|') then
-//
-//      // Assign Accountant Email
-//      if qryGetImportedRecs.FieldByName('has_credit_card').AsString = 'T' then
-//        strAccountantEmail := 'CorporateCC@ClayLacy.com'
-//      else
-//        strAccountantEmail := 'Corporate@ClayLacy.com';
-//
-//      qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := strAccountantEmail;
-//
-//
-//      // Assign Approver1 Email
-//      if qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString <> '' then
-//        qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString
-//      else begin
-//        FlagRecordAsError('error-approver1_email_not_provided ' + strCertifyGroup);
-//      end;
-//
-//
-//      // Assign Approver2 Email
-//      if qryGetImportedRecs.FieldByName('paycom_approver2_email').AsString <> '' then
-//        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := qryGetImportedRecs.FieldByName('paycom_approver2_email').AsString
-//      else
-//        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail;
-//
-//
-//
-//
-//    if Pos(UpperCase('|' + strCertifyGroup + '|'), UpperCase('|Corporate|DOM|') ) > 0 then begin      // Pos() is case-sensitive
-//
-//      if strCertifyGroup = 'DOM' then begin
-//        strAssignedAC := qryGetImportedRecs.FieldByName('paycom_assigned_ac').AsString;
-//        if UpperCase(qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString) = 'LEADPILOT' then
-//          qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn) ;
-//
-//        if UpperCase(qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString) = 'LEADPILOT' then
-//          qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn) ;
-//      end;
-//
-//      // Assign Accountant Email
-//      if qryGetImportedRecs.FieldByName('has_credit_card').AsString = 'T' then
-//        strAccountantEmail := 'CorporateCC@ClayLacy.com'
-//      else
-//        strAccountantEmail := 'Corporate@ClayLacy.com';
-//
-//      qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := strAccountantEmail;
-//
-//
-//      // Assign Approver1 Email
-//      if qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString <> '' then
-//        qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString
-//      else begin
-//        FlagRecordAsError('error-approver1_email_not_provided ' + strCertifyGroup);
-//      end;
-//
-//
-//      // Assign Approver2 Email
-//      if qryGetImportedRecs.FieldByName('paycom_approver2_email').AsString <> '' then
-//        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := qryGetImportedRecs.FieldByName('paycom_approver2_email').AsString
-//      else
-//        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail;
-//
-//
-//
-//    end else if Pos(UpperCase('|' + strCertifyGroup + '|'), UpperCase('|FlightCrew|PoolPilot|PoolFA|FlightCrewCorp|FlightCrewNonPCal|') ) > 0 then begin
-//
-//
-//      // Assign Accountant Email
-//      if qryGetImportedRecs.FieldByName('has_credit_card').AsString = 'T' then
-//        strAccountantEmail := 'FlightCrewCC@ClayLacy.com'
-//      else
-//        strAccountantEmail := 'FlightCrew@ClayLacy.com';
-//
-//      qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := strAccountantEmail;
-//
-//      //  Assign Approver1 Email
-//      qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := strAccountantEmail;
-//
-//      //  Assign Approver2 Email
-//      if qryGetImportedRecs.FieldByName('employee_code').AsString = 'contractor'  then
-//        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail
-//      else
-//        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
-//
-//
-//
-//    end else if Pos(UpperCase('|' + strCertifyGroup + '|'), UpperCase('|CharterVisa|')) > 0 then begin
-//
-//
-//
-//      //  Assign Approver1 Email
-//      qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := 'CorporateCC@ClayLacy.com';
-//
-//      //  Assign Approver2 Email
-//      qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := 'CorporateCC@ClayLacy.com';
-//
-//      // Assign Accountant Email
-//      qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := 'CorporateCC@ClayLacy.com';
-//
-//
-//
-//(*  moved DOM code up to Corporate section
-//
-//end else if Pos(UpperCase('|' + strCertifyGroup + '|'), UpperCase('|DOM|') ) > 0 then begin
-//
-//
-//      strAssignedAC := qryGetImportedRecs.FieldByName('paycom_assigned_ac').AsString;
-//
-//      if UpperCase(qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString) = 'LEADPILOT' then
-//        qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn) ;
-//
-//      if UpperCase(qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString) = 'LEADPILOT' then
-//        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn) ;
-//
-//*)
-//    end else begin       // error, unknown Certify Department
-//
-//
-//      FlagRecordAsError('unknown certify_department/Group: ' + strCertifyGroup);
-//
-//
-//    end;
-//
-//end;  { CalculateApproverEmail }
 
 procedure TufrmCertifyExpDataLoader.CalculateApproverEmail(Const BatchTimeIn : TDateTime);
 var
@@ -655,7 +525,7 @@ begin
       else if UpperCase(PaycomApprover2) = 'LEADPILOT' then
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn)
 
-      else  // Contains a email address
+      else  // Contains an email address
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := PaycomApprover2 ;
 
 
@@ -1929,7 +1799,7 @@ end;  { ScrubFARPart }
 
 
 
-procedure TufrmCertifyExpDataLoader.LoadCharterVisaTripsIntoStartBucket;
+procedure TufrmCertifyExpDataLoader.Load_CharterVisa_IntoStartBucket;
 var
   stlCharterVisaUsers : TStringList;
   i : Integer;
@@ -1958,7 +1828,7 @@ end;  { LoadCharterVisaTripsIntoStartBucket }
     for example:  N225MC/N8241W  or  N225MC/N8241W/N550WT
 
       However most of the time there is only one aircraft listed,  N225MC              *)
-procedure TufrmCertifyExpDataLoader.LoadDOMsIntoStartBucket(Const BatchTimeIn: TDatetime);
+procedure TufrmCertifyExpDataLoader.Load_DOM_IntoStartBucket(Const BatchTimeIn: TDatetime);
 var
   strTailNum : String;
   intVendorNum : Integer;
@@ -1989,6 +1859,33 @@ begin
   stlACList.Free;
 
 end;  { LoadDOMsIntoStartBucket }
+
+
+
+// **********************************************
+//
+//   1. Get all IFS recs from PaycomHistory for given batch
+//   2. Add all tails for each IFS employee into StartBucket Crew & Tail
+//
+// **********************************************
+procedure TufrmCertifyExpDataLoader.Load_IFS_IntoStartBucket(BatchTime: TDateTime);
+begin
+
+  qryGetIFS.Close;
+  qryGetIFS.ParamByName('parmImportedOn').AsDateTime := BatchTime;
+  qryGetIFS.Open;
+
+  while not qryGetIFS.eof do begin
+    qryInsertIFS.Close;
+    qryInsertIFS.ParamByName('parmCrewMemberVendorNum').AsInteger := qryGetIFS.FieldByName('certify_gp_vendornum').AsInteger;
+    qryInsertIFS.Execute;
+    qryGetIFS.Next;
+  end;
+
+  qryGetIFS.Close;
+
+end;  { LoadIFSIntoStartBucket }
+
 
 
 procedure TufrmCertifyExpDataLoader.InsertCrewTail(const TailNumIn: String; VendorNumIn: Integer);

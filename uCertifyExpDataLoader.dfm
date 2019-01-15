@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'ufrmCertifyExpDataLoader-Phase 2B v 0.1'
+  Caption = 'ufrmCertifyExpDataLoader-Phase 2D v 0.1'
   ClientHeight = 446
   ClientWidth = 716
   Color = clBtnFace
@@ -238,6 +238,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Height = 25
     Caption = 'btnTest'
     TabOrder = 10
+    Visible = False
     OnClick = btnTestClick
   end
   object edCharterVisaUsers: TEdit
@@ -611,7 +612,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     SQL.Strings = (
       'SELECT *     '
       '  FROM CertifyExp_Trips_StartBucket'
-      '  WHERE CrewMemberID not in ('#39'CharterVisa'#39', '#39'DOM_processing'#39')'
+      
+        '  WHERE CrewMemberID not in ('#39'CharterVisa'#39', '#39'DOM_processing'#39', '#39'I' +
+        'FS'#39')'
       '  ORDER By crewmemberid , TripDepartDate desc ')
     Left = 467
     Top = 203
@@ -1026,6 +1029,41 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       item
         DataType = ftUnknown
         Name = 'parmEMail'
+        Value = nil
+      end>
+  end
+  object qryInsertIFS: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'insert into CertifyExp_Trips_StartBucket'
+      
+        'select distinct null, '#39'IFS'#39', null, Tail, null, :parmCrewMemberVe' +
+        'ndorNum, null'
+      'from CertifyExp_Tail_LeadPilot')
+    Left = 470
+    Top = 368
+    ParamData = <
+      item
+        DataType = ftInteger
+        Name = 'parmCrewMemberVendorNum'
+        Value = 77777
+      end>
+  end
+  object qryGetIFS: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select certify_gp_vendornum'
+      'from CertifyExp_PayComHistory'
+      'where Upper(certfile_group) = '#39'IFS'#39
+      
+        '  and imported_on = :parmImportedOn      /* '#39'2019-01-13 13:45:30' +
+        '.227'#39' */')
+    Left = 524
+    Top = 380
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmImportedOn'
         Value = nil
       end>
   end
