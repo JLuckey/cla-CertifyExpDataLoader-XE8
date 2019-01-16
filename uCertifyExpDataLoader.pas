@@ -299,7 +299,9 @@ begin
 //  ShowMessage(FindLeadPilot('N32MJ',  StrToDateTime('12/20/2018 12:44:42.020')));
 //  LoadCertFileFields(StrToDateTime('01/11/2019 11:36:58.410'));
 
-  Load_IFS_IntoStartBucket(StrToDateTime('01/13/2019 13:45:30.227'));
+//  Load_IFS_IntoStartBucket(StrToDateTime('01/13/2019 13:45:30.227'));
+
+  ShowMessage(CalcCertfileDepartmentName('Hybrid'));
 end;
 
 
@@ -1397,12 +1399,15 @@ var
   FoundIndex : Integer;
 
 begin
-  slGroupToDropdown := TStringList.Create;
+  slGroupToDropdown := TStringList.Create;    // converting Group value to default value for Certify department_code
   slGroupToDropdown.StrictDelimiter := true;  // don't use space as delimeter;
   try
     slGroupToDropdown.CommaText := myIni.ReadString('Lookups', 'DepartmentName', '');
     FoundIndex := slGroupToDropdown.IndexOf(GroupNameIn);
-    Result := slGroupToDropdown[FoundIndex + 1];
+    if FoundIndex > -1 then
+      Result := slGroupToDropdown[FoundIndex + 1]
+    else
+      Result := 'Error! - ' + GroupNameIn + ' not found in Department Name Lookup (in .ini)';
 
   finally
     slGroupToDropdown.Free;
