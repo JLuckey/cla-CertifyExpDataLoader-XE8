@@ -211,6 +211,8 @@ type
 
     Procedure Load_IFS_IntoStartBucket(BatchTime: TDateTime);
 
+    Procedure HourlyPushMain;
+
 
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
@@ -589,6 +591,7 @@ begin
     Result := True;
 
 end;
+
 
 
 
@@ -1169,19 +1172,25 @@ procedure TufrmCertifyExpDataLoader.BuildCrewTailFile;
 Var
   RowOut : String;
   WorkFile : TextFile;
+  CurrentBatchDateTime : TDateTime;
 
 begin
 
   StatusBar1.Panels[1].Text := 'Current Task:  Writing crew_tail.csv'  ;
   Application.ProcessMessages;
 
-  AssignFile(WorkFile, edOutputDirectory.Text + 'crew_tail.csv');
-  Rewrite(WorkFile);
+  CurrentBatchDateTime := GetTimeFromDBServer();
+
+   'insert into CertifyExp_Crew_Tail_History select distinct TailNum as TailNumber, CrewMemberVendorNum, ' + DateTimeToString(CurrentBatchDateTime) +
+   ' from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and TailNum is not null and CrewMemberVendorNum > 0' ;
 
   qryBuildValFile.Close;
-  qryBuildValFile.SQL.Text := 'select distinct TailNum as TailNumber, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and TailNum is not null and CrewMemberVendorNum > 0' ;
-  qryBuildValFile.Open ;
+  qryBuildValFile.SQL.Text := 'select TailNum as TailNumber, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and TailNum is not null and CrewMemberVendorNum > 0' ;
+  qryBuildValFile.Open ;                                                              CertifyExp_crew_tail_history       CreatedOn = CurrentBatchDateTime
 
+
+  AssignFile(WorkFile, edOutputDirectory.Text + 'crew_tail.csv');
+  Rewrite(WorkFile);
   RowOut := 'TailNumber,CrewMemberID';
   WriteLn(WorkFile, RowOut) ;
   while not qryBuildValFile.eof do begin
@@ -1974,6 +1983,42 @@ begin
   // ShowMessage(ErrorMsgIn);
 
 end;  { FlagRecordAsError }
+
+
+
+procedure TufrmCertifyExpDataLoader.HourlyPushMain;
+var
+  BatchTime : TDateTime;
+
+begin
+
+  BatchTime := GetTimeFromDBServer;
+
+  LoadTripsIntoStartBucket;
+
+  FilterTripsByCount;
+
+    BuildCrewTailFile;   // (BatchTime, False)
+
+    stlNewCrewTail     := GetNewCrewTail(BatchTime)
+    stlDeletedCrewTail := GetDeletedCrewTail(BatchTime)
+
+    SendNewCrewTailToCertify(stlNewCrewTail)
+    SendDeletedCrewTailToCertify(stlDeletedCrewTail);
+
+
+
+    BuildCrewTripFile;
+
+
+
+    BuildCrewLogFile;
+
+
+
+end;  // HourlyPushMain
+
+
 
 
 end.
