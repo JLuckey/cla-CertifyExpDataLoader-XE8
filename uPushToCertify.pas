@@ -10,12 +10,13 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP;
 
 type
   TfrmPushToCertify = class(TForm)
     Button1: TButton;
     Memo1: TMemo;
+    IdHTTP_Avinode: TIdHTTP;
     procedure Button1Click(Sender: TObject);
 
   private
@@ -251,6 +252,64 @@ begin
 
 end;
 
+
+
+(*
+
+Function TfoAvinodeScheduleUploader.SendDataViaREST : String;
+var
+  stsJSON  : TStringStream;
+  strmResp : TMemoryStream;
+  stlResp  : TStringList;
+
+begin
+  memSOAPResults.Clear;
+  BuildAvinodeRESTHeaders;
+  stsJson := TStringStream.Create( memXMLOut.Text );
+
+  strmResp := TMemoryStream.Create;
+  stlResp := TStringList.create;
+  try
+    try
+      IdHTTP_Avinode.Put( edURL.Text, stsJson, strmResp );
+      memSOAPResults.Lines.Add( IntToStr(IdHTTP_Avinode.ResponseCode) );       // 200
+      memSOAPResults.Lines.Add( IdHTTP_Avinode.ResponseText );                 // HTTP/1.1 200 OK
+
+      strmResp.Position := 0;
+      stlResp.LoadFromStream(strmResp);
+      memSOAPResults.Lines.add(stlResp.Text);
+      memSOAPResults.Lines.Add( '' );
+
+    except
+      on E: EIdHTTPProtocolException do begin
+        memSOAPResults.Lines.Add( 'Error Message: ');
+        memSOAPResults.Lines.Add( IntToStr( IdHTTP_Avinode.ResponseCode) );
+        memSOAPResults.Lines.Add( E.Message );
+        memSOAPResults.Lines.Add( E.ErrorMessage );
+        memSOAPResults.Lines.Add( '' );
+      end;
+
+      on E: Exception do begin
+        memSOAPResults.Lines.Add( 'Unknown Exception from IdHTTP_Avinode: ');
+        memSOAPResults.Lines.Add( IntToStr( IdHTTP_Avinode.ResponseCode) );
+        memSOAPResults.Lines.Add( E.Message + ' - ' + IdHTTP_Avinode.ResponseText );
+        memSOAPResults.Lines.Add( '' );
+      end;
+    end; { except }
+
+    Result := DecodeRESTRetVal(memSOAPResults.Text);
+    LogIt('AVINODE');
+
+  Finally
+    stsJSON.free;
+    strmResp.Free;
+    stlResp.Free;
+  End;
+
+end;  { SendDataViaREST }
+
+
+*)
 
 
 end.
