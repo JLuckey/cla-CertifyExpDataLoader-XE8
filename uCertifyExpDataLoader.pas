@@ -152,6 +152,9 @@ type
     qryGetTerminationDate: TUniQuery;
     qryInsertIFS: TUniQuery;
     qryGetIFS: TUniQuery;
+    qryInsertCrewTailHist: TUniQuery;
+    qryGetCrewTailBatchDates: TUniQuery;
+    qryGetNewCrewTailRecs: TUniQuery;
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -213,6 +216,10 @@ type
 
     Procedure HourlyPushMain;
 
+    Procedure LoadData(Const BatchTimeIn: TDateTime);
+
+    Procedure GetNewCrewTailRecs(stlNewCrewTailRecs: TStringList);
+
 
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
@@ -232,6 +239,8 @@ type
     Function EmployeeTerminated(Const EMailIn: String; ImportDateIn: TDateTime): Boolean;
 
     Function GroupIsIn(Const GroupIn, GroupSetIn: String): Boolean;
+
+
   public
     { Public declarations }
   end;
@@ -251,36 +260,14 @@ implementation
 
 procedure TufrmCertifyExpDataLoader.Main;
 var
-  i: Integer;
   BatchTime : TDateTime;
 
 begin
-
   BatchTime := GetTimeFromDBServer;
 
-  ImportPayrollData(BatchTime);               // rec status: imported or error
-
-  LoadTripsIntoStartBucket;
-
-    Load_CharterVisa_IntoStartBucket;
-
-    Load_DOM_IntoStartBucket(BatchTime);
-
-  AddContractorsNotInPaycom(BatchTime);
-
-  UpdateCCField(BatchTime);                   // Update Credit Card Field
-
-  IdentifyNonCertifyRecs(BatchTime);          // rec status: non-certify;     non-certify records flagged in record_status field
-
-  ValidateRecords(BatchTime);                 // rec status: OK
-
-  LoadCertFileFields(BatchTime);
-
-    Load_IFS_IntoStartBucket(BatchTime);
+  LoadData(BatchTime);
 
   BuildEmployeeFile(BatchTime);
-
-  FilterTripsByCount;
 
   BuildValidationFiles;
 
@@ -294,6 +281,36 @@ begin
 end;  { Main }
 
 
+procedure TufrmCertifyExpDataLoader.LoadData(Const BatchTimeIn: TDateTime);
+begin
+
+  ImportPayrollData(BatchTimeIn);               // rec status: imported or error
+
+  LoadTripsIntoStartBucket;
+
+    Load_CharterVisa_IntoStartBucket;
+
+    Load_DOM_IntoStartBucket(BatchTimeIn);
+
+  AddContractorsNotInPaycom(BatchTimeIn);
+
+  UpdateCCField(BatchTimeIn);                   // Update Credit Card Field
+
+  IdentifyNonCertifyRecs(BatchTimeIn);          // rec status: non-certify;     non-certify records flagged in record_status field
+
+  ValidateRecords(BatchTimeIn);                 // rec status: OK
+
+  LoadCertFileFields(BatchTimeIn);
+
+    Load_IFS_IntoStartBucket(BatchTimeIn);
+
+  FilterTripsByCount;                           // removes recs from StartBucket
+
+
+end;  { LoadData() }
+
+
+
 procedure TufrmCertifyExpDataLoader.btnTestClick(Sender: TObject);
 begin
   // LoadCharterVisaTripsIntoStartBucket;
@@ -304,7 +321,10 @@ begin
 
 //  Load_IFS_IntoStartBucket(StrToDateTime('01/13/2019 13:45:30.227'));
 
-  ShowMessage(CalcCertfileDepartmentName('Hybrid'));
+//  ShowMessage(CalcCertfileDepartmentName('Hybrid'));
+
+  HourlyPushMain;
+
 end;
 
 
@@ -455,7 +475,7 @@ begin
 
   qryGetImportedRecs.Close;
 
-end;  { LoadCertFileFields }
+end; { LoadCertFileFields }
 
 
 
@@ -1125,7 +1145,6 @@ begin
 end;
 
 
-
 function TufrmCertifyExpDataLoader.GetTimeFromDBServer: TDateTime;
 begin
   qryGetDBServerTime.Close;
@@ -1181,14 +1200,19 @@ begin
 
   CurrentBatchDateTime := GetTimeFromDBServer();
 
-   'insert into CertifyExp_Crew_Tail_History select distinct TailNum as TailNumber, CrewMemberVendorNum, ' + DateTimeToString(CurrentBatchDateTime) +
-   ' from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and TailNum is not null and CrewMemberVendorNum > 0' ;
+  qryInsertCrewTailHist.Close;
+  qryInsertCrewTailHist.ParamByName('parmBatchDateTime').AsDateTime := CurrentBatchDateTime ;
+  qryInsertCrewTailHist.Execute;
 
   qryBuildValFile.Close;
-  qryBuildValFile.SQL.Text := 'select TailNum as TailNumber, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and TailNum is not null and CrewMemberVendorNum > 0' ;
-  qryBuildValFile.Open ;                                                              CertifyExp_crew_tail_history       CreatedOn = CurrentBatchDateTime
+  qryBuildValFile.SQL.Clear;
+  qryBuildValFile.SQL.Add('select TailNumber, CrewMemberVendorNum ');
+  qryBuildValFile.SQL.Add('from CertifyExp_CrewTail_History ');
+  qryBuildValFile.SQL.Add('where CrewMemberVendorNum is not null and TailNumber is not null ');
+  qryBuildValFile.SQL.Add('  and CrewMemberVendorNum > 0 and CreatedOn =  ' + QuotedStr(DateTimeToStr(CurrentBatchDateTime))) ;
+  qryBuildValFile.Open ;
 
-
+(*
   AssignFile(WorkFile, edOutputDirectory.Text + 'crew_tail.csv');
   Rewrite(WorkFile);
   RowOut := 'TailNumber,CrewMemberID';
@@ -1203,6 +1227,7 @@ begin
 
   CloseFile(WorkFile);
   qryBuildValFile.Close;
+*)
 
 end;  { BuildCrewTailFile }
 
@@ -1989,35 +2014,65 @@ end;  { FlagRecordAsError }
 procedure TufrmCertifyExpDataLoader.HourlyPushMain;
 var
   BatchTime : TDateTime;
+  stlNewCrewTail : TStringList;
 
 begin
+  stlNewCrewTail := TStringList.Create;
 
-  BatchTime := GetTimeFromDBServer;
+  BatchTime := GetTimeFromDBServer();
+//  LoadData(BatchTime);
 
-  LoadTripsIntoStartBucket;
+//  BuildCrewTailFile;
 
-  FilterTripsByCount;
+  GetNewCrewTailRecs(stlNewCrewTail);
 
-    BuildCrewTailFile;   // (BatchTime, False)
+  ShowMessage(stlNewCrewTail.Text);
 
-    stlNewCrewTail     := GetNewCrewTail(BatchTime)
-    stlDeletedCrewTail := GetDeletedCrewTail(BatchTime)
-
-    SendNewCrewTailToCertify(stlNewCrewTail)
-    SendDeletedCrewTailToCertify(stlDeletedCrewTail);
-
-
-
-    BuildCrewTripFile;
+  //  stlDeletedCrewTail := GetDeletedCrewTail(BatchTime)
+//
+//  SendNewCrewTailToCertify(stlNewCrewTail)
+//  SendDeletedCrewTailToCertify(stlDeletedCrewTail);
 
 
 
-    BuildCrewLogFile;
+//    BuildCrewTripFile;
 
 
+//    BuildCrewLogFile;
+
+  stlNewCrewTail.Free;
 
 end;  // HourlyPushMain
 
+
+procedure TufrmCertifyExpDataLoader.GetNewCrewTailRecs(stlNewCrewTailRecs: TStringList);
+var
+  NewBatchDate, OldBatchDate : TDateTime;
+
+begin
+
+  qryGetCrewTailBatchDates.Close;
+  qryGetCrewTailBatchDates.Open;
+  NewBatchDate := qryGetCrewTailBatchDates.FieldByName('CreatedOn').AsDateTime;
+  qryGetCrewTailBatchDates.Next;
+  OldBatchDate := qryGetCrewTailBatchDates.FieldByName('CreatedOn').AsDateTime;
+  qryGetCrewTailBatchDates.Close;
+
+
+  qryGetNewCrewTailRecs.Close;
+  qryGetNewCrewTailRecs.ParamByName('parmOldDateTime').AsDateTime := OldBatchDate;
+  qryGetNewCrewTailRecs.ParamByName('parmNewDateTime').AsDateTime := NewBatchDate;
+  ShowMessage(qryGetNewCrewTailRecs.Sql.Text);
+  qryGetNewCrewTailRecs.Open;
+
+  while not qryGetNewCrewTailRecs.eof do begin
+    stlNewCrewTailRecs.Add(qryGetNewCrewTailRecs.FieldByName('TailNumber').AsString + '||' + qryGetNewCrewTailRecs.FieldByName('CrewMemberVendorNum').AsString);
+    qryGetNewCrewTailRecs.Next;
+  end;
+
+  qryGetNewCrewTailRecs.Close;
+
+end;
 
 
 
