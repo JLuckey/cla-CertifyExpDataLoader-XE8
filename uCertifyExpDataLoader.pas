@@ -502,9 +502,9 @@ begin
 
       // Assign Accountant Email
       if UpperCase(qryGetImportedRecs.FieldByName('has_credit_card').AsString) = 'T' then
-        strAccountantEmail := 'CorporateCC@ClayLacy.com'
+        strAccountantEmail := 'FlightCrewCC@ClayLacy.com'
       else
-        strAccountantEmail := 'Corporate@ClayLacy.com';
+        strAccountantEmail := 'FlightCrew@ClayLacy.com';
 
       qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := strAccountantEmail;
 
