@@ -542,6 +542,8 @@ begin
 
       qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := strAccountantEmail;
 
+
+(* Note 13: This logic is now handled by Certify "Workflows" within the Certify system      4Feb2019 -JL
       //  Assign Approver1 Email
       qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := strAccountantEmail;
 
@@ -550,20 +552,22 @@ begin
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail
       else
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
-
+*)
 
 
     end else if GroupIsIn(strCertifyGroup, '|CharterVisa|') then begin
 
 
+      // Assign Accountant Email
+      qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := 'FlightCrewCC@ClayLacy.com';
+
+(* See Note 13
       //  Assign Approver1 Email
       qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := 'CorporateCC@ClayLacy.com';
 
       //  Assign Approver2 Email
       qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := 'CorporateCC@ClayLacy.com';
-
-      // Assign Accountant Email
-      qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := 'CorporateCC@ClayLacy.com';
+*)
 
 
     end else begin       // error, unknown Certify Department
