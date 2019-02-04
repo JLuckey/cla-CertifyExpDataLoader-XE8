@@ -2018,7 +2018,6 @@ var
 
 begin
   stlNewCrewTail := TStringList.Create;
-
   BatchTime := GetTimeFromDBServer();
 //  LoadData(BatchTime);
 
