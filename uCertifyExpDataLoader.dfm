@@ -948,9 +948,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '  and termination_date < (CURRENT_TIMESTAMP - :parmDaysBackTermi' +
         'nated)'
-      '  and record_status = '#39'OK'#39)
+      '  and record_status = '#39'imported'#39)
     Left = 507
-    Top = 323
+    Top = 322
     ParamData = <
       item
         DataType = ftUnknown
