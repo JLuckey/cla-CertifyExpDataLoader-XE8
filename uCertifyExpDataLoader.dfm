@@ -319,7 +319,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '      ,[paycom_approver2_email]'
       '      ,[paycom_assigned_ac]'
       '  FROM  CertifyExp_PayComHistory'
-      '  WHERE record_status = :parmRecordStatusIn'
+      
+        '  WHERE (record_status = :parmRecordStatusIn  or  record_status ' +
+        '= :parmRecordStatusIn2)'
       '    AND imported_on = :parmImportDateIn'
       ''
       '')
@@ -329,6 +331,11 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       item
         DataType = ftUnknown
         Name = 'parmRecordStatusIn'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmRecordStatusIn2'
         Value = nil
       end
       item
@@ -526,7 +533,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '      ,[paycom_assigned_ac]'
       '  FROM CertifyExp_PayComHistory'
       '  where imported_on =  :parmBatchTimeIn '
-      '    and record_status = :parmRecStatusIn'
+      
+        '    and (record_status = :parmRecStatusIn OR record_status = :pa' +
+        'rmRecStatusIn2)'
       ' ')
     Left = 471
     Top = 146
@@ -539,6 +548,11 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       item
         DataType = ftUnknown
         Name = 'parmRecStatusIn'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmRecStatusIn2'
         Value = nil
       end>
   end
