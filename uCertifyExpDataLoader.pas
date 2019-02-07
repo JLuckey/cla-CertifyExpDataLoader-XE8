@@ -809,7 +809,7 @@ Paycom file columns:
     tblPaycomHistory.FieldByName('job_code_descrip').AsString        := slInputFileRec[6];
     tblPaycomHistory.FieldByName('supervisor_primary_code').AsString := slInputFileRec[7];
 
-    if slInputFileRec[9] <> '' then begin    //
+    if slInputFileRec[9] <> '' then begin    //  refactoring - move this test into ValidateRecords()?    ???JL
       try
         tblPaycomHistory.FieldByName('certify_gp_vendornum').AsInteger := StrToInt(slInputFileRec[9]);
       except on E1: Exception do begin
