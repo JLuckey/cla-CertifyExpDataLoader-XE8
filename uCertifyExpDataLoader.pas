@@ -172,7 +172,7 @@ type
     Procedure ValidateRecords(Const BatchTimeIn: Tdatetime);
     Procedure UpdateDupeEmailRecs( Const EMailIn: String; BatchTimeIn: TDateTime);
     Procedure BuildCrewLogFile();
-    Procedure BuildCrewTailFile();
+    Procedure LoadCrewTailHistoryTable(Const BatchTimeIn: TDateTime);
     Procedure BuildCrewTripFile();
     Procedure BuildTripLogFile();
     Procedure BuildTailTripFile();
@@ -218,7 +218,9 @@ type
 
     Procedure LoadData(Const BatchTimeIn: TDateTime);
 
-    Procedure GetNewCrewTailRecs(stlNewCrewTailRecs: TStringList);
+    Procedure GetNewCrewTailRecs(Const PreviousBatchDateIn, NewBatchDateIn: TDateTime; Var stlNewCrewTailOut: TStringList);
+
+    Procedure SendNewCrewTailToCertify(stlNewCrewTailIn: TStringList);
 
 
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
@@ -325,6 +327,7 @@ begin
 
   HourlyPushMain;
 
+
 end;
 
 
@@ -418,7 +421,7 @@ begin
 
   TargetDirectory :=  edOutputDirectory.Text;  // 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\';
 
-  BuildCrewTailFile;
+//  LoadCrewTailHistoryTable();       ???JL
   BuildCrewTripFile;
   BuildCrewLogFile;
 
@@ -1187,7 +1190,7 @@ end;  { BuildCrewLogFile }
 
 
 
-procedure TufrmCertifyExpDataLoader.BuildCrewTailFile;
+procedure TufrmCertifyExpDataLoader.LoadCrewTailHistoryTable(Const BatchTimeIn: TDateTime);
 Var
   RowOut : String;
   WorkFile : TextFile;
@@ -1195,15 +1198,15 @@ Var
 
 begin
 
-  StatusBar1.Panels[1].Text := 'Current Task:  Writing crew_tail.csv'  ;
+  StatusBar1.Panels[1].Text := 'Current Task:  Loading data into CrewTail_History table'  ;
   Application.ProcessMessages;
 
-  CurrentBatchDateTime := GetTimeFromDBServer();
-
   qryInsertCrewTailHist.Close;
-  qryInsertCrewTailHist.ParamByName('parmBatchDateTime').AsDateTime := CurrentBatchDateTime ;
+  qryInsertCrewTailHist.ParamByName('parmBatchDateTime').AsDateTime := BatchTimeIn ;
   qryInsertCrewTailHist.Execute;
 
+
+(*
   qryBuildValFile.Close;
   qryBuildValFile.SQL.Clear;
   qryBuildValFile.SQL.Add('select TailNumber, CrewMemberVendorNum ');
@@ -1212,7 +1215,7 @@ begin
   qryBuildValFile.SQL.Add('  and CrewMemberVendorNum > 0 and CreatedOn =  ' + QuotedStr(DateTimeToStr(CurrentBatchDateTime))) ;
   qryBuildValFile.Open ;
 
-(*
+
   AssignFile(WorkFile, edOutputDirectory.Text + 'crew_tail.csv');
   Rewrite(WorkFile);
   RowOut := 'TailNumber,CrewMemberID';
@@ -2017,19 +2020,67 @@ var
   stlNewCrewTail : TStringList;
 
 begin
-  stlNewCrewTail := TStringList.Create;
-  BatchTime := GetTimeFromDBServer();
-//  LoadData(BatchTime);
+//  stlNewCrewTail := TStringList.Create;
+  BatchTime      := GetTimeFromDBServer();
 
-//  BuildCrewTailFile;
+  LoadData(BatchTime);                      // loads data into StartBucket
+  LoadCrewTailHistoryTable(BatchTime);                 // puts latest batch into CrewTailHistory table
 
-  GetNewCrewTailRecs(stlNewCrewTail);
+(*
+  1. Upload 'failed' recs from previous batches, in chronological order
+  2. Upload added recs
+  3. Upload deleted recs
+*)
 
-  ShowMessage(stlNewCrewTail.Text);
+(*
+  GetBatchDatesFromLogs(PreviousBatchDate, NewBatchDate);
+  qryGetNewCrewTailRecs.ParamByName('parmPreviousBatchDate') := PreviousBatchDate ;
+  qryGetNewCrewTailRecs.ParamByName('parmNewBatchDate')      := NewBatchDate);
+  qryGetNewCrewTailRecs.Open;
 
+  myPusher := TfrmPushToCertify.Create;
+  while Not qryGetNewCrewTailRecs.eof do begin
+    myPusher.Action     := qryGetNewCrewTailRecs.FieldByName('RecordStatus').AsString;
+    myPusher.TailNumber := qryGetNewCrewTailRecs.FieldByName('TailNumber').AsString;
+    myPusher.CrewMemberVendorNum := qryGetNewCrewTailRecs.FieldByName('CrewMemberVendorNumber').AsString;
+    myPusher.SendToCertify;
+    qryGetNewCrewTailRecs.Edit;
+    qryGetNewCrewTailRecs.FieldByName('UploadStatus').AsString        := myPusher.UploadStatus;
+    qryGetNewCrewTailRecs.FieldByName('UploadStatusMessage').AsString := myPusher.UploadStatusMessage;
+    qryGetNewCrewTailRecs.FieldByName('UploadedOn').AsDateTime        := BatchTime;
+    qryGetNewCrewTailRecs.FieldByName('UploadBatchID').AsDateTime     := UploadBatchID;
+    qryGetNewCrewTailRecs.Post;
+    qryGetNewCrewTailRecs.next;
+  end;  { While }
+  qryGetNewCrewTailRecs.Close
+
+*)
+
+
+
+(*
+    qryGetCrewTailBatchDates.Close;
+    qryGetCrewTailBatchDates.Open;
+    NewBatchDate := qryGetCrewTailBatchDates.FieldByName('CreatedOn').AsDateTime;
+    qryGetCrewTailBatchDates.Next;
+    PreviousBatchDate := qryGetCrewTailBatchDates.FieldByName('CreatedOn').AsDateTime;
+    qryGetCrewTailBatchDates.Close;
+*)
+
+(*
+  GetNewCrewTailRecs(PreviousBatchDate, NewBatchDate, stlNewCrewTail);
+  GetDeletedCrewTailRecs(PreviousBatchDate, NewBatchDate, stlDeletedCrewTail);
+
+
+  myPusher := TfrmPushToCertify.Create;
+  myPusher.stlRecsToAdd    := stlNewCrewTail;
+  myPusher.stlRecsToDelete := stlDeletedCrewTail;
+  myPusher.SendToCertify;
+  LogSendStatus(previousBatchDate, NewBatchDate, myPusher.ResultCode)
+
+*)
   //  stlDeletedCrewTail := GetDeletedCrewTail(BatchTime)
 //
-//  SendNewCrewTailToCertify(stlNewCrewTail)
 //  SendDeletedCrewTailToCertify(stlDeletedCrewTail);
 
 
@@ -2039,27 +2090,20 @@ begin
 
 //    BuildCrewLogFile;
 
-  stlNewCrewTail.Free;
+//  stlNewCrewTail.Free;
+//  myPusher.Free;
 
 end;  // HourlyPushMain
 
 
-procedure TufrmCertifyExpDataLoader.GetNewCrewTailRecs(stlNewCrewTailRecs: TStringList);
+procedure TufrmCertifyExpDataLoader.GetNewCrewTailRecs(Const PreviousBatchDateIn, NewBatchDateIn: TDateTime; Var stlNewCrewTailOut: TStringList);
 var
-  NewBatchDate, OldBatchDate : TDateTime;
+  NewBatchDate, PreviousBatchDate : TDateTime;
 
 begin
-
-  qryGetCrewTailBatchDates.Close;
-  qryGetCrewTailBatchDates.Open;
-  NewBatchDate := qryGetCrewTailBatchDates.FieldByName('CreatedOn').AsDateTime;
-  qryGetCrewTailBatchDates.Next;
-  OldBatchDate := qryGetCrewTailBatchDates.FieldByName('CreatedOn').AsDateTime;
-  qryGetCrewTailBatchDates.Close;
-
-
+(*
   qryGetNewCrewTailRecs.Close;
-  qryGetNewCrewTailRecs.ParamByName('parmOldDateTime').AsDateTime := OldBatchDate;
+  qryGetNewCrewTailRecs.ParamByName('parmOldDateTime').AsDateTime := PreviousBatchDate;
   qryGetNewCrewTailRecs.ParamByName('parmNewDateTime').AsDateTime := NewBatchDate;
   ShowMessage(qryGetNewCrewTailRecs.Sql.Text);
   qryGetNewCrewTailRecs.Open;
@@ -2070,9 +2114,17 @@ begin
   end;
 
   qryGetNewCrewTailRecs.Close;
-
+*)
 end;
 
+
+
+procedure TufrmCertifyExpDataLoader.SendNewCrewTailToCertify(stlNewCrewTailIn: TStringList);
+begin
+
+
+
+end;
 
 
 end.

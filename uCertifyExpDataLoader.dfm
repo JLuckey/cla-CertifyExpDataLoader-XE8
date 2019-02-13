@@ -273,7 +273,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Database = 'WarehouseDEV'
     Username = 'sa'
     Server = '192.168.1.122'
-    Connected = True
     LoginPrompt = False
     Left = 159
     Top = 65519
@@ -1069,12 +1068,15 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryInsertCrewTailHist: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
-      'insert into CertifyExp_CrewTail_History '
-      'select distinct CrewMemberVendorNum, TailNum, :parmBatchDateTime'
-      'from CertifyExp_Trips_StartBucket '
       
-        'where CrewMemberVendorNum is not null and TailNum is not null an' +
-        'd CrewMemberVendorNum > 0')
+        'insert into CertifyExp_CrewTail_History (CrewMemberVendorNum,Tai' +
+        'lNumber,CreatedOn,RecordStatus)'
+      
+        'select distinct CrewMemberVendorNum, TailNum, :parmBatchDateTime' +
+        ', '#39'imported'#39
+      'from CertifyExp_Trips_StartBucket '
+      'where CrewMemberVendorNum is not null '
+      '  and TailNum is not null and CrewMemberVendorNum > 0')
     Left = 47
     Top = 448
     ParamData = <
