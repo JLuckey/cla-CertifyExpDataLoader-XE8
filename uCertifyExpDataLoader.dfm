@@ -274,8 +274,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Username = 'sa'
     Server = '192.168.1.122'
     LoginPrompt = False
-    Left = 159
-    Top = 65519
+    Left = 128
+    Top = 65531
     EncryptedPassword = '9CFF93FF9EFF8CFF8EFF93FF8CFF8DFF89FFCDFFCFFFCEFFC9FF'
   end
   object qryGetEmployees: TUniQuery
@@ -1118,7 +1118,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '   from CertifyExp_CrewLog '
       '   where CreatedOn = :parmOldDateTime            '
       '*/')
-    Left = 212
+    Left = 213
     Top = 449
     ParamData = <
       item
