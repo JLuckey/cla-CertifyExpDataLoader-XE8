@@ -16,10 +16,15 @@ type
   TfrmPushToCertify = class(TForm)
     Button1: TButton;
     Memo1: TMemo;
-    IdHTTP_Avinode: TIdHTTP;
+    IdHTTP_Certify: TIdHTTP;
     procedure Button1Click(Sender: TObject);
 
   private
+    FTailNumber: String;
+    FUploadStatus: String;
+    FCrewMemberVendorNum: String;
+    FUploadStatusMessage: String;
+    FDataAction: String;
     Procedure LoadDataStruct();
     Procedure SaveRecord(Const stlDataIn : TStringList);
 
@@ -30,16 +35,33 @@ type
 
     Function  DecodeFieldVal(Const JSONFieldString : String): String;
     Function  GetIndexForText(Const stlToSearch: TStringList; Const strToFind: String): Integer;
+    procedure SetCrewMemberVendorNum(const Value: String);
+    procedure SetDataAction(const Value: String);
+    procedure SetTailNumber(const Value: String);
+    procedure SetUploadStatus(const Value: String);
+    procedure SetUploadStatusMessage(const Value: String);
 
+
+    Procedure BuildRESTHeaders;
 
   public
-    Procedure SendNewCrewTailToCertify(Const stlNewCrewTail: TStringList);
+
+
+  published
+    Procedure Push;
+
+    Property DataAction : String read FDataAction write SetDataAction;
+    Property TailNumber : String read FTailNumber write SetTailNumber;
+    Property CrewMemberVendorNum : String read FCrewMemberVendorNum write SetCrewMemberVendorNum;
+
+    Property UploadStatus : String read FUploadStatus write SetUploadStatus;
+    Property UploadStatusMessage : String read FUploadStatusMessage write SetUploadStatusMessage;
+
 
   end;
 
-
   type
-    TCertifyCrewLogRec = record
+    TCertifyCrewTailRec = record        // Certify Data Structure:  exprptglds/1
       ExpRptGLDIndex : Integer;
       ExpRptGLDLabel : String;
       ID             : String;
@@ -49,6 +71,21 @@ type
       Data           : String;
       Active         : String;
   end;
+
+
+  type
+    TCertifyCrewLogRec = record         // Certify Data Structure:  exprptglds/3
+      ExpRptGLDIndex : Integer;
+      ExpRptGLDLabel : String;
+      ID             : String;
+      Name           : String;
+      Code           : String;
+      Description    : String;
+      Data           : String;
+      Active         : String;
+  end;
+
+
 
 
 var
@@ -67,6 +104,7 @@ implementation
 {$R *.dfm}
 
 { TForm5 }
+
 
 
 procedure TfrmPushToCertify.Button1Click(Sender: TObject);
@@ -124,6 +162,116 @@ begin
   stlRecData.Free;
 
 end;  { LoadDataStruct }
+
+
+
+procedure TfrmPushToCertify.Push;
+var
+  stsJSON  : TStringStream;
+  strmResp : TMemoryStream;
+  stlResp  : TStringList;
+
+begin
+
+  BuildRESTHeaders;
+
+
+end;
+
+
+(*
+
+Function TfoAvinodeScheduleUploader.SendDataViaREST : String;
+var
+  stsJSON  : TStringStream;
+  strmResp : TMemoryStream;
+  stlResp  : TStringList;
+
+begin
+  memSOAPResults.Clear;
+  BuildAvinodeRESTHeaders;
+  stsJson := TStringStream.Create( memXMLOut.Text );
+
+  strmResp := TMemoryStream.Create;
+  stlResp := TStringList.create;
+  try
+    try
+      IdHTTP_Avinode.Put( edURL.Text, stsJson, strmResp );
+      memSOAPResults.Lines.Add( IntToStr(IdHTTP_Avinode.ResponseCode) );       // 200
+      memSOAPResults.Lines.Add( IdHTTP_Avinode.ResponseText );                 // HTTP/1.1 200 OK
+
+      strmResp.Position := 0;
+      stlResp.LoadFromStream(strmResp);
+      memSOAPResults.Lines.add(stlResp.Text);
+      memSOAPResults.Lines.Add( '' );
+
+    except
+      on E: EIdHTTPProtocolException do begin
+        memSOAPResults.Lines.Add( 'Error Message: ');
+        memSOAPResults.Lines.Add( IntToStr( IdHTTP_Avinode.ResponseCode) );
+        memSOAPResults.Lines.Add( E.Message );
+        memSOAPResults.Lines.Add( E.ErrorMessage );
+        memSOAPResults.Lines.Add( '' );
+      end;
+
+      on E: Exception do begin
+        memSOAPResults.Lines.Add( 'Unknown Exception from IdHTTP_Avinode: ');
+        memSOAPResults.Lines.Add( IntToStr( IdHTTP_Avinode.ResponseCode) );
+        memSOAPResults.Lines.Add( E.Message + ' - ' + IdHTTP_Avinode.ResponseText );
+        memSOAPResults.Lines.Add( '' );
+      end;
+    end; { except }
+
+    Result := DecodeRESTRetVal(memSOAPResults.Text);
+    LogIt('AVINODE');
+
+  Finally
+    stsJSON.free;
+    strmResp.Free;
+    stlResp.Free;
+  End;
+
+end;  { SendDataViaREST }
+
+
+*)
+
+
+
+procedure TfrmPushToCertify.BuildRESTHeaders;
+var
+  stlHeader1 : TStringList;
+
+begin
+//  idHTTP1 Configuration. Set these params in Object Inspector:
+//    hoInProcessAuth      := true;
+//    hoKeepOrigProtocol   := true;
+//    hoForceEncodeParams  := true;
+//    AllowCookies         := false;
+
+  IdHTTP_Certify.Request.CustomHeaders.Clear;
+
+  IdHTTP_Certify.Request.ContentType := 'application/json' ;
+
+  stlHeader1 := TStringList.Create;
+  try
+    // header 1: X-APIKey
+    stlHeader1.Add('X-Api-Key=' + 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv');
+
+    // header 2: Authorization
+    stlHeader1.Add('X-Api-secret=' + '4843793A-6326-4F92-86EB-D34070C34CDC' );
+
+    IdHTTP_Certify.Request.CustomHeaders.AddStdValues(stlHeader1);
+
+//    memSOAPResults.Lines.Add(stlHeader1.Text);
+
+  finally
+    stlHeader1.free;
+  end;
+
+end;
+
+
 
 
 procedure TfrmPushToCertify.SaveRecord(const stlDataIn: TStringList);
@@ -240,76 +388,39 @@ begin
 //  BuildCrewTripFile;
 //  BuildCrewLogFile;
 
-
 end;
 
 
 
-procedure TfrmPushToCertify.SendNewCrewTailToCertify(Const stlNewCrewTail: TStringList);
+
+
+
+// -------------------  Setters & Getters  ---------------------
+
+procedure TfrmPushToCertify.SetCrewMemberVendorNum(const Value: String);
 begin
-
-
-
+  FCrewMemberVendorNum := Value;
 end;
 
-
-
-(*
-
-Function TfoAvinodeScheduleUploader.SendDataViaREST : String;
-var
-  stsJSON  : TStringStream;
-  strmResp : TMemoryStream;
-  stlResp  : TStringList;
-
+procedure TfrmPushToCertify.SetDataAction(const Value: String);
 begin
-  memSOAPResults.Clear;
-  BuildAvinodeRESTHeaders;
-  stsJson := TStringStream.Create( memXMLOut.Text );
+  FDataAction := Value;
+end;
 
-  strmResp := TMemoryStream.Create;
-  stlResp := TStringList.create;
-  try
-    try
-      IdHTTP_Avinode.Put( edURL.Text, stsJson, strmResp );
-      memSOAPResults.Lines.Add( IntToStr(IdHTTP_Avinode.ResponseCode) );       // 200
-      memSOAPResults.Lines.Add( IdHTTP_Avinode.ResponseText );                 // HTTP/1.1 200 OK
+procedure TfrmPushToCertify.SetTailNumber(const Value: String);
+begin
+  FTailNumber := Value;
+end;
 
-      strmResp.Position := 0;
-      stlResp.LoadFromStream(strmResp);
-      memSOAPResults.Lines.add(stlResp.Text);
-      memSOAPResults.Lines.Add( '' );
+procedure TfrmPushToCertify.SetUploadStatus(const Value: String);
+begin
+  FUploadStatus := Value;
+end;
 
-    except
-      on E: EIdHTTPProtocolException do begin
-        memSOAPResults.Lines.Add( 'Error Message: ');
-        memSOAPResults.Lines.Add( IntToStr( IdHTTP_Avinode.ResponseCode) );
-        memSOAPResults.Lines.Add( E.Message );
-        memSOAPResults.Lines.Add( E.ErrorMessage );
-        memSOAPResults.Lines.Add( '' );
-      end;
-
-      on E: Exception do begin
-        memSOAPResults.Lines.Add( 'Unknown Exception from IdHTTP_Avinode: ');
-        memSOAPResults.Lines.Add( IntToStr( IdHTTP_Avinode.ResponseCode) );
-        memSOAPResults.Lines.Add( E.Message + ' - ' + IdHTTP_Avinode.ResponseText );
-        memSOAPResults.Lines.Add( '' );
-      end;
-    end; { except }
-
-    Result := DecodeRESTRetVal(memSOAPResults.Text);
-    LogIt('AVINODE');
-
-  Finally
-    stsJSON.free;
-    strmResp.Free;
-    stlResp.Free;
-  End;
-
-end;  { SendDataViaREST }
-
-
-*)
+procedure TfrmPushToCertify.SetUploadStatusMessage(const Value: String);
+begin
+  FUploadStatusMessage := Value;
+end;
 
 
 end.

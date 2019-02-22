@@ -32,7 +32,7 @@ object frmPushToCertify: TfrmPushToCertify
     ScrollBars = ssVertical
     TabOrder = 1
   end
-  object IdHTTP_Avinode: TIdHTTP
+  object IdHTTP_Certify: TIdHTTP
     AllowCookies = True
     ProxyParams.BasicAuthentication = False
     ProxyParams.ProxyPort = 0

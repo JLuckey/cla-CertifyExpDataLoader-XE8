@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'ufrmCertifyExpDataLoader-Phase 2D v 0.2'
+  Caption = 'ufrmCertifyExpDataLoader-Phase 2C v 0.1'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -267,6 +267,19 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Caption = 'Load Tail_LeadPilot Table'
     TabOrder = 13
     OnClick = btnLoadTailLeadPilotTableClick
+  end
+  object DBGrid1: TDBGrid
+    Left = 380
+    Top = 440
+    Width = 320
+    Height = 120
+    DataSource = DataSource1
+    TabOrder = 14
+    TitleFont.Charset = DEFAULT_CHARSET
+    TitleFont.Color = clWindowText
+    TitleFont.Height = -11
+    TitleFont.Name = 'Tahoma'
+    TitleFont.Style = []
   end
   object UniConnection1: TUniConnection
     ProviderName = 'SQL Server'
@@ -1091,14 +1104,19 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     SQL.Strings = (
       'select distinct CreatedOn'
       'from CertifyExp_CrewTail_History'
+      'where RecordStatus = '#39'imported'#39'        '
       'order by CreatedOn desc')
     Left = 130
-    Top = 461
+    Top = 469
   end
-  object qryGetNewCrewTailRecs: TUniQuery
+  object qryGetAddedRecs_CrewTail: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
-      'select CrewMemberVendorNum, TailNumber'
+      '/* Get Added Records */'
+      
+        'select ID, CrewMemberVendorNum, TailNumber, CreatedOn, RecordSta' +
+        'tus, UploadedOn, UploadStatus, UploadStatusMessage, UploadBatchI' +
+        'D'
       'from CertifyExp_CrewTail_History'
       'where CreatedOn = :parmNewDateTime                '
       '  and concat(CrewMemberVendorNum, '#39'|'#39', TailNumber) not in '
@@ -1108,16 +1126,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       ''
       ''
-      ''
-      '/*'
-      'select CrewMemberVendorNum, LogSheet'
-      'from CertifyExp_CrewTail_History'
-      'where CreatedOn = :parmNewDateTime               '
-      '  and concat(CrewMemberVendorNum, '#39'|'#39', LogSheet) not in '
-      '  (select concat(CrewMemberVendorNum, '#39'|'#39', LogSheet) '
-      '   from CertifyExp_CrewLog '
-      '   where CreatedOn = :parmOldDateTime            '
-      '*/')
+      '')
     Left = 213
     Top = 449
     ParamData = <
@@ -1129,6 +1138,79 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       item
         DataType = ftUnknown
         Name = 'parmOldDateTime'
+        Value = nil
+      end>
+  end
+  object qryGetFailedRecs_CrewTail: TUniQuery
+    Connection = UniConnection1
+    Left = 228
+    Top = 502
+  end
+  object qryGetDeletedRecs_CrewTail: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      '/* Get Deleted Recs  */'
+      
+        'select ID, CrewMemberVendorNum, TailNumber, CreatedOn, RecordSta' +
+        'tus, UploadedOn, UploadStatus, UploadStatusMessage, UploadBatchI' +
+        'D'
+      'from CertifyExp_CrewTail_History'
+      'where CreatedOn = :parmOldDateTime '
+      '  and RecordStatus = '#39'imported'#39'        '
+      '  and concat(CrewMemberVendorNum, '#39'|'#39', TailNumber) not in '
+      '  (select concat(CrewMemberVendorNum, '#39'|'#39', TailNumber) '
+      '   from CertifyExp_CrewTail_History'
+      '   where CreatedOn = :parmNewDateTime                '
+      '     and RecordStatus = '#39'imported'#39' )       '
+      ''
+      '   '
+      ''
+      ''
+      '')
+    Left = 527
+    Top = 523
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmOldDateTime'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmNewDateTime'
+        Value = nil
+      end>
+  end
+  object DataSource1: TDataSource
+    DataSet = qryGetDeletedRecs_CrewTail
+    Left = 386
+    Top = 524
+  end
+  object qryGetCrewTailRecs: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      
+        'select ID, CrewMemberVendorNum, TailNumber, CreatedOn, RecordSta' +
+        'tus, UploadedOn, UploadStatus, UploadStatusMessage, UploadBatchI' +
+        'D'
+      'from CertifyExp_CrewTail_History'
+      'where RecordStatus = :parmRecStatusIn'
+      '  and CreatedOn    = :parmCreatedOnIn'
+      ''
+      ''
+      ''
+      '')
+    Left = 350
+    Top = 446
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmRecStatusIn'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmCreatedOnIn'
         Value = nil
       end>
   end

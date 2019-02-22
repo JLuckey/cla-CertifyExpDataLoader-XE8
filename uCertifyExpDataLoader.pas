@@ -76,7 +76,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, UniProvider, SQLServerUniProvider, Data.DB, MemDS, DBAccess, Uni, Vcl.ComCtrls,
   IdMessage, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdExplicitTLSClientServerBase, IdMessageClient, IdSMTPBase,
   IdSMTP, IdAttachment, IdAttachmentFile, DAScript, UniScript , IniFiles
-  , uPushToCertify;
+  , uPushToCertify, Vcl.Grids, Vcl.DBGrids;
 
 
 
@@ -157,7 +157,12 @@ type
     qryGetIFS: TUniQuery;
     qryInsertCrewTailHist: TUniQuery;
     qryGetCrewTailBatchDates: TUniQuery;
-    qryGetNewCrewTailRecs: TUniQuery;
+    qryGetAddedRecs_CrewTail: TUniQuery;
+    qryGetFailedRecs_CrewTail: TUniQuery;
+    qryGetDeletedRecs_CrewTail: TUniQuery;
+    DataSource1: TDataSource;
+    DBGrid1: TDBGrid;
+    qryGetCrewTailRecs: TUniQuery;
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -226,11 +231,9 @@ type
     Procedure SendNewCrewTailToCertify(stlNewCrewTailIn: TStringList);
 
 
-
-    Procedure SendToCertify(Const BatchTimeIn : TDateTime);
-    Procedure GetBatchDates(Var PreviousBatchDateIn, NewBatchDateIn : TDateTime);
-    Procedure GetDeleted_CrewTail(Const PreviousBatchDateIn, NewBatchDateIn: TDateTime; UploadStatusIn: String);
-
+    Procedure SendToCertify(Const WorkingQueryIn: TUniQuery; Const BatchTimeIn : TDateTime);
+    Procedure GetBatchDates(Var PreviousBatchDateOut, NewBatchDateOut : TDateTime);
+    Procedure UpdateRecordStatus_CrewTail(Const RecStatusIn: String; Const NewBatchDateIn, PreviousBatchDateIn: TDateTime);
 
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
@@ -2026,7 +2029,11 @@ begin
 end;  { FlagRecordAsError }
 
 
-
+(*
+  1. Upload 'failed' recs from previous batches, in chronological order
+  2. Upload added recs
+  3. Upload deleted recs
+*)
 procedure TufrmCertifyExpDataLoader.HourlyPushMain;
 var
   BatchTime : TDateTime;
@@ -2034,44 +2041,55 @@ var
   PreviousBatchDate, NewBatchDate : TDateTime;
 
 begin
-//  stlNewCrewTail := TStringList.Create;
-  BatchTime      := GetTimeFromDBServer();
+//  BatchTime := GetTimeFromDBServer();
+//  LoadData(BatchTime);                      // loads data into StartBucket
+//  LoadCrewTailHistoryTable(BatchTime);      // puts latest batch into CrewTailHistory table
+  GetBatchDates(PreviousBatchDate, NewBatchDate);   // those params are output
 
-  LoadData(BatchTime);                      // loads data into StartBucket
-  LoadCrewTailHistoryTable(BatchTime);      // puts latest batch into CrewTailHistory table
+//  gloPusher := TfrmPushToCertify.Create(self);
+
 (*
-  1. Upload 'failed' recs from previous batches, in chronological order
-  2. Upload added recs
-  3. Upload deleted recs
+  //  Get Failed Recs from previous Pushes
+  qryGetFailedRecs_CrewTail.Close;
+  qryGetFailedRecs_CrewTail.ParamByName('parmNewBatchDateIn').AsDateTime := NewBatchDate;
+  qryGetFailedRecs_CrewTail.Open;
+  SendToCertify(qryGetFailedRecs_CrewTail, BatchTime);
+  qryGetFailedRecs_CrewTail.Close;
 *)
-  gloPusher := TfrmPushToCertify.Create(self);
 
-  GetBatchDates(PreviousBatchDate, NewBatchDate);
+  //  Get Deleted recs from this new batch
+  UpdateRecordStatus_CrewTail('deleted', NewBatchDate, PreviousBatchDate);
 
-  GetDeleted_CrewTail( PreviousBatchDate, NewBatchDate, 'failed');   //  --> puts those recs into generic result set query
-  SendToCertify(BatchTime);
+  qryGetCrewTailRecs.ParamByName('').AsDateTime := PreviousBatchDate;
+  qryGetCrewTailRecs.ParamByName('').AsString   := 'deleted';
+  qryGetCrewTailRecs.Open;
+  SendToCertify(qryGetCrewTailRecs, BatchTime);
+  qryGetCrewTailRecs.Close;
 
-//  GetAdded_CrewTail(PreviousBatchDate, NewBatchDate, 'failed');
-  SendToCertify(BatchTime);
-
-  GetDeleted_CrewTail( PreviousBatchDate, NewBatchDate, 'imported');   //  --> puts those recs into generic result set query
-  SendToCertify(BatchTime);
-
-//  GetAdded_CrewTail(PreviousBatchDate, NewBatchDate, 'imported');
-  SendToCertify(BatchTime);
-
-
-  gloPusher.free
-(*
-    qryGetCrewTailBatchDates.Close;
-    qryGetCrewTailBatchDates.Open;
-    NewBatchDate := qryGetCrewTailBatchDates.FieldByName('CreatedOn').AsDateTime;
-    qryGetCrewTailBatchDates.Next;
-    PreviousBatchDate := qryGetCrewTailBatchDates.FieldByName('CreatedOn').AsDateTime;
-    qryGetCrewTailBatchDates.Close;
-*)
+//  gloPusher.free
 
 end;  // HourlyPushMain
+
+
+procedure TufrmCertifyExpDataLoader.SendToCertify(Const WorkingQueryIn: TUniQuery; Const BatchTimeIn : TDateTime);
+begin
+
+  while Not WorkingQueryIn.eof do begin
+    gloPusher.DataAction := WorkingQueryIn.FieldByName('RecordStatus').AsString;
+    gloPusher.TailNumber := WorkingQueryIn.FieldByName('TailNumber').AsString;
+    gloPusher.CrewMemberVendorNum := WorkingQueryIn.FieldByName('CrewMemberVendorNumber').AsString;
+    gloPusher.Push;
+
+    WorkingQueryIn.Edit;
+    WorkingQueryIn.FieldByName('UploadStatus').AsString        := gloPusher.UploadStatus;
+    WorkingQueryIn.FieldByName('UploadStatusMessage').AsString := gloPusher.UploadStatusMessage;
+    WorkingQueryIn.FieldByName('UploadedOn').AsDateTime        := BatchTimeIn;
+//    WorkingQueryIn.FieldByName('UploadBatchID').AsDateTime     := UploadBatchID;
+    WorkingQueryIn.Post;
+    WorkingQueryIn.Next
+  end;  { While }
+
+end;
 
 
 procedure TufrmCertifyExpDataLoader.GetNewCrewTailRecs(Const PreviousBatchDateIn, NewBatchDateIn: TDateTime; Var stlNewCrewTailOut: TStringList);
@@ -2096,6 +2114,13 @@ begin
 end;
 
 
+procedure TufrmCertifyExpDataLoader.UpdateRecordStatus_CrewTail(const RecStatusIn: String; const NewBatchDateIn,  PreviousBatchDateIn: TDateTime);
+begin
+
+
+end;
+
+
 
 procedure TufrmCertifyExpDataLoader.SendNewCrewTailToCertify(stlNewCrewTailIn: TStringList);
 begin
@@ -2107,42 +2132,21 @@ end;
 
 
 
-procedure TufrmCertifyExpDataLoader.SendToCertify;
+procedure TufrmCertifyExpDataLoader.GetBatchDates(var PreviousBatchDateOut, NewBatchDateOut: TDateTime);
+
 begin
+  qryGetCrewTailBatchDates.Close;
+  qryGetCrewTailBatchDates.Open;
+  NewBatchDateOut := qryGetCrewTailBatchDates.FieldByName('CreatedOn').AsDateTime;
+  qryGetCrewTailBatchDates.Next;
+  PreviousBatchDateOut := qryGetCrewTailBatchDates.FieldByName('CreatedOn').AsDateTime;
+  qryGetCrewTailBatchDates.Close;
 
-  while Not qryGetNewCrewTailRecs.eof do begin
-//    gloPusher.DataAction     := qryGetNewCrewTailRecs.FieldByName('RecordStatus').AsString;
-//    gloPusher.TailNumber := qryGetNewCrewTailRecs.FieldByName('TailNumber').AsString;
-//    gloPusher.CrewMemberVendorNum := qryGetNewCrewTailRecs.FieldByName('CrewMemberVendorNumber').AsString;
-//    gloPusher.SendToCertify;
-
-    qryGetNewCrewTailRecs.Edit;
-//    qryGetNewCrewTailRecs.FieldByName('UploadStatus').AsString        := gloPusher.UploadStatus;
-//    qryGetNewCrewTailRecs.FieldByName('UploadStatusMessage').AsString := gloPusher.UploadStatusMessage;
-//    qryGetNewCrewTailRecs.FieldByName('UploadedOn').AsDateTime        := BatchTime;
-//    qryGetNewCrewTailRecs.FieldByName('UploadBatchID').AsDateTime     := UploadBatchID;
-    qryGetNewCrewTailRecs.Post;
-    qryGetNewCrewTailRecs.next;
-  end;  { While }
-  qryGetNewCrewTailRecs.Close
+  ShowMessage('NewBatchDate: '      + DateTimeToStr(NewBatchDateOut) + #13 +
+              'PreviousBatchDate: ' + DateTimeToStr(PreviousBatchDateOut) );
 
 end;
 
-
-procedure TufrmCertifyExpDataLoader.GetBatchDates(var PreviousBatchDateIn, NewBatchDateIn: TDateTime);
-begin
-
-end;
-
-
-
-procedure TufrmCertifyExpDataLoader.GetDeleted_CrewTail(const PreviousBatchDateIn, NewBatchDateIn: TDateTime;  UploadStatusIn: String);
-begin
-//  qryGetCrewTailRecs
-
-
-
-end;
 
 
 
