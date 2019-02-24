@@ -10,13 +10,16 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP,
+  IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack, IdSSL, IdSSLOpenSSL
+  , IdSSLOpenSSLHeaders;
 
 type
   TfrmPushToCertify = class(TForm)
     Button1: TButton;
     Memo1: TMemo;
     IdHTTP_Certify: TIdHTTP;
+    IdSSLIOHandlerSocketOpenSSL1: TIdSSLIOHandlerSocketOpenSSL;
     procedure Button1Click(Sender: TObject);
 
   private
@@ -44,6 +47,9 @@ type
 
     Procedure BuildRESTHeaders;
 
+    Function ExtractID(Const strmIn : TMemoryStream) : String;
+
+
   public
 
 
@@ -61,7 +67,7 @@ type
   end;
 
   type
-    TCertifyCrewTailRec = record        // Certify Data Structure:  exprptglds/1
+    TCrewTailRec = record        // Certify Data Structure:  exprptglds/1
       ExpRptGLDIndex : Integer;
       ExpRptGLDLabel : String;
       ID             : String;
@@ -92,11 +98,12 @@ var
   frmPushToCertify: TfrmPushToCertify;
 
   CLR : TCertifyCrewLogRec;
-
   CLR_Recs : Array of TCertifyCrewLogRec;
 
-  gloMainIdx : Integer;
+  CrewTailRec : TCrewTailRec;
+  CrewTailRecs : Array of TCrewTailRec;
 
+  gloMainIdx : Integer;
 
 
 implementation
@@ -109,9 +116,12 @@ implementation
 
 procedure TfrmPushToCertify.Button1Click(Sender: TObject);
 begin
-  SetLength(CLR_Recs, 2000);
-  LoadDataStruct;
-  WriteDataStruct;
+
+  SetLength(CLR_Recs, 200);
+//  LoadDataStruct;
+//  WriteDataStruct;
+
+  Push;
 end;
 
 
@@ -164,112 +174,6 @@ begin
 end;  { LoadDataStruct }
 
 
-
-procedure TfrmPushToCertify.Push;
-var
-  stsJSON  : TStringStream;
-  strmResp : TMemoryStream;
-  stlResp  : TStringList;
-
-begin
-
-  BuildRESTHeaders;
-
-
-end;
-
-
-(*
-
-Function TfoAvinodeScheduleUploader.SendDataViaREST : String;
-var
-  stsJSON  : TStringStream;
-  strmResp : TMemoryStream;
-  stlResp  : TStringList;
-
-begin
-  memSOAPResults.Clear;
-  BuildAvinodeRESTHeaders;
-  stsJson := TStringStream.Create( memXMLOut.Text );
-
-  strmResp := TMemoryStream.Create;
-  stlResp := TStringList.create;
-  try
-    try
-      IdHTTP_Avinode.Put( edURL.Text, stsJson, strmResp );
-      memSOAPResults.Lines.Add( IntToStr(IdHTTP_Avinode.ResponseCode) );       // 200
-      memSOAPResults.Lines.Add( IdHTTP_Avinode.ResponseText );                 // HTTP/1.1 200 OK
-
-      strmResp.Position := 0;
-      stlResp.LoadFromStream(strmResp);
-      memSOAPResults.Lines.add(stlResp.Text);
-      memSOAPResults.Lines.Add( '' );
-
-    except
-      on E: EIdHTTPProtocolException do begin
-        memSOAPResults.Lines.Add( 'Error Message: ');
-        memSOAPResults.Lines.Add( IntToStr( IdHTTP_Avinode.ResponseCode) );
-        memSOAPResults.Lines.Add( E.Message );
-        memSOAPResults.Lines.Add( E.ErrorMessage );
-        memSOAPResults.Lines.Add( '' );
-      end;
-
-      on E: Exception do begin
-        memSOAPResults.Lines.Add( 'Unknown Exception from IdHTTP_Avinode: ');
-        memSOAPResults.Lines.Add( IntToStr( IdHTTP_Avinode.ResponseCode) );
-        memSOAPResults.Lines.Add( E.Message + ' - ' + IdHTTP_Avinode.ResponseText );
-        memSOAPResults.Lines.Add( '' );
-      end;
-    end; { except }
-
-    Result := DecodeRESTRetVal(memSOAPResults.Text);
-    LogIt('AVINODE');
-
-  Finally
-    stsJSON.free;
-    strmResp.Free;
-    stlResp.Free;
-  End;
-
-end;  { SendDataViaREST }
-
-
-*)
-
-
-
-procedure TfrmPushToCertify.BuildRESTHeaders;
-var
-  stlHeader1 : TStringList;
-
-begin
-//  idHTTP1 Configuration. Set these params in Object Inspector:
-//    hoInProcessAuth      := true;
-//    hoKeepOrigProtocol   := true;
-//    hoForceEncodeParams  := true;
-//    AllowCookies         := false;
-
-  IdHTTP_Certify.Request.CustomHeaders.Clear;
-
-  IdHTTP_Certify.Request.ContentType := 'application/json' ;
-
-  stlHeader1 := TStringList.Create;
-  try
-    // header 1: X-APIKey
-    stlHeader1.Add('X-Api-Key=' + 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv');
-
-    // header 2: Authorization
-    stlHeader1.Add('X-Api-secret=' + '4843793A-6326-4F92-86EB-D34070C34CDC' );
-
-    IdHTTP_Certify.Request.CustomHeaders.AddStdValues(stlHeader1);
-
-//    memSOAPResults.Lines.Add(stlHeader1.Text);
-
-  finally
-    stlHeader1.free;
-  end;
-
-end;
 
 
 
@@ -391,6 +295,172 @@ begin
 end;
 
 
+function TfrmPushToCertify.ExtractID(const strmIn: TMemoryStream): String;
+var
+  stlCertifyDataStruct : TStringList;
+
+begin
+  stlCertifyDataStruct := TStringList.Create;
+  stlCertifyDataStruct.LoadFromStream(strmIn);
+
+  ShowMessage(stlCertifyDataStruct.Text);
+
+  Result := 'GUID_string';
+
+  stlCertifyDataStruct.Free;
+
+end;
+
+
+
+procedure TfrmPushToCertify.Push;
+var
+  stsJSON  : TStringStream;
+  strmResp : TMemoryStream;
+  stlResp  : TStringList;
+
+  RecID :  String;
+  GetURL:  String;
+  PostURL: String;
+  PutURL:  String;
+
+begin
+
+  strmResp := TMemoryStream.Create;
+  BuildRESTHeaders;
+
+  try
+    IdHTTP_Certify.Get('https://api.certify.com/v1/exprptglds/1?code=15213|N800KS', strmResp);
+
+  except on E: Exception do
+    // ShowMessage(WhichFailedToLoad());
+  end;
+
+
+//  IdHTTP_Certify.Put( 'some URL', stsJson, strmResp );   // New
+
+//  IdHTTP_Certify.Post('target URL', stsJson, strmResp);  // Update - set a given records Active flag to 0 - this is how record is deleted
+
+//  IdHTTP_Certify.Get();
+
+
+//  To "delete" a record set Active = 0 using POST (update):
+//    1. Find the existing record with GET and concat value in Code field
+//    2. Extract its ID
+//    3. Create Update JSON using ID & Active = 0
+//    4. POST
+//    5. Record result of POST
+
+  IdHTTP_Certify.Get('https://api.certify.com/v1/exprptglds/1?code=15213|N800KS', strmResp);
+  RecID := ExtractID(strmResp);
+
+
+
+//  IdHTTP_Certify.Post(PostURL,
+//                      '{"ID": "' + RecID + '","Active": 0}' ,
+//                      strmResp);
+
+  GetURL  := 'https://api.certify.com/v1/exprptglds/1?code='  ;  // <CrewVendorNum>|<TailNumber>';
+  PostURL := 'https://api.certify.com/v1/exprptglds/1';
+  PutURL  := 'https://api.certify.com/v1/exprptglds/1';
+
+
+  strmResp.Free;
+
+end;  {Push}
+
+
+(*
+
+Function TfoAvinodeScheduleUploader.SendDataViaREST : String;
+var
+  stsJSON  : TStringStream;
+  strmResp : TMemoryStream;
+  stlResp  : TStringList;
+
+begin
+  memSOAPResults.Clear;
+  BuildAvinodeRESTHeaders;
+  stsJson := TStringStream.Create( memXMLOut.Text );
+
+  strmResp := TMemoryStream.Create;
+  stlResp := TStringList.create;
+  try
+    try
+      IdHTTP_Avinode.Put( edURL.Text, stsJson, strmResp );
+      memSOAPResults.Lines.Add( IntToStr(IdHTTP_Avinode.ResponseCode) );       // 200
+      memSOAPResults.Lines.Add( IdHTTP_Avinode.ResponseText );                 // HTTP/1.1 200 OK
+
+      strmResp.Position := 0;
+      stlResp.LoadFromStream(strmResp);
+      memSOAPResults.Lines.add(stlResp.Text);
+      memSOAPResults.Lines.Add( '' );
+
+    except
+      on E: EIdHTTPProtocolException do begin
+        memSOAPResults.Lines.Add( 'Error Message: ');
+        memSOAPResults.Lines.Add( IntToStr( IdHTTP_Avinode.ResponseCode) );
+        memSOAPResults.Lines.Add( E.Message );
+        memSOAPResults.Lines.Add( E.ErrorMessage );
+        memSOAPResults.Lines.Add( '' );
+      end;
+
+      on E: Exception do begin
+        memSOAPResults.Lines.Add( 'Unknown Exception from IdHTTP_Avinode: ');
+        memSOAPResults.Lines.Add( IntToStr( IdHTTP_Avinode.ResponseCode) );
+        memSOAPResults.Lines.Add( E.Message + ' - ' + IdHTTP_Avinode.ResponseText );
+        memSOAPResults.Lines.Add( '' );
+      end;
+    end; { except }
+
+    Result := DecodeRESTRetVal(memSOAPResults.Text);
+    LogIt('AVINODE');
+
+  Finally
+    stsJSON.free;
+    strmResp.Free;
+    stlResp.Free;
+  End;
+
+end;  { SendDataViaREST }
+
+
+*)
+
+
+
+procedure TfrmPushToCertify.BuildRESTHeaders;
+var
+  stlHeader1 : TStringList;
+
+begin
+//  idHTTP1 Configuration. Set these params in Object Inspector:
+//    hoInProcessAuth      := true;
+//    hoKeepOrigProtocol   := true;
+//    hoForceEncodeParams  := true;
+//    AllowCookies         := false;
+
+  IdHTTP_Certify.Request.CustomHeaders.Clear;
+
+  IdHTTP_Certify.Request.ContentType := 'application/json' ;
+
+  stlHeader1 := TStringList.Create;
+  try
+    // header 1: X-APIKey
+    stlHeader1.Add('X-Api-Key=' + 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv');
+
+    // header 2: Authorization
+    stlHeader1.Add('X-Api-secret=' + '4843793A-6326-4F92-86EB-D34070C34CDC' );
+
+    IdHTTP_Certify.Request.CustomHeaders.AddStdValues(stlHeader1);
+
+//    memSOAPResults.Lines.Add(stlHeader1.Text);
+
+  finally
+    stlHeader1.free;
+  end;
+
+end;
 
 
 

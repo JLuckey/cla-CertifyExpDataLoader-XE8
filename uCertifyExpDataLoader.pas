@@ -163,6 +163,7 @@ type
     DataSource1: TDataSource;
     DBGrid1: TDBGrid;
     qryGetCrewTailRecs: TUniQuery;
+    qryUpdateRecStatus_CrewTail: TUniQuery;
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -2056,12 +2057,12 @@ begin
   SendToCertify(qryGetFailedRecs_CrewTail, BatchTime);
   qryGetFailedRecs_CrewTail.Close;
 *)
+//  UpdateRecordStatus_CrewTail('added', PreviousBatchDate, NewBatchDate);
 
   //  Get Deleted recs from this new batch
   UpdateRecordStatus_CrewTail('deleted', NewBatchDate, PreviousBatchDate);
-
-  qryGetCrewTailRecs.ParamByName('').AsDateTime := PreviousBatchDate;
-  qryGetCrewTailRecs.ParamByName('').AsString   := 'deleted';
+  qryGetCrewTailRecs.ParamByName('parmCreatedOnIn').AsDateTime := PreviousBatchDate;
+  qryGetCrewTailRecs.ParamByName('parmRecStatusIn').AsString   := 'deleted';
   qryGetCrewTailRecs.Open;
   SendToCertify(qryGetCrewTailRecs, BatchTime);
   qryGetCrewTailRecs.Close;
@@ -2114,9 +2115,13 @@ begin
 end;
 
 
-procedure TufrmCertifyExpDataLoader.UpdateRecordStatus_CrewTail(const RecStatusIn: String; const NewBatchDateIn,  PreviousBatchDateIn: TDateTime);
+procedure TufrmCertifyExpDataLoader.UpdateRecordStatus_CrewTail(const RecStatusIn: String; const NewBatchDateIn, PreviousBatchDateIn: TDateTime);
 begin
-
+  qryUpdateRecStatus_CrewTail.close;
+  qryUpdateRecStatus_CrewTail.ParamByName('parmRecStatus').AsString   := RecStatusIn;
+  qryUpdateRecStatus_CrewTail.ParamByName('parmOlderDate').AsDateTime := PreviousBatchDateIn;
+  qryUpdateRecStatus_CrewTail.ParamByName('parmNewerDate').AsDateTime := NewBatchDateIn;
+  qryUpdateRecStatus_CrewTail.Execute;
 
 end;
 

@@ -11,6 +11,7 @@ uses
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TufrmCertifyExpDataLoader, ufrmCertifyExpDataLoader);
+//  Application.CreateForm(TufrmCertifyExpDataLoader, ufrmCertifyExpDataLoader);
+  Application.CreateForm(TfrmPushToCertify, frmPushToCertify);
   Application.Run;
 end.

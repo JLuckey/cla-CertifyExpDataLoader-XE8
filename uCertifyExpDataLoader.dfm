@@ -1127,8 +1127,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       ''
       '')
-    Left = 213
-    Top = 449
+    Left = 101
+    Top = 543
     ParamData = <
       item
         DataType = ftUnknown
@@ -1143,8 +1143,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object qryGetFailedRecs_CrewTail: TUniQuery
     Connection = UniConnection1
-    Left = 228
-    Top = 502
+    Left = 62
+    Top = 545
   end
   object qryGetDeletedRecs_CrewTail: TUniQuery
     Connection = UniConnection1
@@ -1200,8 +1200,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       ''
       '')
-    Left = 350
-    Top = 446
+    Left = 209
+    Top = 441
     ParamData = <
       item
         DataType = ftUnknown
@@ -1211,6 +1211,40 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       item
         DataType = ftUnknown
         Name = 'parmCreatedOnIn'
+        Value = nil
+      end>
+  end
+  object qryUpdateRecStatus_CrewTail: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      '/* Flag Deleted Recs */'
+      'update CertifyExp_CrewTail_History'
+      
+        'set RecordStatus = :parmRecStatus                  /* '#39'deleted'#39',' +
+        ' '#39'added'#39' */'
+      'where CreatedOn = :parmOlderDate '
+      '  and RecordStatus = '#39'imported'#39'        '
+      '  and concat(CrewMemberVendorNum, '#39'|'#39', TailNumber) not in '
+      '  (select concat(CrewMemberVendorNum, '#39'|'#39', TailNumber) '
+      '   from CertifyExp_CrewTail_History'
+      '   where CreatedOn = :parmNewerDate       '
+      '     and RecordStatus = '#39'imported'#39' )   ')
+    Left = 277
+    Top = 458
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmRecStatus'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmOlderDate'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmNewerDate'
         Value = nil
       end>
   end
