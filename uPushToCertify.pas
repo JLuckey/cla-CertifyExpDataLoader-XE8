@@ -1,4 +1,10 @@
 unit uPushToCertify;       // JSON to Crew Log Record
+(*  Dev Notes
+
+  Verb      Base URL   Resource( HTTP params)     Body
+
+*)
+
 
 (*  to-dos:
 
@@ -10,16 +16,24 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP,
-  IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack, IdSSL, IdSSLOpenSSL
-  , IdSSLOpenSSLHeaders;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls
+
+  , IPPeerClient
+  , REST.Client
+  , Data.Bind.Components
+  , Data.Bind.ObjectScope
+  , System.JSON
+  , REST.Types
+
+  ;
 
 type
   TfrmPushToCertify = class(TForm)
     Button1: TButton;
     Memo1: TMemo;
-    IdHTTP_Certify: TIdHTTP;
-    IdSSLIOHandlerSocketOpenSSL1: TIdSSLIOHandlerSocketOpenSSL;
+    RESTClient: TRESTClient;
+    RESTRequest: TRESTRequest;
+    RESTResponse: TRESTResponse;
     procedure Button1Click(Sender: TObject);
 
   private
@@ -44,13 +58,11 @@ type
     procedure SetUploadStatus(const Value: String);
     procedure SetUploadStatusMessage(const Value: String);
 
-
-    Procedure BuildRESTHeaders;
-
     Function ExtractID(Const strmIn : TMemoryStream) : String;
-
+    Function GetCertifyRecKey(Const CodeFieldValIn: String): String;
 
   public
+
 
 
   published
@@ -117,11 +129,8 @@ implementation
 procedure TfrmPushToCertify.Button1Click(Sender: TObject);
 begin
 
-  SetLength(CLR_Recs, 200);
-//  LoadDataStruct;
-//  WriteDataStruct;
-
   Push;
+
 end;
 
 
@@ -172,9 +181,6 @@ begin
   stlRecData.Free;
 
 end;  { LoadDataStruct }
-
-
-
 
 
 
@@ -268,6 +274,7 @@ begin
 end;
 
 
+
 function TfrmPushToCertify.GetIndexForText(const stlToSearch: TStringList; const strToFind: String): Integer;
 var
   i : Integer;
@@ -324,24 +331,47 @@ var
   PostURL: String;
   PutURL:  String;
 
+  KeyID : String;
+
 begin
+(*
+
+  Verb, URL, Dimension, Resource, Data/body
+  Convert file name to Certify Dimension: crew_tail = 1; crew_trip = 2; crew_log = 3;
+
+  Delete (sets Active field to 0) :
+    KeyID := GetCertifyKey(CrewVendNum|TailNum)
+    Verb:       POST
+    URL & Dim:  https://api.certify.com/v1/exprptglds/1
+    Resource:   null
+    Body:       { "ID": "00390410-43f2-4004-8d25-1061a752cd50", "Active": 0 }
+
+  Add:
+
+
+  use Format() function
+
+*)
+  RESTClient.Params.AddItem('X-Api-Key', 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv', pkHTTPHEADER);
+  RESTClient.Params.AddItem('X-Api-secret', '4843793A-6326-4F92-86EB-D34070C34CDC', pkHTTPHEADER);
+  RESTClient.ContentType := 'application/json';
+
+  KeyID := GetCertifyRecKey('foobar');
+
+  RESTClient.BaseURL   := 'https://api.certify.com/v1/exprptglds/1';
+  RESTRequest.Resource := '?code=15213|N800KS';
+  RESTRequest.Method   := rmGET;
+
+  RESTRequest.Execute;
+  ShowMessage('1' + #13 + RESTResponse.JSONValue.ToJSON);
+
+
+
+  ShowMessage('2' + #13 + RESTResponse.JSONText);
+
+
 
   strmResp := TMemoryStream.Create;
-  BuildRESTHeaders;
-
-  try
-    IdHTTP_Certify.Get('https://api.certify.com/v1/exprptglds/1?code=15213|N800KS', strmResp);
-
-  except on E: Exception do
-    // ShowMessage(WhichFailedToLoad());
-  end;
-
-
-//  IdHTTP_Certify.Put( 'some URL', stsJson, strmResp );   // New
-
-//  IdHTTP_Certify.Post('target URL', stsJson, strmResp);  // Update - set a given records Active flag to 0 - this is how record is deleted
-
-//  IdHTTP_Certify.Get();
 
 
 //  To "delete" a record set Active = 0 using POST (update):
@@ -350,10 +380,6 @@ begin
 //    3. Create Update JSON using ID & Active = 0
 //    4. POST
 //    5. Record result of POST
-
-  IdHTTP_Certify.Get('https://api.certify.com/v1/exprptglds/1?code=15213|N800KS', strmResp);
-  RecID := ExtractID(strmResp);
-
 
 
 //  IdHTTP_Certify.Post(PostURL,
@@ -429,38 +455,20 @@ end;  { SendDataViaREST }
 
 
 
-procedure TfrmPushToCertify.BuildRESTHeaders;
-var
-  stlHeader1 : TStringList;
 
+
+function TfrmPushToCertify.GetCertifyRecKey(const CodeFieldValIn: String): String;
 begin
-//  idHTTP1 Configuration. Set these params in Object Inspector:
-//    hoInProcessAuth      := true;
-//    hoKeepOrigProtocol   := true;
-//    hoForceEncodeParams  := true;
-//    AllowCookies         := false;
+//  get https://api.certify.com/v1/exprptglds/1 ?code=13748|N113CS
 
-  IdHTTP_Certify.Request.CustomHeaders.Clear;
+  RESTClient.BaseURL   := 'https://api.certify.com/v1/exprptglds/1';
+  RESTRequest.Resource := '?code=15213|N800KS';
+  RESTRequest.Method   := rmGET;
 
-  IdHTTP_Certify.Request.ContentType := 'application/json' ;
-
-  stlHeader1 := TStringList.Create;
-  try
-    // header 1: X-APIKey
-    stlHeader1.Add('X-Api-Key=' + 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv');
-
-    // header 2: Authorization
-    stlHeader1.Add('X-Api-secret=' + '4843793A-6326-4F92-86EB-D34070C34CDC' );
-
-    IdHTTP_Certify.Request.CustomHeaders.AddStdValues(stlHeader1);
-
-//    memSOAPResults.Lines.Add(stlHeader1.Text);
-
-  finally
-    stlHeader1.free;
-  end;
+  ShowMessage(format('code: %s ', ['foo']));
 
 end;
+
 
 
 
