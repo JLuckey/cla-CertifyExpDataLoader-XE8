@@ -35,6 +35,7 @@ type
     RESTRequest: TRESTRequest;
     RESTResponse: TRESTResponse;
     procedure Button1Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
 
   private
     FTailNumber: String;
@@ -42,24 +43,44 @@ type
     FCrewMemberVendorNum: String;
     FUploadStatusMessage: String;
     FDataAction: String;
+    FHTTPReturnCode: Integer;
+    FAPIKey: String;
+    FAPISecret: String;
+    FDataSetName: String;
+    FCertifyDimension: Integer;
+    FtheBaseURL: String;
+    FTripNumber: String;
+    FLogNumber: String;
     Procedure LoadDataStruct();
     Procedure SaveRecord(Const stlDataIn : TStringList);
 
     Procedure WriteDataStruct;
 
     Procedure Refresh_TailTripLog_ViaAPI;
-
-
-    Function  DecodeFieldVal(Const JSONFieldString : String): String;
-    Function  GetIndexForText(Const stlToSearch: TStringList; Const strToFind: String): Integer;
+    procedure SetHTTPReturnCode(const Value: Integer);
     procedure SetCrewMemberVendorNum(const Value: String);
     procedure SetDataAction(const Value: String);
     procedure SetTailNumber(const Value: String);
     procedure SetUploadStatus(const Value: String);
     procedure SetUploadStatusMessage(const Value: String);
 
-    Function ExtractID(Const strmIn : TMemoryStream) : String;
-    Function GetCertifyRecKey(Const CodeFieldValIn: String): String;
+
+    Procedure DeleteRec;
+    Procedure Add_CrewTail_Rec;
+
+    Function  GetIndexForText(Const stlToSearch: TStringList; Const strToFind: String): Integer;
+    Function  DecodeFieldVal(Const JSONFieldString : String): String;
+    Function  ExtractID(Const strmIn : TMemoryStream) : String;
+    Function  GetCertifyRecKey(Const CodeFieldValIn: String; DimenIn: Integer): String;
+    procedure SetAPIKey(const Value: String);
+    procedure SetAPISecret(const Value: String);
+
+    Procedure Main;
+    procedure SetDataSetName(const Value: String);
+    procedure SetCertifyDimension(const Value: Integer);
+    procedure SetTheBaseURL(const Value: String);
+    procedure SetLogNumber(const Value: String);
+    procedure SetTripNumber(const Value: String);
 
   public
 
@@ -68,13 +89,23 @@ type
   published
     Procedure Push;
 
+    Property DataSetName : String read FDataSetName write SetDataSetName;
     Property DataAction : String read FDataAction write SetDataAction;
     Property TailNumber : String read FTailNumber write SetTailNumber;
     Property CrewMemberVendorNum : String read FCrewMemberVendorNum write SetCrewMemberVendorNum;
+    Property TripNumber : String read FTripNumber write SetTripNumber;
+    Property LogNumber  : String read FLogNumber write SetLogNumber;
+
 
     Property UploadStatus : String read FUploadStatus write SetUploadStatus;
     Property UploadStatusMessage : String read FUploadStatusMessage write SetUploadStatusMessage;
+    Property HTTPReturnCode : Integer read FHTTPReturnCode write SetHTTPReturnCode;
 
+    Property theBaseURL : String read FtheBaseURL   write SetTheBaseURL;
+    Property APIKey     : String read FAPIKey    write SetAPIKey;
+    Property APISecret  : String read FAPISecret write SetAPISecret;
+
+    Property CertifyDimension : Integer read FCertifyDimension write SetCertifyDimension;    // Should this be read-only?
 
   end;
 
@@ -125,11 +156,36 @@ implementation
 { TForm5 }
 
 
+procedure TfrmPushToCertify.FormCreate(Sender: TObject);
+begin
+  // Set basic comm params
+  APIKey    := 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv' ;
+  APISecret := '4843793A-6326-4F92-86EB-D34070C34CDC' ;
+
+  RESTClient.Params.AddItem('X-Api-Key', APIKey, pkHTTPHEADER);
+  RESTClient.Params.AddItem('X-Api-secret', APISecret, pkHTTPHEADER);
+  RESTClient.ContentType  := 'application/json';
+
+end;
+
 
 procedure TfrmPushToCertify.Button1Click(Sender: TObject);
 begin
 
-  Push;
+  //  Setting properties that will be set in calling program
+  DataSetName         := 'crew_tail';
+  TailNumber          := 'N800KS';
+  CrewMemberVendorNum := '15213' ;
+  theBaseURL          := 'https://api.certify.com/v1/exprptglds';
+
+  DeleteRec;
+//  Add_CrewTail_Rec;
+end;
+
+
+procedure TfrmPushToCertify.Main;
+begin
+
 
 end;
 
@@ -320,6 +376,9 @@ end;
 
 
 
+
+
+
 procedure TfrmPushToCertify.Push;
 var
   stsJSON  : TStringStream;
@@ -334,6 +393,18 @@ var
   KeyID : String;
 
 begin
+
+  if FDataAction = 'added' then Begin
+
+
+  End else if FDataAction = 'deleted' then begin
+    DeleteRec;
+
+  end else begin
+    // Error
+
+  end;
+
 (*
 
   Verb, URL, Dimension, Resource, Data/body
@@ -352,11 +423,6 @@ begin
   use Format() function
 
 *)
-  RESTClient.Params.AddItem('X-Api-Key', 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv', pkHTTPHEADER);
-  RESTClient.Params.AddItem('X-Api-secret', '4843793A-6326-4F92-86EB-D34070C34CDC', pkHTTPHEADER);
-  RESTClient.ContentType := 'application/json';
-
-  KeyID := GetCertifyRecKey('foobar');
 
   RESTClient.BaseURL   := 'https://api.certify.com/v1/exprptglds/1';
   RESTRequest.Resource := '?code=15213|N800KS';
@@ -390,90 +456,181 @@ begin
   PostURL := 'https://api.certify.com/v1/exprptglds/1';
   PutURL  := 'https://api.certify.com/v1/exprptglds/1';
 
-
   strmResp.Free;
 
 end;  {Push}
 
 
-(*
+(* ***************************************************
 
-Function TfoAvinodeScheduleUploader.SendDataViaREST : String;
+  Verb, URL, Dimension, Resource, Data/body
+  Convert file name to Certify Dimension: crew_tail = 1; crew_trip = 2; crew_log = 3;
+
+  Delete (sets Active field to 0) :
+    KeyID := GetCertifyKey(CrewVendNum|TailNum)
+    Verb:       POST
+    URL & Dim:  https://api.certify.com/v1/exprptglds/1
+    Resource:   null
+    Body:       { "ID": "00390410-43f2-4004-8d25-1061a752cd50", "Active": 0 }
+
+
+******************************************************* *)
+procedure TfrmPushToCertify.DeleteRec;
 var
-  stsJSON  : TStringStream;
-  strmResp : TMemoryStream;
-  stlResp  : TStringList;
+  KeyID : String;
+  strBody : String;
+  strSearch : String;
 
 begin
-  memSOAPResults.Clear;
-  BuildAvinodeRESTHeaders;
-  stsJson := TStringStream.Create( memXMLOut.Text );
+  case FCertifyDimension of
+    1: strSearch := FCrewMemberVendorNum + '|' + FTailNumber;        // crew_tail
+    2: strSearch := FCrewMemberVendorNum + '|' + FTripNumber;        // crew_trip
+    3: strSearch := FCrewMemberVendorNum + '|' + FLogNumber;         // crew_log
+  end;
 
-  strmResp := TMemoryStream.Create;
-  stlResp := TStringList.create;
-  try
-    try
-      IdHTTP_Avinode.Put( edURL.Text, stsJson, strmResp );
-      memSOAPResults.Lines.Add( IntToStr(IdHTTP_Avinode.ResponseCode) );       // 200
-      memSOAPResults.Lines.Add( IdHTTP_Avinode.ResponseText );                 // HTTP/1.1 200 OK
+  KeyID := GetCertifyRecKey( strSearch, FCertifyDimension );    // ('15213|N800KS', 1);
 
-      strmResp.Position := 0;
-      stlResp.LoadFromStream(strmResp);
-      memSOAPResults.Lines.add(stlResp.Text);
-      memSOAPResults.Lines.Add( '' );
+  RESTClient.BaseURL := FtheBaseURL + '/' + IntToStr(FCertifyDimension) ;      // 'https://api.certify.com/v1/exprptglds/1';
+  RESTRequest.Method := rmPOST;
+  strBody := Format('{ "ID" : "%s", "Active": 0 }', [KeyID] );                 // Setting "Active" flag to 0 disables record; Certify does not allow us to actually delete record
+  ShowMessage(strBody);
 
-    except
-      on E: EIdHTTPProtocolException do begin
-        memSOAPResults.Lines.Add( 'Error Message: ');
-        memSOAPResults.Lines.Add( IntToStr( IdHTTP_Avinode.ResponseCode) );
-        memSOAPResults.Lines.Add( E.Message );
-        memSOAPResults.Lines.Add( E.ErrorMessage );
-        memSOAPResults.Lines.Add( '' );
-      end;
+  RESTRequest.AddBody( strBody );
+  RESTRequest.Params.Items[0].ContentType := ctAPPLICATION_JSON;
+  RESTRequest.Execute;
 
-      on E: Exception do begin
-        memSOAPResults.Lines.Add( 'Unknown Exception from IdHTTP_Avinode: ');
-        memSOAPResults.Lines.Add( IntToStr( IdHTTP_Avinode.ResponseCode) );
-        memSOAPResults.Lines.Add( E.Message + ' - ' + IdHTTP_Avinode.ResponseText );
-        memSOAPResults.Lines.Add( '' );
-      end;
-    end; { except }
+  // Need to set Return properties
+  ShowMessage(IntToStr(RESTRequest.Response.StatusCode) + '||' + RESTRequest.Response.StatusText + #13 +
+                       'JSONText: ' + RESTRequest.Response.JSONText + #13 +
+                       'ErrorMsg: ' + RESTRequest.Response.Content );
 
-    Result := DecodeRESTRetVal(memSOAPResults.Text);
-    LogIt('AVINODE');
-
-  Finally
-    stsJSON.free;
-    strmResp.Free;
-    stlResp.Free;
-  End;
-
-end;  { SendDataViaREST }
+end;  { DeleteRec }
 
 
-*)
+procedure TfrmPushToCertify.Add_CrewTail_Rec;
+var
+  stlBody: TStringList;
 
-
-
-
-
-function TfrmPushToCertify.GetCertifyRecKey(const CodeFieldValIn: String): String;
 begin
-//  get https://api.certify.com/v1/exprptglds/1 ?code=13748|N113CS
+  stlBody := TStringList.Create;
 
-  RESTClient.BaseURL   := 'https://api.certify.com/v1/exprptglds/1';
-  RESTRequest.Resource := '?code=15213|N800KS';
-  RESTRequest.Method   := rmGET;
+  RESTClient.BaseURL := FtheBaseURL + '/' + IntToStr(FCertifyDimension) ;      // 'https://api.certify.com/v1/exprptglds/1';
+  RESTRequest.Method := rmPUT;
 
-  ShowMessage(format('code: %s ', ['foo']));
+  ShowMessage(RESTClient.BaseURL);
 
-end;
+  // Format JSON data packet
+  stlBody.Add('{"ExpRptGLDIndex": ' + IntToStr(FCertifyDimension) + ',' );
+  stlBody.Add(' "ExpRptGLDLabel": "Tail #", ');
+  stlBody.Add(Format(' "Name": "%s",',     [FTailNumber]));
+  stlBody.Add(Format(' "Code": "%s|%s", ', [FCrewMemberVendorNum, FTailNumber] ) );
+  stlBody.Add(Format(' "Data": "%s", ',    [FTailNumber ] ) );
+  stlBody.Add(' "Active": 1 }');
+
+  ShowMessage(stlBody.Text);
+
+  RESTRequest.AddBody( stlBody.Text );
+  RESTRequest.Params.Items[0].ContentType := ctAPPLICATION_JSON;
+//  RESTRequest.Execute;
+
+  stlBody.Free;
+
+end;  { Add_Crew_Tail_Rec }
 
 
+
+//  get https://api.certify.com/v1/exprptglds/1?code=13748|N113CS
+function TfrmPushToCertify.GetCertifyRecKey(const CodeFieldValIn: String; DimenIn: Integer): String;
+// DimenIn is Certify ExpRptGLDs Dimension [1,2,3]
+Var
+  theParam : TRESTRequestParameter;
+
+Begin
+  RESTClient.BaseURL := FtheBaseURL + '/' + IntToStr(DimenIn);
+  theParam := RESTRequest.Params.AddItem('code', CodeFieldValIn);
+  RESTRequest.Method := rmGET;
+  RESTRequest.Execute;
+  Result := RESTResponse.JSONValue.GetValue<string>('ExpRptGLDs[0].ID');
+
+  RESTRequest.Params.Delete(theParam);  // This param interferes w/ subsequent execution of RESTRequest hence removing it
+  // How to handle errors:
+  //   1. case where search string is not found
+  //   2. case where this code raises an exception  ???JL
+
+
+  // Return value when string found:
+    (*
+    {
+      "Page": 1,
+      "PageCount": 1,
+      "Records": 1,
+      "RecordCount": 1,
+      "ExpRptGLDs": [
+          {
+              "ExpRptGLDIndex": 1,
+              "ExpRptGLDLabel": "Tail #",
+              "ID": "006305cd-7bda-4295-b353-96e099712f87",
+              "Name": "N955MB",
+              "Code": "14967|N955MB",
+              "Description": "",
+              "Data": "N955MB",
+              "Active": 0
+          }
+      ]
+    }
+    *)
+
+  // Return value when search string not found:
+  {
+    "ExpRptGLDs": []
+  }
+
+  //  ShowMessage( RESTResponse.JSONText );
+
+end;  { GetCertifyRecKey }
 
 
 
 // -------------------  Setters & Getters  ---------------------
+procedure TfrmPushToCertify.SetDataSetName(const Value: String);
+begin
+
+  // Matching file types w/ Certify Dimension. Which is the integer (i) at end of URL: https://api.certify.com/v1/i  [1,2,3]
+
+  if Value = 'crew_tail' then
+    FCertifyDimension := 1
+  else if Value = 'crew_trip' then
+    FCertifyDimension := 2
+  else if Value = 'crew_log' then
+    FCertifyDimension := 3;
+
+  FDataSetName := Value;
+end;
+
+procedure TfrmPushToCertify.SetAPIKey(const Value: String);
+begin
+  FAPIKey := Value;
+end;
+
+procedure TfrmPushToCertify.SetAPISecret(const Value: String);
+begin
+  FAPISecret := Value;
+end;
+
+procedure TfrmPushToCertify.SetTheBaseURL(const Value: String);
+begin
+  FtheBaseURL := Value;
+end;
+
+procedure TfrmPushToCertify.SetTripNumber(const Value: String);
+begin
+  FTripNumber := Value;
+end;
+
+procedure TfrmPushToCertify.SetCertifyDimension(const Value: Integer);
+begin
+  FCertifyDimension := Value;
+end;
 
 procedure TfrmPushToCertify.SetCrewMemberVendorNum(const Value: String);
 begin
@@ -483,6 +640,17 @@ end;
 procedure TfrmPushToCertify.SetDataAction(const Value: String);
 begin
   FDataAction := Value;
+end;
+
+
+procedure TfrmPushToCertify.SetHTTPReturnCode(const Value: Integer);
+begin
+  FHTTPReturnCode := Value;
+end;
+
+procedure TfrmPushToCertify.SetLogNumber(const Value: String);
+begin
+  FLogNumber := Value;
 end;
 
 procedure TfrmPushToCertify.SetTailNumber(const Value: String);

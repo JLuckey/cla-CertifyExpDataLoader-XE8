@@ -2047,7 +2047,11 @@ begin
 //  LoadCrewTailHistoryTable(BatchTime);      // puts latest batch into CrewTailHistory table
   GetBatchDates(PreviousBatchDate, NewBatchDate);   // those params are output
 
-//  gloPusher := TfrmPushToCertify.Create(self);
+  gloPusher := TfrmPushToCertify.Create(self);
+  gloPusher.theBaseURL   := 'https://api.certify.com/v1/exprptglds';
+  gloPusher.APIKey    := 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv' ;
+  gloPusher.APISecret := '4843793A-6326-4F92-86EB-D34070C34CDC' ;
+
 
 (*
   //  Get Failed Recs from previous Pushes
@@ -2067,7 +2071,7 @@ begin
   SendToCertify(qryGetCrewTailRecs, BatchTime);
   qryGetCrewTailRecs.Close;
 
-//  gloPusher.free
+  gloPusher.free
 
 end;  // HourlyPushMain
 
@@ -2076,8 +2080,9 @@ procedure TufrmCertifyExpDataLoader.SendToCertify(Const WorkingQueryIn: TUniQuer
 begin
 
   while Not WorkingQueryIn.eof do begin
-    gloPusher.DataAction := WorkingQueryIn.FieldByName('RecordStatus').AsString;
-    gloPusher.TailNumber := WorkingQueryIn.FieldByName('TailNumber').AsString;
+    gloPusher.DataSetName         := 'crew_tail';        // sets Dimension
+    gloPusher.DataAction          := WorkingQueryIn.FieldByName('RecordStatus').AsString;
+    gloPusher.TailNumber          := WorkingQueryIn.FieldByName('TailNumber').AsString;
     gloPusher.CrewMemberVendorNum := WorkingQueryIn.FieldByName('CrewMemberVendorNumber').AsString;
     gloPusher.Push;
 
