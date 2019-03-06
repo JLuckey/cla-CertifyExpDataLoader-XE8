@@ -7,10 +7,20 @@ unit uPushToCertify;       // JSON to Crew Log Record
 
 
 (*  to-dos:
+Possible Failure Modes:
+
+1. Success
+2. Data not found
+3. Bad request
+     improperly formatted JSON data
+     bad URL
+
+4. Update failed
+5. Create failed
+6. Network/Server failure
 
 
 *)
-
 
 interface
 
@@ -51,12 +61,8 @@ type
     FtheBaseURL: String;
     FTripNumber: String;
     FLogNumber: String;
-    Procedure LoadDataStruct();
-    Procedure SaveRecord(Const stlDataIn : TStringList);
 
-    Procedure WriteDataStruct;
 
-    Procedure Refresh_TailTripLog_ViaAPI;
     procedure SetHTTPReturnCode(const Value: Integer);
     procedure SetCrewMemberVendorNum(const Value: String);
     procedure SetDataAction(const Value: String);
@@ -67,11 +73,10 @@ type
 
     Procedure DeleteRec;
     Procedure Add_CrewTail_Rec;
+    Procedure Add_CrewTrip_Rec();
+    Procedure Add_CrewLog_Rec();
 
-    Function  GetIndexForText(Const stlToSearch: TStringList; Const strToFind: String): Integer;
-    Function  DecodeFieldVal(Const JSONFieldString : String): String;
-    Function  ExtractID(Const strmIn : TMemoryStream) : String;
-    Function  GetCertifyRecKey(Const CodeFieldValIn: String; DimenIn: Integer): String;
+
     procedure SetAPIKey(const Value: String);
     procedure SetAPISecret(const Value: String);
 
@@ -81,6 +86,10 @@ type
     procedure SetTheBaseURL(const Value: String);
     procedure SetLogNumber(const Value: String);
     procedure SetTripNumber(const Value: String);
+
+
+    Function  GetCertifyRecKey(Const CodeFieldValIn: String; DimenIn: Integer): String;
+    Function  CalcUploadStatus(): String;
 
   public
 
@@ -170,17 +179,24 @@ end;
 
 
 procedure TfrmPushToCertify.Button1Click(Sender: TObject);
+var
+  x : Integer;
+
 begin
 
   //  Setting properties that will be set in calling program
   DataSetName         := 'crew_tail';
-  TailNumber          := 'N800KS';
+  TailNumber          := 'N800KSfoo';
   CrewMemberVendorNum := '15213' ;
   theBaseURL          := 'https://api.certify.com/v1/exprptglds';
 
+//  RESTResponse.JSONValue.GetValue<string>('ExpRptGLDs[0].ID');
+
   DeleteRec;
-//  Add_CrewTail_Rec;
+  // Add_CrewTail_Rec;
+
 end;
+
 
 
 procedure TfrmPushToCertify.Main;
@@ -190,6 +206,325 @@ begin
 end;
 
 
+procedure TfrmPushToCertify.Push;
+var
+  stsJSON  : TStringStream;
+  strmResp : TMemoryStream;
+  stlResp  : TStringList;
+
+
+begin
+
+  if FDataAction = 'added' then Begin
+    // put code that selects what happens when crew_tail, crew_trip, crew_log is assigned in one location for ease of maintenance
+    case FCertifyDimension of
+      1: Add_CrewTail_Rec();     // crew_tail
+      2: Add_CrewTrip_Rec();     // crew_trip
+      3: Add_CrewLog_Rec();      // crew_log
+    end;
+
+  End else if FDataAction = 'deleted' then begin
+    DeleteRec;
+
+  end else begin
+    // Error
+
+  end;  { If }
+
+(*
+
+  Verb, URL, Dimension, Resource, Data/body
+  Convert file name to Certify Dimension: crew_tail = 1; crew_trip = 2; crew_log = 3;
+
+  Delete (sets Active field to 0) :
+    KeyID := GetCertifyKey(CrewVendNum|TailNum)
+    Verb:       POST
+    URL & Dim:  https://api.certify.com/v1/exprptglds/1
+    Resource:   null
+    Body:       { "ID": "00390410-43f2-4004-8d25-1061a752cd50", "Active": 0 }
+
+  Add:
+
+*)
+
+end;  {Push}
+
+
+(* ***************************************************
+
+  Verb, URL, Dimension, Resource, Data/body
+  Convert file name to Certify Dimension: crew_tail = 1; crew_trip = 2; crew_log = 3;
+
+  Delete (sets Active field to 0) :
+    KeyID := GetCertifyKey(CrewVendNum|TailNum)
+    Verb:       POST
+    URL & Dim:  https://api.certify.com/v1/exprptglds/1
+    Resource:   null
+    Body:       { "ID": "00390410-43f2-4004-8d25-1061a752cd50", "Active": 0 }
+
+
+******************************************************* *)
+procedure TfrmPushToCertify.DeleteRec;
+var
+  KeyID : String;
+  strBody : String;
+  strSearch : String;
+  strStatusOut : String;
+  strMessageOut : String;
+  arrJson : TJSONArray;
+
+begin
+  case FCertifyDimension of
+    1: strSearch := FCrewMemberVendorNum + '|' + FTailNumber;        // crew_tail
+    2: strSearch := FCrewMemberVendorNum + '|' + FTripNumber;        // crew_trip
+    3: strSearch := FCrewMemberVendorNum + '|' + FLogNumber;         // crew_log
+  end;
+
+  KeyID := GetCertifyRecKey( strSearch, FCertifyDimension );    // ('15213|N800KS', 1);
+
+  RESTClient.BaseURL := FtheBaseURL + '/' + IntToStr(FCertifyDimension) ;      // 'https://api.certify.com/v1/exprptglds/1';
+  RESTRequest.Method := rmPOST;
+  strBody := Format('{ "ID" : "%s", "Active": 1 }', [KeyID] );                 // Setting "Active" flag to 0 disables record; Certify does not allow us to actually delete record
+  RESTRequest.ClearBody;
+  RESTRequest.AddBody( strBody );
+  RESTRequest.Params.Items[0].ContentType := ctAPPLICATION_JSON;
+  try
+    RESTRequest.Execute;
+
+    // set Return Value properties
+    FHTTPReturnCode      := RESTResponse.StatusCode ;    //RESTRequest.Response.StatusCode;
+    FUploadStatus        := CalcUploadStatus();
+    FUploadStatusMessage := RESTResponse.JSONText ;
+
+    ShowMessage(IntToStr(RESTRequest.Response.StatusCode) + '||' + RESTRequest.Response.StatusText + #13 +
+                         'JSONText: ' + RESTRequest.Response.JSONText + #13 +
+                         'ErrorMsg: ' + RESTRequest.Response.Content );
+
+  except on E: Exception do
+    ShowMessage('Exception!: ' + #13 + E.Message);
+
+  end;
+
+ //   strStatusOut := RESTResponse.JSONValue.ToString;
+ //   arrJson := RESTResponse.JSONValue As TJSONArray;
+ //   strStatusOUt := arrJson.Items[0].GetValue<string>('Status');   //ToString;   //GetValue('Status', strStatusOut);
+ //   strMessageOUt := arrJson.Items[0].GetValue<string>('Message');
+ //   ShowMessage('StatusOut: ' + strStatusOut + #13 + 'MessageOut:' + strMessageOut);
+
+end;  { DeleteRec }
+
+
+function TfrmPushToCertify.CalcUploadStatus: String;
+var
+  arrJson : TJSONArray;
+
+begin
+  case FHTTPReturnCode of
+    200..299:
+      Begin
+        arrJson := RESTResponse.JSONValue As TJSONArray;
+        Result  := arrJson.Items[0].GetValue<string>('Status');
+      End;
+
+    400..499:
+      Result := RESTResponse.JSONValue.GetValue<string>('errorMessage');
+
+  end;  { Case }
+
+end;  { CalcUploadStatus }
+
+
+procedure TfrmPushToCertify.Add_CrewTail_Rec;
+var
+  stlBody: TStringList;
+
+begin
+  stlBody := TStringList.Create;
+
+  RESTClient.BaseURL := FtheBaseURL + '/' + IntToStr(FCertifyDimension) ;      // 'https://api.certify.com/v1/exprptglds/1';
+  RESTRequest.Method := rmPUT;
+
+  ShowMessage(RESTClient.BaseURL);
+
+  // Format JSON data packet
+  stlBody.Add('{"ExpRptGLDIndex": ' + IntToStr(FCertifyDimension) + ',' );
+  stlBody.Add(' "ExpRptGLDLabel": "Tail #", ');
+  stlBody.Add(Format(' "Name": "%s",',     [FTailNumber]));
+  stlBody.Add(Format(' "Code": "%s|%s", ', [FCrewMemberVendorNum, FTailNumber] ) );
+  stlBody.Add(Format(' "Data": "%s", ',    [FTailNumber ] ) );
+  stlBody.Add(' "Active": 1 }');
+
+  ShowMessage(stlBody.Text);
+
+  RESTRequest.AddBody( stlBody.Text );
+  RESTRequest.Params.Items[0].ContentType := ctAPPLICATION_JSON;
+//  RESTRequest.Execute;
+
+  stlBody.Free;
+
+end;  { Add_Crew_Tail_Rec }
+
+
+procedure TfrmPushToCertify.Add_CrewLog_Rec;
+begin
+
+end;
+
+
+procedure TfrmPushToCertify.Add_CrewTrip_Rec;
+begin
+
+end;
+
+
+//  get https://api.certify.com/v1/exprptglds/1?code=13748|N113CS
+function TfrmPushToCertify.GetCertifyRecKey(const CodeFieldValIn: String; DimenIn: Integer): String;
+// DimenIn is Certify ExpRptGLDs Dimension [1,2,3]
+Var
+  theParam : TRESTRequestParameter;
+
+Begin
+  RESTClient.BaseURL := FtheBaseURL + '/' + IntToStr(DimenIn);
+  theParam := RESTRequest.Params.AddItem('code', CodeFieldValIn);
+  RESTRequest.Method := rmGET;
+
+  try
+
+    RESTRequest.Execute;
+    Result := RESTResponse.JSONValue.GetValue<string>('ExpRptGLDs[0].ID');
+
+  except
+    on E: EJSONException do
+      Sleep(1);
+      //ShowMessage('ClassName: ' + E.ClassName);
+
+    on E: Exception do
+    //    if E.ClassName = 'EJSONException' then
+
+
+
+  end;
+
+  RESTRequest.Params.Delete(theParam);  // This param interferes w/ subsequent execution of RESTRequest hence removing it
+  // How to handle errors:   ???JL
+  //   1. case where search string is not found
+  //   2. case where this code raises an exception
+
+  // Return value when string found:
+    (* ----------------------------------------
+    {
+      "Page": 1,
+      "PageCount": 1,
+      "Records": 1,
+      "RecordCount": 1,
+      "ExpRptGLDs": [
+          {
+              "ExpRptGLDIndex": 1,
+              "ExpRptGLDLabel": "Tail #",
+              "ID": "006305cd-7bda-4295-b353-96e099712f87",
+              "Name": "N955MB",
+              "Code": "14967|N955MB",
+              "Description": "",
+              "Data": "N955MB",
+              "Active": 0
+          }
+      ]
+    }
+    ------------------------------------------- *)
+
+
+  // Return value when search string not found:
+  (* ----------------------------------------------
+  {
+    "ExpRptGLDs": []
+  }
+   ------------------------------------------------ *)
+
+  //  ShowMessage( RESTResponse.JSONText );
+
+end;  { GetCertifyRecKey }
+
+
+
+// -------------------  Setters & Getters  ---------------------
+procedure TfrmPushToCertify.SetDataSetName(const Value: String);
+begin
+  // Matching file types w/ Certify Dimension, which is the integer (i) at end of URL: https://api.certify.com/v1/i
+
+  if Value = 'crew_tail' then
+    FCertifyDimension := 1
+  else if Value = 'crew_trip' then
+    FCertifyDimension := 2
+  else if Value = 'crew_log' then
+    FCertifyDimension := 3;
+
+  FDataSetName := Value;
+end;
+
+procedure TfrmPushToCertify.SetAPIKey(const Value: String);
+begin
+  FAPIKey := Value;
+end;
+
+procedure TfrmPushToCertify.SetAPISecret(const Value: String);
+begin
+  FAPISecret := Value;
+end;
+
+procedure TfrmPushToCertify.SetTheBaseURL(const Value: String);
+begin
+  FtheBaseURL := Value;
+end;
+
+procedure TfrmPushToCertify.SetTripNumber(const Value: String);
+begin
+  FTripNumber := Value;
+end;
+
+procedure TfrmPushToCertify.SetCertifyDimension(const Value: Integer);
+begin
+  FCertifyDimension := Value;
+end;
+
+procedure TfrmPushToCertify.SetCrewMemberVendorNum(const Value: String);
+begin
+  FCrewMemberVendorNum := Value;
+end;
+
+procedure TfrmPushToCertify.SetDataAction(const Value: String);
+begin
+  FDataAction := Value;
+end;
+
+
+procedure TfrmPushToCertify.SetHTTPReturnCode(const Value: Integer);
+begin
+  FHTTPReturnCode := Value;
+end;
+
+procedure TfrmPushToCertify.SetLogNumber(const Value: String);
+begin
+  FLogNumber := Value;
+end;
+
+procedure TfrmPushToCertify.SetTailNumber(const Value: String);
+begin
+  FTailNumber := Value;
+end;
+
+procedure TfrmPushToCertify.SetUploadStatus(const Value: String);
+begin
+  FUploadStatus := Value;
+end;
+
+procedure TfrmPushToCertify.SetUploadStatusMessage(const Value: String);
+begin
+  FUploadStatusMessage := Value;
+end;
+
+
+(*
+Old/Depricated Code:
 procedure TfrmPushToCertify.LoadDataStruct;
 var
   FileIn : TextFile;
@@ -374,299 +709,5 @@ begin
 
 end;
 
-
-
-
-
-
-procedure TfrmPushToCertify.Push;
-var
-  stsJSON  : TStringStream;
-  strmResp : TMemoryStream;
-  stlResp  : TStringList;
-
-  RecID :  String;
-  GetURL:  String;
-  PostURL: String;
-  PutURL:  String;
-
-  KeyID : String;
-
-begin
-
-  if FDataAction = 'added' then Begin
-
-
-  End else if FDataAction = 'deleted' then begin
-    DeleteRec;
-
-  end else begin
-    // Error
-
-  end;
-
-(*
-
-  Verb, URL, Dimension, Resource, Data/body
-  Convert file name to Certify Dimension: crew_tail = 1; crew_trip = 2; crew_log = 3;
-
-  Delete (sets Active field to 0) :
-    KeyID := GetCertifyKey(CrewVendNum|TailNum)
-    Verb:       POST
-    URL & Dim:  https://api.certify.com/v1/exprptglds/1
-    Resource:   null
-    Body:       { "ID": "00390410-43f2-4004-8d25-1061a752cd50", "Active": 0 }
-
-  Add:
-
-
-  use Format() function
-
 *)
-
-  RESTClient.BaseURL   := 'https://api.certify.com/v1/exprptglds/1';
-  RESTRequest.Resource := '?code=15213|N800KS';
-  RESTRequest.Method   := rmGET;
-
-  RESTRequest.Execute;
-  ShowMessage('1' + #13 + RESTResponse.JSONValue.ToJSON);
-
-
-
-  ShowMessage('2' + #13 + RESTResponse.JSONText);
-
-
-
-  strmResp := TMemoryStream.Create;
-
-
-//  To "delete" a record set Active = 0 using POST (update):
-//    1. Find the existing record with GET and concat value in Code field
-//    2. Extract its ID
-//    3. Create Update JSON using ID & Active = 0
-//    4. POST
-//    5. Record result of POST
-
-
-//  IdHTTP_Certify.Post(PostURL,
-//                      '{"ID": "' + RecID + '","Active": 0}' ,
-//                      strmResp);
-
-  GetURL  := 'https://api.certify.com/v1/exprptglds/1?code='  ;  // <CrewVendorNum>|<TailNumber>';
-  PostURL := 'https://api.certify.com/v1/exprptglds/1';
-  PutURL  := 'https://api.certify.com/v1/exprptglds/1';
-
-  strmResp.Free;
-
-end;  {Push}
-
-
-(* ***************************************************
-
-  Verb, URL, Dimension, Resource, Data/body
-  Convert file name to Certify Dimension: crew_tail = 1; crew_trip = 2; crew_log = 3;
-
-  Delete (sets Active field to 0) :
-    KeyID := GetCertifyKey(CrewVendNum|TailNum)
-    Verb:       POST
-    URL & Dim:  https://api.certify.com/v1/exprptglds/1
-    Resource:   null
-    Body:       { "ID": "00390410-43f2-4004-8d25-1061a752cd50", "Active": 0 }
-
-
-******************************************************* *)
-procedure TfrmPushToCertify.DeleteRec;
-var
-  KeyID : String;
-  strBody : String;
-  strSearch : String;
-
-begin
-  case FCertifyDimension of
-    1: strSearch := FCrewMemberVendorNum + '|' + FTailNumber;        // crew_tail
-    2: strSearch := FCrewMemberVendorNum + '|' + FTripNumber;        // crew_trip
-    3: strSearch := FCrewMemberVendorNum + '|' + FLogNumber;         // crew_log
-  end;
-
-  KeyID := GetCertifyRecKey( strSearch, FCertifyDimension );    // ('15213|N800KS', 1);
-
-  RESTClient.BaseURL := FtheBaseURL + '/' + IntToStr(FCertifyDimension) ;      // 'https://api.certify.com/v1/exprptglds/1';
-  RESTRequest.Method := rmPOST;
-  strBody := Format('{ "ID" : "%s", "Active": 0 }', [KeyID] );                 // Setting "Active" flag to 0 disables record; Certify does not allow us to actually delete record
-  ShowMessage(strBody);
-
-  RESTRequest.AddBody( strBody );
-  RESTRequest.Params.Items[0].ContentType := ctAPPLICATION_JSON;
-  RESTRequest.Execute;
-
-  // Need to set Return properties
-  ShowMessage(IntToStr(RESTRequest.Response.StatusCode) + '||' + RESTRequest.Response.StatusText + #13 +
-                       'JSONText: ' + RESTRequest.Response.JSONText + #13 +
-                       'ErrorMsg: ' + RESTRequest.Response.Content );
-
-end;  { DeleteRec }
-
-
-procedure TfrmPushToCertify.Add_CrewTail_Rec;
-var
-  stlBody: TStringList;
-
-begin
-  stlBody := TStringList.Create;
-
-  RESTClient.BaseURL := FtheBaseURL + '/' + IntToStr(FCertifyDimension) ;      // 'https://api.certify.com/v1/exprptglds/1';
-  RESTRequest.Method := rmPUT;
-
-  ShowMessage(RESTClient.BaseURL);
-
-  // Format JSON data packet
-  stlBody.Add('{"ExpRptGLDIndex": ' + IntToStr(FCertifyDimension) + ',' );
-  stlBody.Add(' "ExpRptGLDLabel": "Tail #", ');
-  stlBody.Add(Format(' "Name": "%s",',     [FTailNumber]));
-  stlBody.Add(Format(' "Code": "%s|%s", ', [FCrewMemberVendorNum, FTailNumber] ) );
-  stlBody.Add(Format(' "Data": "%s", ',    [FTailNumber ] ) );
-  stlBody.Add(' "Active": 1 }');
-
-  ShowMessage(stlBody.Text);
-
-  RESTRequest.AddBody( stlBody.Text );
-  RESTRequest.Params.Items[0].ContentType := ctAPPLICATION_JSON;
-//  RESTRequest.Execute;
-
-  stlBody.Free;
-
-end;  { Add_Crew_Tail_Rec }
-
-
-
-//  get https://api.certify.com/v1/exprptglds/1?code=13748|N113CS
-function TfrmPushToCertify.GetCertifyRecKey(const CodeFieldValIn: String; DimenIn: Integer): String;
-// DimenIn is Certify ExpRptGLDs Dimension [1,2,3]
-Var
-  theParam : TRESTRequestParameter;
-
-Begin
-  RESTClient.BaseURL := FtheBaseURL + '/' + IntToStr(DimenIn);
-  theParam := RESTRequest.Params.AddItem('code', CodeFieldValIn);
-  RESTRequest.Method := rmGET;
-  RESTRequest.Execute;
-  Result := RESTResponse.JSONValue.GetValue<string>('ExpRptGLDs[0].ID');
-
-  RESTRequest.Params.Delete(theParam);  // This param interferes w/ subsequent execution of RESTRequest hence removing it
-  // How to handle errors:
-  //   1. case where search string is not found
-  //   2. case where this code raises an exception  ???JL
-
-
-  // Return value when string found:
-    (*
-    {
-      "Page": 1,
-      "PageCount": 1,
-      "Records": 1,
-      "RecordCount": 1,
-      "ExpRptGLDs": [
-          {
-              "ExpRptGLDIndex": 1,
-              "ExpRptGLDLabel": "Tail #",
-              "ID": "006305cd-7bda-4295-b353-96e099712f87",
-              "Name": "N955MB",
-              "Code": "14967|N955MB",
-              "Description": "",
-              "Data": "N955MB",
-              "Active": 0
-          }
-      ]
-    }
-    *)
-
-  // Return value when search string not found:
-  {
-    "ExpRptGLDs": []
-  }
-
-  //  ShowMessage( RESTResponse.JSONText );
-
-end;  { GetCertifyRecKey }
-
-
-
-// -------------------  Setters & Getters  ---------------------
-procedure TfrmPushToCertify.SetDataSetName(const Value: String);
-begin
-
-  // Matching file types w/ Certify Dimension. Which is the integer (i) at end of URL: https://api.certify.com/v1/i  [1,2,3]
-
-  if Value = 'crew_tail' then
-    FCertifyDimension := 1
-  else if Value = 'crew_trip' then
-    FCertifyDimension := 2
-  else if Value = 'crew_log' then
-    FCertifyDimension := 3;
-
-  FDataSetName := Value;
-end;
-
-procedure TfrmPushToCertify.SetAPIKey(const Value: String);
-begin
-  FAPIKey := Value;
-end;
-
-procedure TfrmPushToCertify.SetAPISecret(const Value: String);
-begin
-  FAPISecret := Value;
-end;
-
-procedure TfrmPushToCertify.SetTheBaseURL(const Value: String);
-begin
-  FtheBaseURL := Value;
-end;
-
-procedure TfrmPushToCertify.SetTripNumber(const Value: String);
-begin
-  FTripNumber := Value;
-end;
-
-procedure TfrmPushToCertify.SetCertifyDimension(const Value: Integer);
-begin
-  FCertifyDimension := Value;
-end;
-
-procedure TfrmPushToCertify.SetCrewMemberVendorNum(const Value: String);
-begin
-  FCrewMemberVendorNum := Value;
-end;
-
-procedure TfrmPushToCertify.SetDataAction(const Value: String);
-begin
-  FDataAction := Value;
-end;
-
-
-procedure TfrmPushToCertify.SetHTTPReturnCode(const Value: Integer);
-begin
-  FHTTPReturnCode := Value;
-end;
-
-procedure TfrmPushToCertify.SetLogNumber(const Value: String);
-begin
-  FLogNumber := Value;
-end;
-
-procedure TfrmPushToCertify.SetTailNumber(const Value: String);
-begin
-  FTailNumber := Value;
-end;
-
-procedure TfrmPushToCertify.SetUploadStatus(const Value: String);
-begin
-  FUploadStatus := Value;
-end;
-
-procedure TfrmPushToCertify.SetUploadStatusMessage(const Value: String);
-begin
-  FUploadStatusMessage := Value;
-end;
-
-
 end.

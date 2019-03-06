@@ -2087,11 +2087,11 @@ begin
     gloPusher.Push;
 
     WorkingQueryIn.Edit;
+    WorkingQueryIn.FieldByName('HTTPResultCode').AsString      := gloPusher.HTTPReturnCode;
     WorkingQueryIn.FieldByName('UploadStatus').AsString        := gloPusher.UploadStatus;
     WorkingQueryIn.FieldByName('UploadStatusMessage').AsString := gloPusher.UploadStatusMessage;
     WorkingQueryIn.FieldByName('UploadedOn').AsDateTime        := BatchTimeIn;
 
-// consider capturing HTTP response code & raw error messages from API call   ???JL
 //    WorkingQueryIn.FieldByName('UploadBatchID').AsDateTime     := UploadBatchID;
     WorkingQueryIn.Post;
     WorkingQueryIn.Next
