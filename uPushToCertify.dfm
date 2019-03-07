@@ -14,6 +14,27 @@ object frmPushToCertify: TfrmPushToCertify
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
+  object Label1: TLabel
+    Left = 49
+    Top = 11
+    Width = 20
+    Height = 13
+    Caption = 'Tail:'
+  end
+  object Label2: TLabel
+    Left = 49
+    Top = 53
+    Width = 38
+    Height = 13
+    Caption = 'Vendor:'
+  end
+  object Label3: TLabel
+    Left = 49
+    Top = 97
+    Width = 34
+    Height = 13
+    Caption = 'Action:'
+  end
   object Button1: TButton
     Left = 264
     Top = 225
@@ -24,8 +45,8 @@ object frmPushToCertify: TfrmPushToCertify
     OnClick = Button1Click
   end
   object Memo1: TMemo
-    Left = 136
-    Top = 14
+    Left = 294
+    Top = 8
     Width = 352
     Height = 198
     Lines.Strings = (
@@ -39,23 +60,53 @@ object frmPushToCertify: TfrmPushToCertify
     ScrollBars = ssVertical
     TabOrder = 1
   end
+  object edTail: TEdit
+    Left = 49
+    Top = 26
+    Width = 121
+    Height = 21
+    BiDiMode = bdLeftToRight
+    ParentBiDiMode = False
+    TabOrder = 2
+    Text = 'N8241W'
+  end
+  object edVendorNum: TEdit
+    Left = 49
+    Top = 70
+    Width = 121
+    Height = 21
+    BiDiMode = bdLeftToRight
+    ParentBiDiMode = False
+    TabOrder = 3
+    Text = '13748'
+  end
+  object edAction: TEdit
+    Left = 49
+    Top = 112
+    Width = 121
+    Height = 21
+    BiDiMode = bdLeftToRight
+    ParentBiDiMode = False
+    TabOrder = 4
+    Text = 'added'
+  end
   object RESTClient: TRESTClient
     BaseURL = 'https://api.certify.com/v1/exprptglds/1'
     Params = <>
     HandleRedirects = True
-    Left = 32
-    Top = 24
+    Left = 85
+    Top = 180
   end
   object RESTRequest: TRESTRequest
     Client = RESTClient
     Params = <>
     Response = RESTResponse
     SynchronizedEvents = False
-    Left = 40
-    Top = 77
+    Left = 20
+    Top = 161
   end
   object RESTResponse: TRESTResponse
-    Left = 50
-    Top = 121
+    Left = 35
+    Top = 203
   end
 end

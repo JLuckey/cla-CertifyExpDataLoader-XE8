@@ -44,6 +44,12 @@ type
     RESTClient: TRESTClient;
     RESTRequest: TRESTRequest;
     RESTResponse: TRESTResponse;
+    edTail: TEdit;
+    edVendorNum: TEdit;
+    edAction: TEdit;
+    Label1: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
 
@@ -185,15 +191,22 @@ var
 begin
 
   //  Setting properties that will be set in calling program
+(*
   DataSetName         := 'crew_tail';
   TailNumber          := 'N800KSfoo';
   CrewMemberVendorNum := '15213' ;
   theBaseURL          := 'https://api.certify.com/v1/exprptglds';
+*)
 
-//  RESTResponse.JSONValue.GetValue<string>('ExpRptGLDs[0].ID');
+  DataSetName         := 'crew_tail';
+  TailNumber          := edTail.Text;
+  CrewMemberVendorNum := edVendorNum.Text ;
+  DataAction          := edAction.Text;
+  theBaseURL          := 'https://api.certify.com/v1/exprptglds';
 
-  DeleteRec;
-  // Add_CrewTail_Rec;
+//  DeleteRec;
+//  Add_CrewTail_Rec;
+  Push;
 
 end;
 
@@ -207,12 +220,6 @@ end;
 
 
 procedure TfrmPushToCertify.Push;
-var
-  stsJSON  : TStringStream;
-  strmResp : TMemoryStream;
-  stlResp  : TStringList;
-
-
 begin
 
   if FDataAction = 'added' then Begin
@@ -284,7 +291,7 @@ begin
 
   RESTClient.BaseURL := FtheBaseURL + '/' + IntToStr(FCertifyDimension) ;      // 'https://api.certify.com/v1/exprptglds/1';
   RESTRequest.Method := rmPOST;
-  strBody := Format('{ "ID" : "%s", "Active": 1 }', [KeyID] );                 // Setting "Active" flag to 0 disables record; Certify does not allow us to actually delete record
+  strBody := Format('{ "ID" : "%s", "Active": 0 }', [KeyID] );                 // Setting "Active" flag to 0 disables record; Certify does not allow us to actually delete record
   RESTRequest.ClearBody;
   RESTRequest.AddBody( strBody );
   RESTRequest.Params.Items[0].ContentType := ctAPPLICATION_JSON;
@@ -314,37 +321,20 @@ begin
 end;  { DeleteRec }
 
 
-function TfrmPushToCertify.CalcUploadStatus: String;
-var
-  arrJson : TJSONArray;
-
-begin
-  case FHTTPReturnCode of
-    200..299:
-      Begin
-        arrJson := RESTResponse.JSONValue As TJSONArray;
-        Result  := arrJson.Items[0].GetValue<string>('Status');
-      End;
-
-    400..499:
-      Result := RESTResponse.JSONValue.GetValue<string>('errorMessage');
-
-  end;  { Case }
-
-end;  { CalcUploadStatus }
-
 
 procedure TfrmPushToCertify.Add_CrewTail_Rec;
 var
   stlBody: TStringList;
 
 begin
+  Memo1.Lines.Clear;
+
   stlBody := TStringList.Create;
 
   RESTClient.BaseURL := FtheBaseURL + '/' + IntToStr(FCertifyDimension) ;      // 'https://api.certify.com/v1/exprptglds/1';
   RESTRequest.Method := rmPUT;
 
-  ShowMessage(RESTClient.BaseURL);
+  Memo1.Lines.Add( RESTClient.BaseURL );
 
   // Format JSON data packet
   stlBody.Add('{"ExpRptGLDIndex": ' + IntToStr(FCertifyDimension) + ',' );
@@ -354,15 +344,61 @@ begin
   stlBody.Add(Format(' "Data": "%s", ',    [FTailNumber ] ) );
   stlBody.Add(' "Active": 1 }');
 
-  ShowMessage(stlBody.Text);
-
+  Memo1.Lines.AddStrings(stlBody);
+  RESTRequest.ClearBody;
   RESTRequest.AddBody( stlBody.Text );
   RESTRequest.Params.Items[0].ContentType := ctAPPLICATION_JSON;
-//  RESTRequest.Execute;
+
+  try
+    RESTRequest.Execute;
+    FHTTPReturnCode      := RESTResponse.StatusCode ;    //RESTRequest.Response.StatusCode;
+    FUploadStatus        := CalcUploadStatus();
+    FUploadStatusMessage := RESTResponse.JSONText ;
+
+    memo1.lines.append(IntToStr(RESTResponse.StatusCode));
+    memo1.lines.append(FUploadStatus);
+    memo1.lines.append(RESTResponse.StatusText);
+    memo1.lines.append(RESTResponse.JSONText);
+    memo1.lines.append(RESTResponse.Content);
+
+  except on E: Exception do
+    Memo1.Lines.Append('Exception! ' + #13 + E.Message);
+
+  end;
 
   stlBody.Free;
 
 end;  { Add_Crew_Tail_Rec }
+
+
+
+function TfrmPushToCertify.CalcUploadStatus: String;
+var
+  arrJson : TJSONArray;
+
+begin
+  case FHTTPReturnCode of
+    200..299:
+      Begin
+        if RESTResponse.JSONValue is TJSONArray then begin
+          arrJson := RESTResponse.JSONValue As TJSONArray;
+          Result  := arrJson.Items[0].GetValue<string>('Status');
+        end else begin
+          If RESTResponse.JSONValue.GetValue<string>('ID') <> '' Then
+            Result := 'Added:' + RESTResponse.JSONValue.GetValue<string>('ID')
+          else
+            Result := 'Add-Failed';
+        end;
+
+      End;
+
+    400..499:
+      Result := RESTResponse.JSONValue.GetValue<string>('errorMessage');
+
+  end;  { Case }
+
+end;  { CalcUploadStatus }
+
 
 
 procedure TfrmPushToCertify.Add_CrewLog_Rec;
