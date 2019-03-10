@@ -2084,6 +2084,8 @@ begin
     gloPusher.DataAction          := WorkingQueryIn.FieldByName('RecordStatus').AsString;
     gloPusher.TailNumber          := WorkingQueryIn.FieldByName('TailNumber').AsString;
     gloPusher.CrewMemberVendorNum := WorkingQueryIn.FieldByName('CrewMemberVendorNumber').AsString;
+    gloPusher.LogNumber           := 0;
+    gloPusher.TripNumber          := 0;
     gloPusher.Push;
 
     WorkingQueryIn.Edit;
