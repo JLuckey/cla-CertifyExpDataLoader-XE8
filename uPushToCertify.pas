@@ -310,16 +310,12 @@ begin
   try
     RESTRequest.Execute;
     // set Return Value properties
-    FHTTPReturnCode      := RESTResponse.StatusCode ;    //RESTRequest.Response.StatusCode;
+    FHTTPReturnCode      := RESTResponse.StatusCode ;    // RESTRequest.Response.StatusCode;
     FUploadStatus        := DecodeUploadStatus();
     FUploadStatusMessage := RESTResponse.JSONText ;
 
-//    ShowMessage(IntToStr(RESTRequest.Response.StatusCode) + '||' + RESTRequest.Response.StatusText + #13 +
-//                         'JSONText: ' + RESTRequest.Response.JSONText + #13 +
-//                         'ErrorMsg: ' + RESTRequest.Response.Content );
   except on E: Exception do
-    ShowMessage('Exception!: ' + #13 + E.Message);    // Change all ShowMessages to
-
+    LogException('Exception in SetCertifyActiveFlag()', E);
   end;
 
 end;  { SetCertifyActiveFlag }
@@ -365,7 +361,7 @@ begin
 
   try
     RESTRequest.Execute;
-    FHTTPReturnCode      := RESTResponse.StatusCode ;    //RESTRequest.Response.StatusCode;
+    FHTTPReturnCode      := RESTResponse.StatusCode ;
     FUploadStatus        := DecodeUploadStatus();
     FUploadStatusMessage := RESTResponse.JSONText ;
 
@@ -580,6 +576,11 @@ end;
 
 (*
 Old/Depricated Code:
+
+//    ShowMessage(IntToStr(RESTRequest.Response.StatusCode) + '||' + RESTRequest.Response.StatusText + #13 +
+//                         'JSONText: ' + RESTRequest.Response.JSONText + #13 +
+//                         'ErrorMsg: ' + RESTRequest.Response.Content );
+
 
  //   strStatusOut := RESTResponse.JSONValue.ToString;
  //   arrJson := RESTResponse.JSONValue As TJSONArray;

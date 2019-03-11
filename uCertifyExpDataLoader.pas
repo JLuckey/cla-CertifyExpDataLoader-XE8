@@ -285,7 +285,7 @@ begin
 
   LoadData(BatchTime);
 
-  BuildEmployeeFile(BatchTime);
+//  BuildEmployeeFile(BatchTime);
 
   BuildValidationFiles;
 
@@ -437,7 +437,7 @@ begin
 
   TargetDirectory :=  edOutputDirectory.Text;  // 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\';
 
-//  LoadCrewTailHistoryTable();       ???JL
+//  LoadCrewTailHistoryTable();      // ???JL
   BuildCrewTripFile;
   BuildCrewLogFile;
 

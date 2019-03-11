@@ -844,8 +844,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'RRENT_TIMESTAMP + :parmDaysForward )'
       '  and STATUS = '#39'confirmed'#39
       'order by QUOTENO')
-    Left = 442
-    Top = 298
+    Left = 473
+    Top = 289
     ParamData = <
       item
         DataType = ftInteger
@@ -856,8 +856,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object tblStartBucket: TUniTable
     TableName = 'CertifyExp_Trips_StartBucket'
     Connection = UniConnection1
-    Left = 508
-    Top = 274
+    Left = 523
+    Top = 251
   end
   object qryUpdateHasCCField: TUniQuery
     Connection = UniConnection1
@@ -1127,8 +1127,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       ''
       '')
-    Left = 101
-    Top = 543
+    Left = 159
+    Top = 532
     ParamData = <
       item
         DataType = ftUnknown

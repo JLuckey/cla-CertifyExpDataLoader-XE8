@@ -49,14 +49,6 @@ object frmPushToCertify: TfrmPushToCertify
     Top = 8
     Width = 352
     Height = 198
-    Lines.Strings = (
-      '[               '
-      '    {'
-      '    "ID":"c9aa4f93-3217-4524-8097-625a66152cd3",'
-      '    "Status":"Updated",'
-      '    "Message":""'
-      '  }'
-      ']')
     ScrollBars = ssVertical
     TabOrder = 1
   end
