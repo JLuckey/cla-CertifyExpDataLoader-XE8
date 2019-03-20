@@ -169,11 +169,12 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Text = 'certify_employees.csv'
   end
   object btnMain: TButton
-    Left = 396
+    Left = 395
     Top = 305
     Width = 99
     Height = 25
     Caption = 'btnMain'
+    Enabled = False
     TabOrder = 3
     OnClick = btnMainClick
   end
@@ -231,14 +232,14 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     TabOrder = 9
     Text = '45'
   end
-  object btnTest: TButton
+  object btnGoHourly: TButton
     Left = 633
     Top = 396
     Width = 75
     Height = 25
-    Caption = 'btnTest'
+    Caption = 'btnGoHourly'
     TabOrder = 10
-    OnClick = btnTestClick
+    OnClick = btnGoHourlyClick
   end
   object edCharterVisaUsers: TEdit
     Left = 14
@@ -257,7 +258,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     TabOrder = 12
     Text = 
       'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\InputFiles\tail_lea' +
-      'dpilot_20190107.csv'
+      'dpilot_20190215.csv'
   end
   object btnLoadTailLeadPilotTable: TButton
     Left = 569
@@ -265,6 +266,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 139
     Height = 25
     Caption = 'Load Tail_LeadPilot Table'
+    Enabled = False
     TabOrder = 13
     OnClick = btnLoadTailLeadPilotTableClick
   end
@@ -1189,16 +1191,12 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryGetCrewTailRecs: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
-      
-        'select ID, CrewMemberVendorNum, TailNumber, CreatedOn, RecordSta' +
-        'tus, UploadedOn, UploadStatus, UploadStatusMessage, UploadBatchI' +
-        'D'
+      'select ID, CrewMemberVendorNum, TailNumber, CreatedOn, '
+      '       RecordStatus, UploadedOn, UploadStatus, '
+      '       UploadStatusMessage, UploadBatchID'
       'from CertifyExp_CrewTail_History'
       'where RecordStatus = :parmRecStatusIn'
       '  and CreatedOn    = :parmCreatedOnIn'
-      ''
-      ''
-      ''
       '')
     Left = 209
     Top = 441
@@ -1219,9 +1217,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     SQL.Strings = (
       '/* Flag Deleted Recs */'
       'update CertifyExp_CrewTail_History'
-      
-        'set RecordStatus = :parmRecStatus                  /* '#39'deleted'#39',' +
-        ' '#39'added'#39' */'
+      'set RecordStatus = :parmRecStatus       /* '#39'deleted'#39', '#39'added'#39' */'
       'where CreatedOn = :parmOlderDate '
       '  and RecordStatus = '#39'imported'#39'        '
       '  and concat(CrewMemberVendorNum, '#39'|'#39', TailNumber) not in '
@@ -1229,8 +1225,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '   from CertifyExp_CrewTail_History'
       '   where CreatedOn = :parmNewerDate       '
       '     and RecordStatus = '#39'imported'#39' )   ')
-    Left = 277
-    Top = 458
+    Left = 301
+    Top = 459
     ParamData = <
       item
         DataType = ftUnknown

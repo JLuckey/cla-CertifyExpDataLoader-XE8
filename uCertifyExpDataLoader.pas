@@ -143,7 +143,7 @@ type
     Label14: TLabel;
     Label15: TLabel;
     qryInsertCharterVisa: TUniQuery;
-    btnTest: TButton;
+    btnGoHourly: TButton;
     edCharterVisaUsers: TEdit;
     Label16: TLabel;
     qryGetDOMEmployees: TUniQuery;
@@ -167,7 +167,7 @@ type
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure btnTestClick(Sender: TObject);
+    procedure btnGoHourlyClick(Sender: TObject);
     procedure btnLoadTailLeadPilotTableClick(Sender: TObject);
 
   private
@@ -282,10 +282,9 @@ var
 
 begin
   BatchTime := GetTimeFromDBServer;
-
   LoadData(BatchTime);
 
-//  BuildEmployeeFile(BatchTime);
+  BuildEmployeeFile(BatchTime);
 
   BuildValidationFiles;
 
@@ -329,9 +328,9 @@ end;  { LoadData() }
 
 
 
-procedure TufrmCertifyExpDataLoader.btnTestClick(Sender: TObject);
+procedure TufrmCertifyExpDataLoader.btnGoHourlyClick(Sender: TObject);
 begin
-  // LoadCharterVisaTripsIntoStartBucket;
+// LoadCharterVisaTripsIntoStartBucket;
 // LoadDOMsIntoStartBucket(StrToDateTime('12/20/2018 12:44:42.020'));
 
 //  ShowMessage(FindLeadPilot('N32MJ',  StrToDateTime('12/20/2018 12:44:42.020')));
@@ -342,7 +341,6 @@ begin
 //  ShowMessage(CalcCertfileDepartmentName('Hybrid'));
 
   HourlyPushMain;
-
 
 end;
 
@@ -368,7 +366,8 @@ begin
     Self.Show;
     Application.ProcessMessages;
     Sleep(2000);
-    Main;
+//    Main;
+    HourlyPushMain;
     Sleep(2000);
     Application.Terminate;
   end;
@@ -437,7 +436,9 @@ begin
 
   TargetDirectory :=  edOutputDirectory.Text;  // 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\';
 
-//  LoadCrewTailHistoryTable();      // ???JL
+//  LoadCrewTripHistoryTable();
+//  LoadCrewLogHistoryTable();
+
   BuildCrewTripFile;
   BuildCrewLogFile;
 
@@ -630,8 +631,6 @@ begin
     Result := True;
 
 end;
-
-
 
 
 procedure TufrmCertifyExpDataLoader.FilterTripsByCount;
@@ -2042,16 +2041,16 @@ var
   PreviousBatchDate, NewBatchDate : TDateTime;
 
 begin
-//  BatchTime := GetTimeFromDBServer();
-//  LoadData(BatchTime);                      // loads data into StartBucket
-//  LoadCrewTailHistoryTable(BatchTime);      // puts latest batch into CrewTailHistory table
+  BatchTime := GetTimeFromDBServer();
+  LoadData(BatchTime);                              // loads data into StartBucket
+  LoadCrewTailHistoryTable(BatchTime);              // puts latest batch into CrewTailHistory table
   GetBatchDates(PreviousBatchDate, NewBatchDate);   // those params are output
 
-  gloPusher := TfrmPushToCertify.Create(self);
-  gloPusher.theBaseURL   := 'https://api.certify.com/v1/exprptglds';
-  gloPusher.APIKey    := 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv' ;
-  gloPusher.APISecret := '4843793A-6326-4F92-86EB-D34070C34CDC' ;
 
+//  gloPusher := TfrmPushToCertify.Create(self);
+//  gloPusher.theBaseURL := 'https://api.certify.com/v1/exprptglds';
+//  gloPusher.APIKey     := 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv' ;
+//  gloPusher.APISecret  := '4843793A-6326-4F92-86EB-D34070C34CDC' ;
 
 (*
   //  Get Failed Recs from previous Pushes
@@ -2061,45 +2060,57 @@ begin
   SendToCertify(qryGetFailedRecs_CrewTail, BatchTime);
   qryGetFailedRecs_CrewTail.Close;
 *)
-//  UpdateRecordStatus_CrewTail('added', PreviousBatchDate, NewBatchDate);
+
+  // Get Added recs from this new batch
+  UpdateRecordStatus_CrewTail('added', PreviousBatchDate, NewBatchDate);
+{  qryGetCrewTailRecs.ParamByName('parmCreatedOnIn').AsDateTime := NewBatchDate;
+  qryGetCrewTailRecs.ParamByName('parmRecStatusIn').AsString   := 'added';
+  qryGetCrewTailRecs.Open;
+
+  SendToCertify(qryGetCrewTailRecs, BatchTime);
+  qryGetCrewTailRecs.Close;
+}
 
   //  Get Deleted recs from this new batch
   UpdateRecordStatus_CrewTail('deleted', NewBatchDate, PreviousBatchDate);
-  qryGetCrewTailRecs.ParamByName('parmCreatedOnIn').AsDateTime := PreviousBatchDate;
-  qryGetCrewTailRecs.ParamByName('parmRecStatusIn').AsString   := 'deleted';
-  qryGetCrewTailRecs.Open;
-  SendToCertify(qryGetCrewTailRecs, BatchTime);
-  qryGetCrewTailRecs.Close;
+//  qryGetCrewTailRecs.ParamByName('parmCreatedOnIn').AsDateTime := PreviousBatchDate;
+//  qryGetCrewTailRecs.ParamByName('parmRecStatusIn').AsString   := 'deleted';
+//  qryGetCrewTailRecs.Open;
+//
+//  SendToCertify(qryGetCrewTailRecs, BatchTime);
+//  qryGetCrewTailRecs.Close;
+//
+//  gloPusher.free
 
-  gloPusher.free
+  StatusBar1.Panels[1].Text := 'Current Task:  All done!'  ;
 
-end;  // HourlyPushMain
+
+end;  { HourlyPushMain }
 
 
 procedure TufrmCertifyExpDataLoader.SendToCertify(Const WorkingQueryIn: TUniQuery; Const BatchTimeIn : TDateTime);
 begin
 
   while Not WorkingQueryIn.eof do begin
-    gloPusher.DataSetName         := 'crew_tail';        // sets Dimension
+    gloPusher.DataSetName         := 'crew_tail';        // sets Certify "Dimension"
     gloPusher.DataAction          := WorkingQueryIn.FieldByName('RecordStatus').AsString;
     gloPusher.TailNumber          := WorkingQueryIn.FieldByName('TailNumber').AsString;
     gloPusher.CrewMemberVendorNum := WorkingQueryIn.FieldByName('CrewMemberVendorNumber').AsString;
-    gloPusher.LogNumber           := 0;
-    gloPusher.TripNumber          := 0;
+    gloPusher.LogNumber           := '0';
+    gloPusher.TripNumber          := '0';
     gloPusher.Push;
 
     WorkingQueryIn.Edit;
-    WorkingQueryIn.FieldByName('HTTPResultCode').AsString      := gloPusher.HTTPReturnCode;
+    WorkingQueryIn.FieldByName('HTTPResultCode').AsString      := IntToStr(gloPusher.HTTPReturnCode);
     WorkingQueryIn.FieldByName('UploadStatus').AsString        := gloPusher.UploadStatus;
     WorkingQueryIn.FieldByName('UploadStatusMessage').AsString := gloPusher.UploadStatusMessage;
     WorkingQueryIn.FieldByName('UploadedOn').AsDateTime        := BatchTimeIn;
 
-//    WorkingQueryIn.FieldByName('UploadBatchID').AsDateTime     := UploadBatchID;
     WorkingQueryIn.Post;
     WorkingQueryIn.Next
   end;  { While }
 
-end;
+end;  { SendToCertify() }
 
 
 procedure TufrmCertifyExpDataLoader.GetNewCrewTailRecs(Const PreviousBatchDateIn, NewBatchDateIn: TDateTime; Var stlNewCrewTailOut: TStringList);
@@ -2156,12 +2167,10 @@ begin
   PreviousBatchDateOut := qryGetCrewTailBatchDates.FieldByName('CreatedOn').AsDateTime;
   qryGetCrewTailBatchDates.Close;
 
-  ShowMessage('NewBatchDate: '      + DateTimeToStr(NewBatchDateOut) + #13 +
-              'PreviousBatchDate: ' + DateTimeToStr(PreviousBatchDateOut) );
+//  ShowMessage('NewBatchDate: '      + DateTimeToStr(NewBatchDateOut) + #13 +
+//              'PreviousBatchDate: ' + DateTimeToStr(PreviousBatchDateOut) );
 
 end;
-
-
 
 
 end.
