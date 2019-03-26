@@ -219,14 +219,7 @@ begin
   DataAction          := edAction.Text;
   theBaseURL          := 'https://api.certify.com/v1/exprptglds';
 
-//  DeleteRec;
-//  Add_CrewTail_Rec;
   Push;
-
-//  foo := 'fkjls-kdjfk-fjju83';
-//  x := 0;
-//  strBody := Format('{ "ID" : "%s", "Active": %s }', [foo, IntToStr(x)] );                 // Setting "Active" flag to 0 disables record; Certify does not allow us to actually delete record
-//  ShowMessage('firday!:' + strbody);
 
 end;
 
@@ -258,11 +251,10 @@ begin
       2: strSearch := FCrewMemberVendorNum + '|' + FTripNumber;   // confirm order here  ???JL
       3: strSearch := FCrewMemberVendorNum + '|' + FLogNumber;
     end;
-
     DeleteRec(strSearch, FCertifyDimension);
 
   end else begin
-    // Error
+    FUploadStatus := 'Error - Unknown DataAction: ' + FDataAction;
 
   end;  { If }
 
@@ -289,7 +281,7 @@ var
 begin
   KeyID := GetCertifyRecKey( SearchStringIn, CertDimensionIn );    // ie: ('15213|N800KS', 1);
   if KeyID = 'NOT_FOUND' then
-
+    FUploadStatus := 'NOT_FOUND'
   else
     SetCertifyActiveFlag( CertDimensionIn, KeyID, 0 );            // setting Active flag = 0 is equivalent to deleting record per Certify
 
@@ -321,7 +313,6 @@ begin
 end;  { SetCertifyActiveFlag }
 
 
-
 procedure TfrmPushToCertify.Add_CrewTail_Rec;
 var
   stlBody: TStringList;
@@ -333,50 +324,49 @@ begin
 
   strVendorTail := Format('%s|%s', [FCrewMemberVendorNum, FTailNumber] ) ;
 
-//  Check for Duplicate record
-
+  // Check if crew_tail value already exists
   RecordKey := GetCertifyRecKey(strVendorTail, FCertifyDimension);
-  if RecordKey <> '' then       // If a record exists (because its key is not blank)
-    SetCertifyActiveFlag(1, RecordKey, 1);
+  if RecordKey = 'NOT_FOUND' then begin           // If Not Found then create new record
+    stlBody := TStringList.Create;
+    try
+      RESTClient.BaseURL := FtheBaseURL + '/' + IntToStr(FCertifyDimension) ;      // 'https://api.certify.com/v1/exprptglds/1';
+      RESTRequest.Method := rmPUT;
+      Memo1.Lines.Add( RESTClient.BaseURL );
 
-  stlBody := TStringList.Create;
+      // Format JSON data packet
+      stlBody.Add('{"ExpRptGLDIndex": ' + IntToStr(FCertifyDimension) + ',' );
+      stlBody.Add(' "ExpRptGLDLabel": "Tail #", ');
+      stlBody.Add(Format(' "Name": "%s",',  [FTailNumber]));
+      stlBody.Add(Format(' "Code": "%s", ', [strVendorTail] ) );
+      stlBody.Add(Format(' "Data": "%s", ', [FTailNumber ] ) );
+      stlBody.Add(' "Active": 1 }');
 
-  RESTClient.BaseURL := FtheBaseURL + '/' + IntToStr(FCertifyDimension) ;      // 'https://api.certify.com/v1/exprptglds/1';
-  RESTRequest.Method := rmPUT;
+      Memo1.Lines.AddStrings(stlBody);
+      RESTRequest.ClearBody;
+      RESTRequest.AddBody( stlBody.Text );
+      RESTRequest.Params.Items[0].ContentType := ctAPPLICATION_JSON;
+      try
+        RESTRequest.Execute;
+        FHTTPReturnCode      := RESTResponse.StatusCode ;
+        FUploadStatus        := DecodeUploadStatus();
+        FUploadStatusMessage := RESTResponse.JSONText ;
 
-  Memo1.Lines.Add( RESTClient.BaseURL );
+        memo1.lines.append(IntToStr(RESTResponse.StatusCode));
+        memo1.lines.append(FUploadStatus);
+        memo1.lines.append(RESTResponse.StatusText);
+        memo1.lines.append(RESTResponse.JSONText);
+        memo1.lines.append(RESTResponse.Content);
+      except on E: Exception do
+        Memo1.Lines.Append('Exception! ' + #13 + E.Message);
+      end;
 
-  // Format JSON data packet
-  stlBody.Add('{"ExpRptGLDIndex": ' + IntToStr(FCertifyDimension) + ',' );
-  stlBody.Add(' "ExpRptGLDLabel": "Tail #", ');
-  stlBody.Add(Format(' "Name": "%s",',  [FTailNumber]));
-  stlBody.Add(Format(' "Code": "%s", ', [strVendorTail] ) );
-  stlBody.Add(Format(' "Data": "%s", ', [FTailNumber ] ) );
-  stlBody.Add(' "Active": 1 }');
+    finally
+      stlBody.Free;
+    end;
 
-  Memo1.Lines.AddStrings(stlBody);
-  RESTRequest.ClearBody;
-  RESTRequest.AddBody( stlBody.Text );
-  RESTRequest.Params.Items[0].ContentType := ctAPPLICATION_JSON;
-
-  try
-    RESTRequest.Execute;
-    FHTTPReturnCode      := RESTResponse.StatusCode ;
-    FUploadStatus        := DecodeUploadStatus();
-    FUploadStatusMessage := RESTResponse.JSONText ;
-
-    memo1.lines.append(IntToStr(RESTResponse.StatusCode));
-    memo1.lines.append(FUploadStatus);
-    memo1.lines.append(RESTResponse.StatusText);
-    memo1.lines.append(RESTResponse.JSONText);
-    memo1.lines.append(RESTResponse.Content);
-
-  except on E: Exception do
-    Memo1.Lines.Append('Exception! ' + #13 + E.Message);
-
+  end else begin
+    SetCertifyActiveFlag(1, RecordKey, 1);      // if Found then set it's Active Flag to TRUE
   end;
-
-  stlBody.Free;
 
 end;  { Add_Crew_Tail_Rec }
 
@@ -443,8 +433,10 @@ Begin
 //      Sleep(1);
 //      //ShowMessage('ClassName: ' + E.ClassName);
 
-    on E: Exception do
-      LogException('from GetCertifyRecKey', E);
+    on E: Exception do begin
+      Result := 'Exception!';
+      LogException('from GetCertifyRecKey()', E);
+    end;
 
   end;
 

@@ -2041,16 +2041,16 @@ var
   PreviousBatchDate, NewBatchDate : TDateTime;
 
 begin
-  BatchTime := GetTimeFromDBServer();
+  BatchTime := StrToDateTime('03/25/2019 22:15:00');   // GetTimeFromDBServer();
   LoadData(BatchTime);                              // loads data into StartBucket
   LoadCrewTailHistoryTable(BatchTime);              // puts latest batch into CrewTailHistory table
-  GetBatchDates(PreviousBatchDate, NewBatchDate);   // those params are output
+(*GetBatchDates(PreviousBatchDate, NewBatchDate);   // those params are output
 
 
-//  gloPusher := TfrmPushToCertify.Create(self);
-//  gloPusher.theBaseURL := 'https://api.certify.com/v1/exprptglds';
-//  gloPusher.APIKey     := 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv' ;
-//  gloPusher.APISecret  := '4843793A-6326-4F92-86EB-D34070C34CDC' ;
+  gloPusher := TfrmPushToCertify.Create(self);
+  gloPusher.theBaseURL := 'https://api.certify.com/v1/exprptglds';
+  gloPusher.APIKey     := 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv' ;
+  gloPusher.APISecret  := '4843793A-6326-4F92-86EB-D34070C34CDC' ;
 
 (*
   //  Get Failed Recs from previous Pushes
@@ -2062,28 +2062,27 @@ begin
 *)
 
   // Get Added recs from this new batch
-  UpdateRecordStatus_CrewTail('added', PreviousBatchDate, NewBatchDate);
-{  qryGetCrewTailRecs.ParamByName('parmCreatedOnIn').AsDateTime := NewBatchDate;
+(*UpdateRecordStatus_CrewTail('added', PreviousBatchDate, NewBatchDate);
+  qryGetCrewTailRecs.ParamByName('parmCreatedOnIn').AsDateTime := NewBatchDate;
   qryGetCrewTailRecs.ParamByName('parmRecStatusIn').AsString   := 'added';
   qryGetCrewTailRecs.Open;
 
   SendToCertify(qryGetCrewTailRecs, BatchTime);
   qryGetCrewTailRecs.Close;
-}
+
 
   //  Get Deleted recs from this new batch
   UpdateRecordStatus_CrewTail('deleted', NewBatchDate, PreviousBatchDate);
-//  qryGetCrewTailRecs.ParamByName('parmCreatedOnIn').AsDateTime := PreviousBatchDate;
-//  qryGetCrewTailRecs.ParamByName('parmRecStatusIn').AsString   := 'deleted';
-//  qryGetCrewTailRecs.Open;
-//
-//  SendToCertify(qryGetCrewTailRecs, BatchTime);
-//  qryGetCrewTailRecs.Close;
-//
-//  gloPusher.free
+  qryGetCrewTailRecs.ParamByName('parmCreatedOnIn').AsDateTime := PreviousBatchDate;
+  qryGetCrewTailRecs.ParamByName('parmRecStatusIn').AsString   := 'deleted';
+  qryGetCrewTailRecs.Open;
 
+  SendToCertify(qryGetCrewTailRecs, BatchTime);
+  qryGetCrewTailRecs.Close;
+
+  gloPusher.free ;
+*)
   StatusBar1.Panels[1].Text := 'Current Task:  All done!'  ;
-
 
 end;  { HourlyPushMain }
 

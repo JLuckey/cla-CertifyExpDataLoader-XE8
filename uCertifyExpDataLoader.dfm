@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'ufrmCertifyExpDataLoader-Phase 2C v 0.1'
+  Caption = 'ufrmCertifyExpDataLoader-Phase 2C v 0.1 - Hourly'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -965,6 +965,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryInsertCharterVisa: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
+      '/*'
       'insert into CertifyExp_Trips_StartBucket'
       
         'select distinct L.logsheet, '#39'CharterVisa'#39', T.QUOTENO, L.acregno,' +
@@ -977,14 +978,29 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'RRENT_TIMESTAMP) )   -- in-progress'
       
         '   OR ( (departure > (CURRENT_TIMESTAMP - 10)) and (arrival < CU' +
-        'RRENT_TIMESTAMP) )   -- ended within the past 10 days')
-    Left = 131
+        'RRENT_TIMESTAMP) )   -- ended within the past 10 days'
+      '*/'
+      ''
+      
+        'select distinct L.logsheet, '#39'CharterVisa'#39', T.QUOTENO, L.acregno,' +
+        ' null, :parmCrewMemberVendorNum, null'
+      
+        'from QuoteSys_TripLeg L LEFT OUTER JOIN QuoteSys_Trip T ON L.ACR' +
+        'EGNO = T.ACREGNO AND L.LOGSHEET = T.LOGSHEET'
+      
+        'where ( (departure < '#39'2019-03-25 22:15:00'#39')        and (arrival ' +
+        '> '#39'2019-03-25 22:15:00'#39') )   -- in-progress'
+      
+        '   OR ( (departure > ('#39'2019-03-13 22:14:00'#39')) and (arrival < '#39'20' +
+        '19-03-25 22:15:00'#39') )   -- ended within the past 10 days'
+      '')
+    Left = 133
     Top = 251
     ParamData = <
       item
-        DataType = ftInteger
+        DataType = ftUnknown
         Name = 'parmCrewMemberVendorNum'
-        Value = 77777
+        Value = nil
       end>
   end
   object qryGetDOMEmployees: TUniQuery
