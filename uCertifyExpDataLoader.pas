@@ -85,14 +85,14 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, UniProvider, SQLServerUniProvider, Data.DB, MemDS, DBAccess, Uni, Vcl.ComCtrls,
   IdMessage, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdExplicitTLSClientServerBase, IdMessageClient, IdSMTPBase,
   IdSMTP, IdAttachment, IdAttachmentFile, DAScript, UniScript , IniFiles
-<<<<<<< HEAD
+// <<<<<<< HEAD
   , uPushToCertify, Vcl.Grids, Vcl.DBGrids;
 
 
-=======
-  , System.UITypes
-  ;
->>>>>>> Branch_BugFix_DOM_ApproverEmail
+// =======
+//  , System.UITypes
+//  ;
+//>>>>>>> Branch_BugFix_DOM_ApproverEmail
 
 type
   TufrmCertifyExpDataLoader = class(TForm)
@@ -195,6 +195,7 @@ type
     Procedure ValidateRecords(Const BatchTimeIn: Tdatetime);
     Procedure UpdateDupeEmailRecs( Const EMailIn: String; BatchTimeIn: TDateTime);
     Procedure BuildCrewLogFile();
+    Procedure BuildCrewTailFile();
     Procedure LoadCrewTailHistoryTable(Const BatchTimeIn: TDateTime);
     Procedure BuildCrewTripFile();
     Procedure BuildTripLogFile();
@@ -1230,11 +1231,10 @@ end;  { BuildCrewLogFile }
 procedure TufrmCertifyExpDataLoader.LoadCrewTailHistoryTable(Const BatchTimeIn: TDateTime);
 Var
   RowOut : String;
-  WorkFile : TextFile;
+  WorkFile : TextFile;                // ??? superfluous?
   CurrentBatchDateTime : TDateTime;
 
 begin
-
   StatusBar1.Panels[1].Text := 'Current Task:  Loading data into CrewTail_History table'  ;
   Application.ProcessMessages;
 
@@ -1242,8 +1242,17 @@ begin
   qryInsertCrewTailHist.ParamByName('parmBatchDateTime').AsDateTime := BatchTimeIn ;
   qryInsertCrewTailHist.Execute;
 
+end;  { LoadCrewTailHistoryTable }
 
-(*
+
+
+procedure TufrmCertifyExpDataLoader.BuildCrewTailFile;
+Var
+  RowOut : String;
+  WorkFile : TextFile;
+  CurrentBatchDateTime : TDateTime;
+
+begin
   qryBuildValFile.Close;
   qryBuildValFile.SQL.Clear;
   qryBuildValFile.SQL.Add('select TailNumber, CrewMemberVendorNum ');
@@ -1267,10 +1276,8 @@ begin
 
   CloseFile(WorkFile);
   qryBuildValFile.Close;
-*)
 
 end;  { BuildCrewTailFile }
-
 
 
 procedure TufrmCertifyExpDataLoader.BuildCrewTripFile;

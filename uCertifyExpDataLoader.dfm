@@ -1,13 +1,8 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-<<<<<<< HEAD
   Caption = 'ufrmCertifyExpDataLoader-Phase 2C v 0.1 - Hourly'
   ClientHeight = 601
-=======
-  Caption = 'ufrmCertifyExpDataLoader-Phase 2D v 0.3'
-  ClientHeight = 446
->>>>>>> Branch_BugFix_DOM_ApproverEmail
   ClientWidth = 716
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
