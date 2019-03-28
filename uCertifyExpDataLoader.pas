@@ -1246,7 +1246,7 @@ end;  { LoadCrewTailHistoryTable }
 
 
 
-procedure TufrmCertifyExpDataLoader.BuildCrewTailFile;
+procedure TufrmCertifyExpDataLoader.BuildCrewTailFile;    // may want to piggy-back this on to LoadCrewHistoryTable  ???JL
 Var
   RowOut : String;
   WorkFile : TextFile;
@@ -2081,24 +2081,24 @@ var
   PreviousBatchDate, NewBatchDate : TDateTime;
 
 begin
-  BatchTime :=  GetTimeFromDBServer();          //StrToDateTime('03/25/2019 22:15:00');
-//  LoadData(BatchTime);                              // loads data into StartBucket
-//  LoadCrewTailHistoryTable(BatchTime);              // puts latest batch into CrewTailHistory table
+  BatchTime := GetTimeFromDBServer();          //StrToDateTime('03/25/2019 22:15:00');
+  LoadData(BatchTime);                              // loads data into StartBucket
+  LoadCrewTailHistoryTable(BatchTime);              // puts latest batch into CrewTailHistory table
   GetBatchDates(PreviousBatchDate, NewBatchDate);   // those params are output
 
+(*
   gloPusher := TfrmPushToCertify.Create(self);
   gloPusher.theBaseURL := 'https://api.certify.com/v1/exprptglds';
   gloPusher.APIKey     := 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv' ;
   gloPusher.APISecret  := '4843793A-6326-4F92-86EB-D34070C34CDC' ;
 
-(*
-  //  Get Failed Recs from previous Pushes
-  qryGetFailedRecs_CrewTail.Close;
-  qryGetFailedRecs_CrewTail.ParamByName('parmNewBatchDateIn').AsDateTime := NewBatchDate;
-  qryGetFailedRecs_CrewTail.Open;
-  SendToCertify(qryGetFailedRecs_CrewTail, BatchTime);
-  qryGetFailedRecs_CrewTail.Close;
-*)
+//  //  Get Failed Recs from previous Pushes
+//  qryGetFailedRecs_CrewTail.Close;
+//  qryGetFailedRecs_CrewTail.ParamByName('parmNewBatchDateIn').AsDateTime := NewBatchDate;
+//  qryGetFailedRecs_CrewTail.Open;
+//  SendToCertify(qryGetFailedRecs_CrewTail, BatchTime);
+//  qryGetFailedRecs_CrewTail.Close;
+
 
   // Get Added recs from this new batch
   UpdateRecordStatus_CrewTail('added', PreviousBatchDate, NewBatchDate);
@@ -2118,7 +2118,10 @@ begin
 
   gloPusher.free ;
 
+*)
+
   StatusBar1.Panels[1].Text := 'Current Task:  All done!'  ;
+
 
 end;  { HourlyPushMain }
 

@@ -25,7 +25,7 @@ EditWindowCount=1
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas]
 ModuleType=TSourceModule
 FormState=1
-FormOnTop=0
+FormOnTop=1
 
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj]
 ModuleType=TBaseProject
@@ -86,13 +86,13 @@ EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpD
 [View2]
 CustomEditViewType=TEditView
 Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-CursorX=1
-CursorY=1267
-TopLine=1229
+CursorX=61
+CursorY=1898
+TopLine=1874
 LeftCol=1
 Elisions=
 Bookmarks={1,1245,34}
-EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
+EditViewName=Borland.FormDesignerView
 
 [Watches]
 Count=0
@@ -119,8 +119,9 @@ Dockable=1
 StayOnTop=0
 
 [Breakpoints]
-Count=1
+Count=2
 Breakpoint0='F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',347,'',0,1,'',1,0,0,'',1,'','','',0,''
+Breakpoint1='F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',2084,'',0,1,'',1,0,0,'',1,'','','',0,''
 
 [EmbarcaderoWin32Debugger_AddressBreakpoints]
 Count=0
@@ -303,8 +304,8 @@ SplitPos=90
 
 [PropInspDesignerSelection]
 ArrangeBy=Name
-SelectedItem=Action,
-ExpandedItems=Anchors=0,BorderIcons=0,"LiveBindings Designer=0",Constraints=0
+SelectedItem=Name,
+ExpandedItems=Anchors=0,BorderIcons=0,"LiveBindings Designer=0",Constraints=0,FilterOptions=0,Options=0
 
 [frmDesignPreview]
 PercentageSizes=1
