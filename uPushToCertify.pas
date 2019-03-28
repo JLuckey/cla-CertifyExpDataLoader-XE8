@@ -344,6 +344,7 @@ begin
       Memo1.Lines.AddStrings(stlBody);
       RESTRequest.ClearBody;
       RESTRequest.AddBody( stlBody.Text );
+      Application.ProcessMessages;
       RESTRequest.Params.Items[0].ContentType := ctAPPLICATION_JSON;
       try
         RESTRequest.Execute;
@@ -422,11 +423,14 @@ Begin
   RESTClient.BaseURL := FtheBaseURL + '/' + IntToStr(DimenIn);
   theParam           := RESTRequest.Params.AddItem('code', CodeFieldValIn);
   RESTRequest.Method := rmGET;
-
-  Result := 'NOT_FOUND';
   try
     RESTRequest.Execute;
-    Result := RESTResponse.JSONValue.GetValue<string>('ExpRptGLDs[0].ID');
+
+    If (Pos('ExpRptGLDs', RESTResponse.JSONValue.ToString) > 0)  and
+       (Pos('[]',         RESTResponse.JSONValue.ToString) > 0) Then
+      Result := 'NOT_FOUND'
+    Else
+      Result := RESTResponse.JSONValue.GetValue<string>('ExpRptGLDs[0].ID');
 
   except
 //    on E: EJSONException do
@@ -434,7 +438,7 @@ Begin
 //      //ShowMessage('ClassName: ' + E.ClassName);
 
     on E: Exception do begin
-      Result := 'Exception!';
+      Result := 'NOT_FOUND';               //'Exception!';
       LogException('from GetCertifyRecKey()', E);
     end;
 

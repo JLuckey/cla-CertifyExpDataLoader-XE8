@@ -236,6 +236,8 @@ type
     Procedure GetBatchDates(Var PreviousBatchDateOut, NewBatchDateOut : TDateTime);
     Procedure UpdateRecordStatus_CrewTail(Const RecStatusIn: String; Const NewBatchDateIn, PreviousBatchDateIn: TDateTime);
 
+    Procedure LogIt(ErrorMsgIn: String);
+
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
     Function  GetTimeFromDBServer(): TDateTime;
@@ -266,6 +268,7 @@ var
   CertifyEmployeeFile : TextFile;
   CertifyEmployeeFileName : String;
   myIni : TIniFile;
+  myLog : TIniFile;
   gloPaycomErrorFile: String;
 
   gloPusher : TfrmPushToCertify;
@@ -1601,6 +1604,12 @@ end;  { FindPilotsNotInPaycom }
 
 procedure TufrmCertifyExpDataLoader.DeleteTrip(const LogSheetIn, CrewMemberIDIn, QuoteNumIn: Integer);
 begin
+
+//  LogIt('LogSheet: '  + IntToStr(LogSheetIn) + '; ' +
+//        'TripNum: '   + IntToStr(QuoteNumIn) + '; ' +
+//        'VendorNum: ' + qryGetStartBucketSorted.FieldByName('CrewMemberVendorNum').AsString + '; ' +
+//        'TailNum: '   + qryGetStartBucketSorted.FieldByName('TailNum').AsString );
+
   qryDeleteTrips.Close;
   qryDeleteTrips.ParamByName('parmLogSheetIn').AsInteger     := LogSheetIn;
   qryDeleteTrips.ParamByName('parmCrewMemberIDIn').AsInteger := CrewMemberIDIn;
@@ -2041,11 +2050,10 @@ var
   PreviousBatchDate, NewBatchDate : TDateTime;
 
 begin
-  BatchTime := StrToDateTime('03/25/2019 22:15:00');   // GetTimeFromDBServer();
-  LoadData(BatchTime);                              // loads data into StartBucket
-  LoadCrewTailHistoryTable(BatchTime);              // puts latest batch into CrewTailHistory table
-(*GetBatchDates(PreviousBatchDate, NewBatchDate);   // those params are output
-
+  BatchTime :=  GetTimeFromDBServer();          //StrToDateTime('03/25/2019 22:15:00');
+//  LoadData(BatchTime);                              // loads data into StartBucket
+//  LoadCrewTailHistoryTable(BatchTime);              // puts latest batch into CrewTailHistory table
+  GetBatchDates(PreviousBatchDate, NewBatchDate);   // those params are output
 
   gloPusher := TfrmPushToCertify.Create(self);
   gloPusher.theBaseURL := 'https://api.certify.com/v1/exprptglds';
@@ -2062,26 +2070,23 @@ begin
 *)
 
   // Get Added recs from this new batch
-(*UpdateRecordStatus_CrewTail('added', PreviousBatchDate, NewBatchDate);
-  qryGetCrewTailRecs.ParamByName('parmCreatedOnIn').AsDateTime := NewBatchDate;
+  UpdateRecordStatus_CrewTail('added', PreviousBatchDate, NewBatchDate);
+  qryGetCrewTailRecs.ParamByName('parmCreatedOnIn').AsDateTime := NewBatchDate;    // modify this query to exclude already uploaded recs  ???JL
   qryGetCrewTailRecs.ParamByName('parmRecStatusIn').AsString   := 'added';
   qryGetCrewTailRecs.Open;
-
   SendToCertify(qryGetCrewTailRecs, BatchTime);
   qryGetCrewTailRecs.Close;
-
 
   //  Get Deleted recs from this new batch
   UpdateRecordStatus_CrewTail('deleted', NewBatchDate, PreviousBatchDate);
   qryGetCrewTailRecs.ParamByName('parmCreatedOnIn').AsDateTime := PreviousBatchDate;
   qryGetCrewTailRecs.ParamByName('parmRecStatusIn').AsString   := 'deleted';
   qryGetCrewTailRecs.Open;
-
   SendToCertify(qryGetCrewTailRecs, BatchTime);
   qryGetCrewTailRecs.Close;
 
   gloPusher.free ;
-*)
+
   StatusBar1.Panels[1].Text := 'Current Task:  All done!'  ;
 
 end;  { HourlyPushMain }
@@ -2094,7 +2099,7 @@ begin
     gloPusher.DataSetName         := 'crew_tail';        // sets Certify "Dimension"
     gloPusher.DataAction          := WorkingQueryIn.FieldByName('RecordStatus').AsString;
     gloPusher.TailNumber          := WorkingQueryIn.FieldByName('TailNumber').AsString;
-    gloPusher.CrewMemberVendorNum := WorkingQueryIn.FieldByName('CrewMemberVendorNumber').AsString;
+    gloPusher.CrewMemberVendorNum := WorkingQueryIn.FieldByName('CrewMemberVendorNum').AsString;
     gloPusher.LogNumber           := '0';
     gloPusher.TripNumber          := '0';
     gloPusher.Push;
@@ -2106,7 +2111,9 @@ begin
     WorkingQueryIn.FieldByName('UploadedOn').AsDateTime        := BatchTimeIn;
 
     WorkingQueryIn.Post;
-    WorkingQueryIn.Next
+    WorkingQueryIn.Next;
+    application.ProcessMessages;
+
   end;  { While }
 
 end;  { SendToCertify() }
@@ -2170,6 +2177,28 @@ begin
 //              'PreviousBatchDate: ' + DateTimeToStr(PreviousBatchDateOut) );
 
 end;
+
+
+
+procedure TufrmCertifyExpDataLoader.LogIt(ErrorMsgIn: String);
+var
+  YearMonth       : ShortString;
+  TargetDate      : TDateTime;
+  TargetYearMonth : ShortString;
+
+begin
+  Sleep(1000);      // keeps Identifier strings for ini file entries unique. Klunky, but it works  -JL
+  myLog := TIniFile.Create( ExtractFilePath(ParamStr(0)) + 'CertifyDataLoader.log');
+  YearMonth := IntToStr(YearOf(Now)) + '-' + IntToStr(MonthOf(Now));
+  myLog.WriteString(YearMonth, FormatDateTime('yyyy-mm-dd hh:nn:ss', Now()), ErrorMsgIn) ;
+
+  // prune log file - purge log entries older than 180 days
+  TargetDate := Now() - 60;
+  TargetYearMonth := IntToStr(YearOf(TargetDate)) + '-' + IntToStr(MonthOf(TargetDate));
+  if myLog.SectionExists(TargetYearMonth) Then
+    myLog.EraseSection(TargetYearMonth);
+
+end;  { LogIt }
 
 
 end.

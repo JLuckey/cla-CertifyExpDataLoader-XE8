@@ -965,7 +965,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryInsertCharterVisa: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
-      '/*'
       'insert into CertifyExp_Trips_StartBucket'
       
         'select distinct L.logsheet, '#39'CharterVisa'#39', T.QUOTENO, L.acregno,' +
@@ -979,8 +978,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '   OR ( (departure > (CURRENT_TIMESTAMP - 10)) and (arrival < CU' +
         'RRENT_TIMESTAMP) )   -- ended within the past 10 days'
-      '*/'
       ''
+      '/*'
       
         'select distinct L.logsheet, '#39'CharterVisa'#39', T.QUOTENO, L.acregno,' +
         ' null, :parmCrewMemberVendorNum, null'
@@ -993,7 +992,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '   OR ( (departure > ('#39'2019-03-13 22:14:00'#39')) and (arrival < '#39'20' +
         '19-03-25 22:15:00'#39') )   -- ended within the past 10 days'
-      '')
+      ''
+      '*/')
     Left = 133
     Top = 251
     ParamData = <
@@ -1209,7 +1209,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     SQL.Strings = (
       'select ID, CrewMemberVendorNum, TailNumber, CreatedOn, '
       '       RecordStatus, UploadedOn, UploadStatus, '
-      '       UploadStatusMessage, UploadBatchID'
+      '       UploadStatusMessage, UploadBatchID, HTTPResultCode'
       'from CertifyExp_CrewTail_History'
       'where RecordStatus = :parmRecStatusIn'
       '  and CreatedOn    = :parmCreatedOnIn'

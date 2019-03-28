@@ -1,24 +1,25 @@
 ﻿[Closed Files]
-File_0=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.Controls.pas',0,1,7335,73,7337,0,0,,
-File_1=TSourceModule,'c:\codegear\delphixe8\source\Indy10\Protocols\IdSSLOpenSSLHeaders.pas',0,1,24069,3,24096,0,0,,
-File_2=TSourceModule,'F:\XDrive\DCS\CLA\Avinode\Source_XE8\ufoAvinodeSOAPRequest.pas',0,1,612,1,630,0,0,,
-File_3=TSourceModule,'c:\codegear\delphixe8\source\rtl\common\System.Classes.pas',0,1,7106,1,7133,0,0,,
-File_4=TSourceModule,'F:\XDrive\DCS\CLA\DataWarehouse\DataLoader\QuoteLoader\DelphiSourceXE8\uQuoteLoader.pas',0,1,339,12,362,0,0,,
-File_5=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.Forms.pas',0,1,936,1,961,0,0,{{1716,4}
-File_6=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\API_Interface\source_XE8\uJSON_2_CLR.pas',0,1,103,101,55,0,0,,
-File_7=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.pas',0,1,24577,1,24603,0,0,,
-File_8=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.SysUtils.pas',0,1,7427,1,7461,0,0,,
-File_9=TSourceModule,'c:\codegear\delphixe8\source\rtl\common\System.SyncObjs.pas',0,1,1032,1,1059,0,0,,
-File_10=TSourceModule,'c:\codegear\delphixe8\source\data\Data.DB.pas',0,1,13528,1,13560,0,0,,
-File_11=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.StdCtrls.pas',0,1,3113,1,3140,0,0,{{1651,4}
-File_12=TSourceModule,'c:\codegear\delphixe8\source\rtl\win\Winapi.Windows.pas',0,1,36649,1,36675,0,0,,
-File_13=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\dmCertifyGroupClass_Corporate.pas',0,1,61,3,110,0,0,,
+File_0=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.pas',0,1,29861,1,29893,0,0,,
+File_1=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.Controls.pas',0,1,9765,1,9794,0,0,,
+File_2=TSourceModule,'F:\XDrive\DCS\CLA\DataWarehouse\DataLoader\TripLoader_hourly\DelphiSourceXE8\uQuoteLoader.pas',0,1,620,1,647,0,0,,
+File_3=TSourceModule,'c:\codegear\delphixe8\source\Indy10\Protocols\IdSSLOpenSSLHeaders.pas',0,1,24069,3,24096,0,0,,
+File_4=TSourceModule,'F:\XDrive\DCS\CLA\Avinode\Source_XE8\ufoAvinodeSOAPRequest.pas',0,1,612,1,630,0,0,,
+File_5=TSourceModule,'c:\codegear\delphixe8\source\rtl\common\System.Classes.pas',0,1,7106,1,7133,0,0,,
+File_6=TSourceModule,'F:\XDrive\DCS\CLA\DataWarehouse\DataLoader\QuoteLoader\DelphiSourceXE8\uQuoteLoader.pas',0,1,339,12,362,0,0,,
+File_7=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.Forms.pas',0,1,936,1,961,0,0,{{1716,4}
+File_8=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\API_Interface\source_XE8\uJSON_2_CLR.pas',0,1,103,101,55,0,0,,
+File_9=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.SysUtils.pas',0,1,7427,1,7461,0,0,,
+File_10=TSourceModule,'c:\codegear\delphixe8\source\rtl\common\System.SyncObjs.pas',0,1,1032,1,1059,0,0,,
+File_11=TSourceModule,'c:\codegear\delphixe8\source\data\Data.DB.pas',0,1,13528,1,13560,0,0,,
+File_12=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.StdCtrls.pas',0,1,3113,1,3140,0,0,{{1651,4}
+File_13=TSourceModule,'c:\codegear\delphixe8\source\rtl\win\Winapi.Windows.pas',0,1,36649,1,36675,0,0,,
+File_14=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\dmCertifyGroupClass_Corporate.pas',0,1,61,3,110,0,0,,
 
 [Modules]
 Module0=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-Module1=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
-Module2=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj
-Module3=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uPushToCertify.pas
+Module1=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uPushToCertify.pas
+Module2=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
+Module3=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj
 Module4=Main_Page
 Count=5
 EditWindowCount=1
@@ -28,16 +29,16 @@ ModuleType=TSourceModule
 FormState=1
 FormOnTop=0
 
+[F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uPushToCertify.pas]
+ModuleType=TSourceModule
+FormState=1
+FormOnTop=0
+
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini]
 ModuleType=TSourceModule
 
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj]
 ModuleType=TBaseProject
-
-[F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uPushToCertify.pas]
-ModuleType=TSourceModule
-FormState=1
-FormOnTop=0
 
 [Main_Page]
 ModuleType=TURLModule
@@ -66,9 +67,9 @@ ClientHeight=9155
 DockedToMainForm=1
 BorlandEditorCodeExplorer=BorlandEditorCodeExplorer@EditWindow0
 TopPanelSize=0
-LeftPanelSize=1979
+LeftPanelSize=1521
 LeftPanelClients=PropertyInspector,DockSite3
-LeftPanelData=00000800010100000000860F00000000000001BB070000000000000100000000580E000009000000446F636B53697465330100000000921E00001100000050726F7065727479496E73706563746F72FFFFFFFF
+LeftPanelData=00000800010100000000860F00000000000001F1050000000000000100000000580E000009000000446F636B53697465330100000000921E00001100000050726F7065727479496E73706563746F72FFFFFFFF
 RightPanelSize=1286
 RightPanelClients=DockSite2,DockSite4
 RightPanelData=00000800010100000000860F00000000000001060500000000000001000000004512000009000000446F636B53697465320100000000921E000009000000446F636B5369746534FFFFFFFF
@@ -86,23 +87,23 @@ WelcomePageURL=http://docwiki.embarcadero.com/RADStudio/Tokyo/en/Main_Page
 [View1]
 CustomEditViewType=TEditView
 Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-CursorX=59
-CursorY=2044
-TopLine=2018
+CursorX=1
+CursorY=2098
+TopLine=2069
 LeftCol=1
 Elisions=
-Bookmarks={1,1210,4}{2,930,1}{6,1174,1}{8,330,1}{9,2047,3}
+Bookmarks={1,1213,4}{2,933,1}{6,1177,1}{8,333,1}{9,2056,3}
 EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
 
 [View2]
 CustomEditViewType=TEditView
 Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uPushToCertify.pas
-CursorX=3
-CursorY=323
-TopLine=313
+CursorX=1
+CursorY=261
+TopLine=234
 LeftCol=1
 Elisions=
-Bookmarks={1,284,33}
+Bookmarks={1,284,33}{8,308,1}
 EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uPushToCertify.pas
 
 [View3]
@@ -152,8 +153,10 @@ Dockable=1
 StayOnTop=0
 
 [Breakpoints]
-Count=1
-Breakpoint0='F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',343,'',0,1,'',1,0,0,'',1,'','','',0,''
+Count=3
+Breakpoint0='F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',346,'',0,1,'',1,0,0,'',1,'','','',0,''
+Breakpoint1='F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',2053,'',0,1,'',1,0,0,'',1,'','','',0,''
+Breakpoint2='F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',2058,'',0,1,'',1,0,0,'',1,'','','',0,''
 
 [EmbarcaderoWin32Debugger_AddressBreakpoints]
 Count=0
@@ -263,7 +266,7 @@ Create=1
 Visible=0
 Docked=1
 State=0
-Left=-190
+Left=-146
 Top=-102
 Width=1844
 Height=3134
@@ -322,22 +325,22 @@ Docked=1
 State=0
 Left=0
 Top=381
-Width=1979
+Width=1521
 Height=4086
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=1979
+ClientWidth=1521
 ClientHeight=4086
 TBDockHeight=7743
-LRDockWidth=1979
+LRDockWidth=1521
 Dockable=1
 StayOnTop=0
-SplitPos=142
+SplitPos=90
 
 [PropInspDesignerSelection]
 ArrangeBy=Name
 SelectedItem=Name,
-ExpandedItems=Anchors=0,BorderIcons=0,Constraints=0,Font=0,GlassFrame=0,Options=0,RefreshOptions=0,SmartFetch=0
+ExpandedItems=ImageMargins=0,LiveBindings=0,"LiveBindings Designer=0",Margins=0,Options=0,RefreshOptions=0,SmartFetch=0,FilterOptions=0
 
 [frmDesignPreview]
 PercentageSizes=1
@@ -616,11 +619,11 @@ Docked=1
 State=0
 Left=0
 Top=0
-Width=1979
+Width=1521
 Height=3251
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=1979
+ClientWidth=1521
 ClientHeight=3251
 TBDockHeight=3679
 LRDockWidth=1896
@@ -673,11 +676,11 @@ Docked=1
 State=0
 Left=0
 Top=0
-Width=990
+Width=760
 Height=7455
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=990
+ClientWidth=760
 ClientHeight=7455
 TBDockHeight=3679
 LRDockWidth=1896
@@ -788,14 +791,14 @@ Docked=1
 State=0
 Left=0
 Top=23
-Width=1979
+Width=1521
 Height=3540
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=1979
+ClientWidth=1521
 ClientHeight=3540
 TBDockHeight=7743
-LRDockWidth=1979
+LRDockWidth=1521
 Dockable=1
 StayOnTop=0
 TabPosition=1
