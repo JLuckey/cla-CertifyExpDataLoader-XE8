@@ -16,6 +16,15 @@ Depricated Minimum LogSheet queries/calcs
 
 To-Do:
 
+5 Feb 2019
+Possible Refactorings:
+
+1. qryGetImportedRecs & qryGetEmployees appear to be duplicate, can we get rid of one?
+2. make ErrorType a Type?
+
+
+
+
 
 12 Sep 2018
 
@@ -76,9 +85,14 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, UniProvider, SQLServerUniProvider, Data.DB, MemDS, DBAccess, Uni, Vcl.ComCtrls,
   IdMessage, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdExplicitTLSClientServerBase, IdMessageClient, IdSMTPBase,
   IdSMTP, IdAttachment, IdAttachmentFile, DAScript, UniScript , IniFiles
+<<<<<<< HEAD
   , uPushToCertify, Vcl.Grids, Vcl.DBGrids;
 
 
+=======
+  , System.UITypes
+  ;
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 
 type
   TufrmCertifyExpDataLoader = class(TForm)
@@ -219,7 +233,7 @@ type
 
     Procedure LoadTailLeadPilot;
     Procedure InsertTailLeadPilot(Const TailNumIn, EMailIn: String);
-    Procedure FlagRecordAsError(Const ErrorMsgIn : String);
+    Procedure FlagRecordAsError(Const ErrorType, ErrorMsgIn : String);
 
     Procedure Load_IFS_IntoStartBucket(BatchTime: TDateTime);
 
@@ -349,9 +363,6 @@ end;
 
 
 procedure TufrmCertifyExpDataLoader.FormCreate(Sender: TObject);
-var
-  HomeDirectory: String;
-
 begin
   myIni := TIniFile.Create( ExtractFilePath(ParamStr(0)) + 'CertifyExpDataLoader.ini' );
 
@@ -388,8 +399,6 @@ end;
 
 
 procedure TufrmCertifyExpDataLoader.btnMainClick(Sender: TObject);
-var
-  TargetDirectory : string;
 
 begin
   Main;
@@ -400,7 +409,7 @@ end;
 procedure TufrmCertifyExpDataLoader.ConnectToDB;
 var
   errorMsg: String;
-  dbName: ShortString;
+  dbName: String;
 
 begin
   try
@@ -462,9 +471,7 @@ end;  { BuildValidationFiles }
 
 procedure TufrmCertifyExpDataLoader.LoadCertFileFields(const BatchTime: TDateTime);
 Var
-  slEmpRec : TStringList;          // Employee Record
   LNameOut, FNameOut : String;
-  DeptName : String;
 
 begin
   StatusBar1.Panels[1].Text := 'Current Task:  Loading Certify fields in PaycomHistory ';
@@ -473,7 +480,7 @@ begin
   qryGetImportedRecs.Close;
   qryGetImportedRecs.ParamByName('parmBatchTimeIn').AsDateTime := BatchTime ;
   qryGetImportedRecs.ParamByName('parmRecStatusIn').AsString   := 'OK' ;
-//  qryGetImportedRecs.ParamByName('parmRecStatusIn').AsString   := 'Exported' ;
+  qryGetImportedRecs.ParamByName('parmRecStatusIn2').AsString  := 'warning' ;
 
   qryGetImportedRecs.Open ;
   while not qryGetImportedRecs.eof do begin
@@ -504,11 +511,11 @@ end; { LoadCertFileFields }
 
 procedure TufrmCertifyExpDataLoader.CalculateApproverEmail(Const BatchTimeIn : TDateTime);
 var
-  ApproverEmail : String;
   strAccountantEmail : String;
   strCertifyGroup : String;
   strAssignedAC : String;
   PaycomApprover1, PaycomApprover2: String;
+  PilotEmail : String;
 
 begin
     strCertifyGroup := qryGetImportedRecs.FieldByName('certfile_group').AsString ;
@@ -528,7 +535,7 @@ begin
       if qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString <> '' then
         qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString
       else begin
-        FlagRecordAsError('error-approver1_email_not_provided ' + strCertifyGroup);
+        FlagRecordAsError('error', 'error-approver1_email_not_provided ' + strCertifyGroup);
       end;
 
 
@@ -548,32 +555,40 @@ begin
 
       // Assign Accountant Email
       if UpperCase(qryGetImportedRecs.FieldByName('has_credit_card').AsString) = 'T' then
-        strAccountantEmail := 'CorporateCC@ClayLacy.com'
+        strAccountantEmail := 'FlightCrewCC@ClayLacy.com'
       else
-        strAccountantEmail := 'Corporate@ClayLacy.com';
+        strAccountantEmail := 'FlightCrew@ClayLacy.com';
 
       qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := strAccountantEmail;
 
 
       //  Assign Approver1
       if PaycomApprover1 = '' then
-        FlagRecordAsError('paycom_approver1_email is blank')
+        FlagRecordAsError('error', 'paycom_approver1_email is blank')
 
-      else if UpperCase(PaycomApprover1) = 'LEADPILOT' then
-        qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn)
+      else if UpperCase(PaycomApprover1) = 'LEADPILOT' then begin
+        PilotEmail := FindLeadPilot(strAssignedAC, BatchTimeIn);
+        if PilotEmail = 'NotFound' then
+          qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := strAccountantEmail
+        else
+          qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := PilotEmail ;
 
-      else   // Contains a email address
+      end else   // Contains a email address
         qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := PaycomApprover1;
 
 
       //  Assign Approver2
       if PaycomApprover2 = '' then
-        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString
+        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail   // qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString
 
-      else if UpperCase(PaycomApprover2) = 'LEADPILOT' then
-        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := FindLeadPilot(strAssignedAC, BatchTimeIn)
+      else if UpperCase(PaycomApprover2) = 'LEADPILOT' then begin
+        PilotEmail := FindLeadPilot(strAssignedAC, BatchTimeIn);
+        if PilotEmail = 'NotFound' then
+          qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail
+        else
+          qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := PilotEmail;
 
-      else  // Contains an email address
+      end else  // Contains an email address
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := PaycomApprover2 ;
 
 
@@ -588,6 +603,8 @@ begin
 
       qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := strAccountantEmail;
 
+
+(* Note 13: This logic is now handled by Certify "Workflows" within the Certify system      4Feb2019 -JL
       //  Assign Approver1 Email
       qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := strAccountantEmail;
 
@@ -596,26 +613,28 @@ begin
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail
       else
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
-
+*)
 
 
     end else if GroupIsIn(strCertifyGroup, '|CharterVisa|') then begin
 
 
+      // Assign Accountant Email
+      qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := 'FlightCrewCC@ClayLacy.com';
+
+(* See Note 13
       //  Assign Approver1 Email
       qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := 'CorporateCC@ClayLacy.com';
 
       //  Assign Approver2 Email
       qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := 'CorporateCC@ClayLacy.com';
-
-      // Assign Accountant Email
-      qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := 'CorporateCC@ClayLacy.com';
+*)
 
 
     end else begin       // error, unknown Certify Department
 
 
-      FlagRecordAsError('unknown certify_department/Group: ' + strCertifyGroup);
+      FlagRecordAsError('error', 'unknown certify_department/Group: ' + strCertifyGroup);
 
 
     end;
@@ -696,8 +715,9 @@ begin
   WriteLn(CertifyEmployeeFile, 'work_email,first_name,last_name,employee_id,employee_type,group,department_name,approver_email_1,approver_email_2,accountant_email') ;
 
   qryGetEmployees.Close;
-  qryGetEmployees.ParamByName('parmImportDateIn').AsDateTime := BatchTimeIn;
-  qryGetEmployees.ParamByName('parmRecordStatusIn').AsString := 'OK';
+  qryGetEmployees.ParamByName('parmImportDateIn').AsDateTime  := BatchTimeIn;
+  qryGetEmployees.ParamByName('parmRecordStatusIn').AsString  := 'OK';
+  qryGetEmployees.ParamByName('parmRecordStatusIn2').AsString := 'warning';
   qryGetEmployees.Open;
   WriteTime := GetTimeFromDBServer();
   while not qryGetEmployees.eof do begin
@@ -716,8 +736,6 @@ end;  { BuildEmployeeFile }
 procedure TufrmCertifyExpDataLoader.WriteToCertifyEmployeeFile( Const BatchTimeIn: TDateTime )  ;
 Var
   slEmpRec : TStringList;          // Employee Record
-  LNameOut, FNameOut : String;
-  DeptName : String;
 
 begin
   slEmpRec := TStringList.Create;
@@ -737,11 +755,11 @@ begin
 
     // update status fields
     qryGetEmployees.Edit;
-//    if DeptName = 'error' then begin
-//      qryGetEmployees.FieldByName('record_status').AsString := 'error';
-//      qryGetEmployees.FieldByName('error_text').AsString    := qryGetEmployees.FieldByName('error_text').AsString + ' cannot find: ' + qryGetEmployees.FieldByName('certify_department').AsString + ' in Department_Name lookup; ';
-//    end else
-    qryGetEmployees.FieldByName('record_status').AsString      := 'exported';
+    if qryGetEmployees.FieldByName('record_status').AsString = 'warning' then
+      qryGetEmployees.FieldByName('record_status').AsString := 'warning-exported'
+    else
+      qryGetEmployees.FieldByName('record_status').AsString := 'exported';
+
     qryGetEmployees.FieldByName('status_timestamp').AsDateTime := BatchTimeIn;
     qryGetEmployees.Post;
 
@@ -770,7 +788,6 @@ var
   FileIn: TextFile;
   sl : TStringList;
   s: string;
-  i: Integer;
 
 begin
   StatusBar1.Panels[1].Text := 'Current Task:  Importing Payroll Data' ;
@@ -841,7 +858,7 @@ Paycom file columns:
     tblPaycomHistory.FieldByName('job_code_descrip').AsString        := slInputFileRec[6];
     tblPaycomHistory.FieldByName('supervisor_primary_code').AsString := slInputFileRec[7];
 
-    if slInputFileRec[9] <> '' then begin    //
+    if slInputFileRec[9] <> '' then begin    //  refactoring - move this test into ValidateRecords()?    ???JL
       try
         tblPaycomHistory.FieldByName('certify_gp_vendornum').AsInteger := StrToInt(slInputFileRec[9]);
       except on E1: Exception do begin
@@ -1068,12 +1085,19 @@ begin
   Application.ProcessMessages;
 
   Time_Stamp := GetTimeFromDBServer();
+
+  // Set status = 'terminated' for employees terminated more than edTerminatedDaysBack.Text days ago so that they don't get procesed
+  //   Test for Terminated employee first because if Terminated then other validation is moot.
+  qryFlagTerminatedEmployees.Close;
+  qryFlagTerminatedEmployees.ParamByName('parmDaysBackTerminated').AsInteger := StrToInt(edTerminatedDaysBack.Text);
+  qryFlagTerminatedEmployees.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
+  qryFlagTerminatedEmployees.Execute;   // Sets RecordStatus = 'terminated'
+
   // check for valid Certify recs
   qryGetEmployees.Close;
   qryGetEmployees.ParamByName('parmImportDateIn').AsDateTime := BatchTimeIn;
   qryGetEmployees.ParamByName('parmRecordStatusIn').AsString := 'imported';
   qryGetEmployees.Open;
-
   while not qryGetEmployees.eof do begin
     RecIsValid(Time_Stamp);
     qryGetEmployees.Next;
@@ -1089,20 +1113,14 @@ begin
   end;
 
   // Validate Vendor Number w/ an Update query
-  qryValidateVendorNum.Close;     // checks if vendornum exists in Great Plains and sets
+  qryValidateVendorNum.Close;     // checks if vendornum exists in Great Plains and sets ...
   qryValidateVendorNum.ParamByName('parmImportedOn').AsDateTime := BatchTimeIn;
-  qryValidateVendorNum.Execute;   //   record_status = 'error' & error_text = 'certify_gp_vendornum not found' if not
+  qryValidateVendorNum.Execute;   //        ... record_status = 'error' & error_text = 'certify_gp_vendornum not found' if not
 
   // Set status = 'error' for flight crews that are missing values for important Certify fields, see query
   qryFlagMissingFlightCrews.Close;
   qryFlagMissingFlightCrews.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
   qryFlagMissingFlightCrews.Execute;
-
-  // Set status = 'terminated' for employees terminated more than edTerminatedDaysBack.Text days ago so that they don't get procesed
-  qryFlagTerminatedEmployees.Close;
-  qryFlagTerminatedEmployees.ParamByName('parmDaysBackTerminated').AsInteger := StrToInt(edTerminatedDaysBack.Text);
-  qryFlagTerminatedEmployees.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
-  qryFlagTerminatedEmployees.Execute;
 
 end;  { ValidateRecords }
 
@@ -1709,7 +1727,6 @@ procedure TufrmCertifyExpDataLoader.SendStatusEmail;
 Var
   mySMTP    : TIdSMTP;
   myMessage : TIDMessage;
-  myAttach  : TIdAttachment;
   OutPutFileDir : String;
   stlOutputFiles : TStringList;
   i : Integer;
@@ -1774,6 +1791,7 @@ begin
   qryGetImportedRecs.Close;
   qryGetImportedRecs.ParamByName('parmBatchTimeIn').AsDateTime := BatchTimeIn ;
   qryGetImportedRecs.ParamByName('parmRecStatusIn').AsString   := 'error' ;
+  qryGetImportedRecs.ParamByName('parmRecStatusIn2').AsString  := 'warning-exported' ;
   qryGetImportedRecs.Open ;
 
   // Write header record
@@ -1803,7 +1821,7 @@ end;  { CreateEmployeeErrorReport }
 function TufrmCertifyExpDataLoader.CalcPaycomErrorFileName(const BatchTimeIn: TDateTime): String;
 var
   myMonth, myDay, myYear: word;
-  strMonth, strDay, strYear : String;
+  strMonth, strDay: String;
 
 begin
   DecodeDate(Trunc(BatchTimeIn), myYear, myMonth, myDay);
@@ -1898,9 +1916,6 @@ end;  { LoadCharterVisaTripsIntoStartBucket }
       However most of the time there is only one aircraft listed,  N225MC              *)
 procedure TufrmCertifyExpDataLoader.Load_DOM_IntoStartBucket(Const BatchTimeIn: TDatetime);
 var
-  strTailNum : String;
-  intVendorNum : Integer;
-  strAssignedAC : String;
   stlACList : TStringList;
   i : Integer;
 
@@ -1974,7 +1989,7 @@ var
   LeadPilotEMail : String;
 
 begin
-  Result := 'NoPilotAssigned@fubar.com';
+  Result := 'NotFound';
 
   // step 1: parse AssignedACString, it could contain multiple aircraft seperated by forward slash: 'N855LD/N5504B'
   stlACList := TStringList.Create;
@@ -1989,15 +2004,15 @@ begin
   qryFindLeadPilotEmail.Open;
   LeadPilotEMail := qryFindLeadPilotEMail.FieldByName('EMail').AsString;
 
-  if (qryFindLeadPilotEmail.RecordCount > 0) and (LeadPilotEMail <> '' ) then begin
-    if Not EmployeeTerminated(LeadPilotEMail, BatchTimeIn) then
+  if (qryFindLeadPilotEmail.RecordCount > 0) and (LeadPilotEMail <> '' ) then begin            // If LeadPilot not found
+    if Not EmployeeTerminated(LeadPilotEMail, BatchTimeIn) then                                //   If LeadPilot is terminated
       Result := LeadPilotEMail
     else begin
-      FlagRecordAsError('Lead Pilot: ' + LeadPilotEMail + ' terminated');
+      FlagRecordAsError('warning', 'Lead Pilot: ' + LeadPilotEMail + ' terminated');
     end;
 
   end else begin
-    FlagRecordAsError('Lead Pilot: ' + LeadPilotEMail + ' or TailNumber: ' + AssignedAC + ' not found in Tail_LeadPilot table');
+    FlagRecordAsError('warning', 'Lead Pilot: ' + LeadPilotEMail + ' or TailNumber: ' + AssignedAC + ' not found in Tail_LeadPilot table');
   end;
 
 end;  { FindLeadPilot }
@@ -2020,20 +2035,29 @@ begin
       Result := True;
 
   end else
-    FlagRecordAsError('Cannot find ' + EMailIn + ' in PaycomHistory table - (check for differences in Tail_LeadPilot table)');
+    FlagRecordAsError('error', 'Cannot find ' + EMailIn + ' in PaycomHistory table - (check for differences in Tail_LeadPilot table)');
 
   qryGetTerminationDate.Close;
 
 end;  { EmployeeTerminated }
 
 
-procedure TufrmCertifyExpDataLoader.FlagRecordAsError(const ErrorMsgIn: String);
-begin
-  // assuming we are on the current record in PaycomHistory table!  All calling procs should be in this context
-  qryGetImportedRecs.FieldByName('record_status').AsString := 'error';
-  qryGetImportedRecs.FieldByName('error_text').AsString    := ErrorMsgIn;
+procedure TufrmCertifyExpDataLoader.FlagRecordAsError(const ErrorType, ErrorMsgIn: String);
+Var
+  AdditionalErrorMsg : String;
 
-  // ShowMessage(ErrorMsgIn);
+begin
+   AdditionalErrorMsg := '';
+
+  // assuming we are on the current record in PaycomHistory table!  All calling procs should be in this context
+  if ErrorType = 'error' then
+    qryGetImportedRecs.FieldByName('record_status').AsString := 'error'
+  else if ErrorType = 'warning' then
+    qryGetImportedRecs.FieldByName('record_status').AsString := 'warning'
+  else
+    AdditionalErrorMsg := '-- Unknown ErrorType passed to FlagRecordAsError(): ' + ErrorType;
+
+  qryGetImportedRecs.FieldByName('error_text').AsString    := ErrorMsgIn + AdditionalErrorMsg;
 
 end;  { FlagRecordAsError }
 

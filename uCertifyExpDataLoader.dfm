@@ -1,8 +1,13 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
+<<<<<<< HEAD
   Caption = 'ufrmCertifyExpDataLoader-Phase 2C v 0.1 - Hourly'
   ClientHeight = 601
+=======
+  Caption = 'ufrmCertifyExpDataLoader-Phase 2D v 0.3'
+  ClientHeight = 446
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
   ClientWidth = 716
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -332,7 +337,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '      ,[paycom_approver2_email]'
       '      ,[paycom_assigned_ac]'
       '  FROM  CertifyExp_PayComHistory'
-      '  WHERE record_status = :parmRecordStatusIn'
+      
+        '  WHERE (record_status = :parmRecordStatusIn  or  record_status ' +
+        '= :parmRecordStatusIn2)'
       '    AND imported_on = :parmImportDateIn'
       ''
       '')
@@ -342,6 +349,11 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       item
         DataType = ftUnknown
         Name = 'parmRecordStatusIn'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmRecordStatusIn2'
         Value = nil
       end
       item
@@ -539,7 +551,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '      ,[paycom_assigned_ac]'
       '  FROM CertifyExp_PayComHistory'
       '  where imported_on =  :parmBatchTimeIn '
-      '    and record_status = :parmRecStatusIn'
+      
+        '    and (record_status = :parmRecStatusIn OR record_status = :pa' +
+        'rmRecStatusIn2)'
       ' ')
     Left = 471
     Top = 146
@@ -552,6 +566,11 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       item
         DataType = ftUnknown
         Name = 'parmRecStatusIn'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmRecStatusIn2'
         Value = nil
       end>
   end
@@ -947,9 +966,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '  and termination_date < (CURRENT_TIMESTAMP - :parmDaysBackTermi' +
         'nated)'
-      '  and record_status = '#39'OK'#39)
+      '  and record_status = '#39'imported'#39)
     Left = 507
-    Top = 323
+    Top = 322
     ParamData = <
       item
         DataType = ftUnknown

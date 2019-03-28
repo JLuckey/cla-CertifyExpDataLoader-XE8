@@ -1,4 +1,5 @@
 ﻿[Closed Files]
+<<<<<<< HEAD
 File_0=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.pas',0,1,29861,1,29893,0,0,,
 File_1=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.Controls.pas',0,1,9765,1,9794,0,0,,
 File_2=TSourceModule,'F:\XDrive\DCS\CLA\DataWarehouse\DataLoader\TripLoader_hourly\DelphiSourceXE8\uQuoteLoader.pas',0,1,620,1,647,0,0,,
@@ -22,6 +23,29 @@ Module2=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\Cert
 Module3=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj
 Module4=Main_Page
 Count=5
+=======
+File_0=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.pas',0,1,29853,1,29893,0,0,,
+File_1=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.Controls.pas',0,1,9766,1,9792,0,0,,
+File_2=TSourceModule,'c:\codegear\delphixe8\source\rtl\common\System.Classes.pas',0,1,6904,1,6934,0,0,,
+File_3=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.SysUtils.pas',0,1,7427,1,7461,0,0,,
+File_4=TSourceModule,'c:\codegear\delphixe8\source\rtl\common\System.SyncObjs.pas',0,1,1032,1,1059,0,0,,
+File_5=TSourceModule,'c:\codegear\delphixe8\source\data\Data.DB.pas',0,1,13528,1,13560,0,0,,
+File_6=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.StdCtrls.pas',0,1,3113,1,3140,0,0,{{1651,4}
+File_7=TSourceModule,'c:\codegear\delphixe8\source\rtl\win\Winapi.Windows.pas',0,1,36649,1,36675,0,0,,
+File_8=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\dmCertifyGroupClass_Corporate.pas',0,1,61,3,110,0,0,,
+File_9=TSourceModule,'c:\codegear\delphixe8\source\Indy10\Protocols\IdReplySMTP.pas',0,1,477,1,503,0,0,,
+File_10=TSourceModule,'F:\XDrive\DCS\CLA\DataWarehouse\DataLoader\QuoteLoader\DelphiSourceXE8\Win32\Release\QuoteLoader.ini',0,1,1,29,25,0,0,,
+File_11=TSourceModule,'F:\XDrive\DCS\CLA\DataWarehouse\DataLoader\QuoteLoader\DelphiSourceXE8\uQuoteLoader.pas',0,1,148,1,178,0,0,,
+File_12=TSourceModule,'c:\codegear\delphixe8\source\rtl\common\System.Generics.Collections.pas',0,1,1105,1,1131,0,0,,
+File_13=TSourceModule,'c:\codegear\delphixe8\source\rtl\common\System.DateUtils.pas',0,1,2838,1,2876,0,0,,
+File_14=TSourceModule,'F:\XDrive\DCS\CLA\DataWarehouse\DataLoader\QuoteLoader.pas',0,1,1,66,23,0,0,,
+
+[Modules]
+Module0=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
+Module1=Main_Page
+Module2=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
+Count=3
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 EditWindowCount=1
 
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas]
@@ -34,14 +58,20 @@ ModuleType=TSourceModule
 FormState=1
 FormOnTop=0
 
+<<<<<<< HEAD
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini]
 ModuleType=TSourceModule
 
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj]
 ModuleType=TBaseProject
 
+=======
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 [Main_Page]
 ModuleType=TURLModule
+
+[F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini]
+ModuleType=TSourceModule
 
 [EditWindow0]
 ViewCount=5
@@ -58,6 +88,7 @@ Docked=1
 State=0
 Left=0
 Top=0
+<<<<<<< HEAD
 Width=10000
 Height=9155
 MaxLeft=-1
@@ -76,6 +107,26 @@ RightPanelData=00000800010100000000860F00000000000001060500000000000001000000004
 BottomPanelSize=892
 BottomPanelClients=DockSite1,MessageView
 BottomPanelData=0000080001020100000009000000446F636B5369746531EC4C000000000000027C030000000000000100000000EC4C00000F0000004D65737361676556696577466F726DFFFFFFFF
+=======
+Width=9662
+Height=8900
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=9662
+ClientHeight=8900
+DockedToMainForm=1
+BorlandEditorCodeExplorer=BorlandEditorCodeExplorer@EditWindow0
+TopPanelSize=0
+LeftPanelSize=2339
+LeftPanelClients=PropertyInspector,DockSite3
+LeftPanelData=00000800010100000000A70D00000000000001230900000000000001000000005E0E000009000000446F636B53697465330100000000401B00001100000050726F7065727479496E73706563746F72FFFFFFFF
+RightPanelSize=1288
+RightPanelClients=DockSite2,DockSite4
+RightPanelData=00000800010100000000A70D00000000000001080500000000000001000000004712000009000000446F636B53697465320100000000401B000009000000446F636B5369746534FFFFFFFF
+BottomPanelSize=1486
+BottomPanelClients=DockSite1,MessageView
+BottomPanelData=0000080001020100000009000000446F636B5369746531534B00000000000002CE050000000000000100000000534B00000F0000004D65737361676556696577466F726DFFFFFFFF
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 BottomMiddlePanelSize=0
 BottomMiddlePanelClients=DockSite0,GraphDrawingModel
 BottomMiddelPanelData=0000080001020200000009000000446F636B536974653010000000477261706844726177696E67566965779B1D00000000000002F906000000000000FFFFFFFF
@@ -87,6 +138,7 @@ WelcomePageURL=http://docwiki.embarcadero.com/RADStudio/Tokyo/en/Main_Page
 [View1]
 CustomEditViewType=TEditView
 Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
+<<<<<<< HEAD
 CursorX=1
 CursorY=2098
 TopLine=2069
@@ -94,6 +146,15 @@ LeftCol=1
 Elisions=
 Bookmarks={1,1213,4}{2,933,1}{6,1177,1}{8,333,1}{9,2056,3}
 EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
+=======
+CursorX=3
+CursorY=1827
+TopLine=1809
+LeftCol=1
+Elisions=
+Bookmarks={1,470,6}{2,1030,41}{6,1144,1}{8,412,1}{9,812,111}
+EditViewName=Borland.FormDesignerView
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 
 [View2]
 CustomEditViewType=TEditView
@@ -142,6 +203,7 @@ State=0
 Left=0
 Top=0
 Width=3823
+<<<<<<< HEAD
 Height=396
 MaxLeft=-1
 MaxTop=-1
@@ -149,6 +211,15 @@ ClientWidth=3823
 ClientHeight=396
 TBDockHeight=214
 LRDockWidth=13599
+=======
+Height=1001
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=3823
+ClientHeight=1001
+TBDockHeight=220
+LRDockWidth=13601
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 Dockable=1
 StayOnTop=0
 
@@ -169,6 +240,7 @@ PercentageSizes=1
 Create=1
 Visible=1
 Docked=0
+<<<<<<< HEAD
 State=2
 Left=156
 Top=278
@@ -181,6 +253,18 @@ MaxHeight=8524
 ClientWidth=10000
 ClientHeight=9754
 BottomPanelSize=8779
+=======
+State=0
+Left=100
+Top=55
+Width=9747
+Height=9945
+MaxLeft=-5
+MaxTop=-11
+ClientWidth=9662
+ClientHeight=9516
+BottomPanelSize=8525
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 BottomPanelClients=EditWindow0
 BottomPanelData=0000080000000000000000000000000000000000000000000000000100000000000000000C0000004564697457696E646F775F30FFFFFFFF
 
@@ -211,6 +295,7 @@ Docked=1
 State=0
 Left=0
 Top=23
+<<<<<<< HEAD
 Width=10000
 Height=684
 MaxLeft=-1
@@ -219,6 +304,16 @@ ClientWidth=10000
 ClientHeight=684
 TBDockHeight=684
 LRDockWidth=2771
+=======
+Width=9662
+Height=1298
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=9662
+ClientHeight=1298
+TBDockHeight=1298
+LRDockWidth=2772
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 Dockable=1
 StayOnTop=0
 
@@ -230,6 +325,7 @@ Docked=1
 State=0
 Left=0
 Top=0
+<<<<<<< HEAD
 Width=1286
 Height=3037
 MaxLeft=-1
@@ -238,6 +334,16 @@ ClientWidth=1286
 ClientHeight=3037
 TBDockHeight=7144
 LRDockWidth=1995
+=======
+Width=1288
+Height=2145
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=1288
+ClientHeight=2145
+TBDockHeight=7151
+LRDockWidth=1996
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 Dockable=1
 StayOnTop=0
 
@@ -249,6 +355,7 @@ Docked=1
 State=0
 Left=0
 Top=0
+<<<<<<< HEAD
 Width=1286
 Height=7455
 MaxLeft=-1
@@ -257,6 +364,16 @@ ClientWidth=1286
 ClientHeight=7455
 TBDockHeight=4877
 LRDockWidth=5307
+=======
+Width=1288
+Height=7184
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=1288
+ClientHeight=7184
+TBDockHeight=4884
+LRDockWidth=5306
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 Dockable=1
 StayOnTop=0
 
@@ -266,10 +383,17 @@ Create=1
 Visible=0
 Docked=1
 State=0
+<<<<<<< HEAD
 Left=-146
 Top=-102
 Width=1844
 Height=3134
+=======
+Left=-248
+Top=-115
+Width=1848
+Height=3135
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1844
@@ -324,6 +448,7 @@ Visible=1
 Docked=1
 State=0
 Left=0
+<<<<<<< HEAD
 Top=381
 Width=1521
 Height=4086
@@ -336,11 +461,29 @@ LRDockWidth=1521
 Dockable=1
 StayOnTop=0
 SplitPos=90
+=======
+Top=372
+Width=2339
+Height=3190
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=2339
+ClientHeight=3190
+TBDockHeight=7481
+LRDockWidth=2339
+Dockable=1
+StayOnTop=0
+SplitPos=197
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 
 [PropInspDesignerSelection]
 ArrangeBy=Name
 SelectedItem=Name,
+<<<<<<< HEAD
 ExpandedItems=ImageMargins=0,LiveBindings=0,"LiveBindings Designer=0",Margins=0,Options=0,RefreshOptions=0,SmartFetch=0,FilterOptions=0
+=======
+ExpandedItems=Anchors=0,Constraints=0,Font=0,ImageMargins=0,LiveBindings=0,"LiveBindings Designer=0",Margins=0,StyleElements=0,Options=0,RefreshOptions=0,SmartFetch=0,BorderIcons=0,Encryption=0,FilterOptions=0
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 
 [frmDesignPreview]
 PercentageSizes=1
@@ -350,6 +493,7 @@ Docked=1
 State=0
 Left=0
 Top=0
+<<<<<<< HEAD
 Width=1286
 Height=7455
 MaxLeft=-1
@@ -358,6 +502,16 @@ ClientWidth=1286
 ClientHeight=7455
 TBDockHeight=5957
 LRDockWidth=2510
+=======
+Width=1288
+Height=7184
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=1288
+ClientHeight=7184
+TBDockHeight=5963
+LRDockWidth=2513
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 Dockable=1
 StayOnTop=0
 
@@ -367,10 +521,17 @@ Create=1
 Visible=0
 Docked=1
 State=0
+<<<<<<< HEAD
 Left=-1556
 Top=-23
 Width=2849
 Height=6203
+=======
+Left=-1498
+Top=-39
+Width=2846
+Height=6205
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=2849
@@ -386,10 +547,17 @@ Create=1
 Visible=0
 Docked=1
 State=0
+<<<<<<< HEAD
 Left=-1796
 Top=230
 Width=276
 Height=364
+=======
+Left=-1735
+Top=208
+Width=275
+Height=363
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=276
@@ -411,6 +579,7 @@ State=0
 Left=0
 Top=0
 Width=3823
+<<<<<<< HEAD
 Height=396
 MaxLeft=-1
 MaxTop=-1
@@ -418,6 +587,15 @@ ClientWidth=3823
 ClientHeight=396
 TBDockHeight=406
 LRDockWidth=4953
+=======
+Height=1001
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=3823
+ClientHeight=1001
+TBDockHeight=407
+LRDockWidth=4952
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 Dockable=1
 StayOnTop=0
 
@@ -430,6 +608,7 @@ State=0
 Left=0
 Top=0
 Width=3823
+<<<<<<< HEAD
 Height=396
 MaxLeft=-1
 MaxTop=-1
@@ -437,6 +616,15 @@ ClientWidth=3823
 ClientHeight=396
 TBDockHeight=214
 LRDockWidth=7406
+=======
+Height=1001
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=3823
+ClientHeight=1001
+TBDockHeight=220
+LRDockWidth=7408
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 Dockable=1
 StayOnTop=0
 Column0Width=145
@@ -453,11 +641,19 @@ State=0
 Left=0
 Top=0
 Width=3823
+<<<<<<< HEAD
 Height=396
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=3823
 ClientHeight=396
+=======
+Height=1001
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=3823
+ClientHeight=1001
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 TBDockHeight=1540
 LRDockWidth=3484
 Dockable=1
@@ -472,6 +668,7 @@ State=0
 Left=0
 Top=0
 Width=3823
+<<<<<<< HEAD
 Height=396
 MaxLeft=-1
 MaxTop=-1
@@ -479,6 +676,15 @@ ClientWidth=3823
 ClientHeight=396
 TBDockHeight=2064
 LRDockWidth=3484
+=======
+Height=1001
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=3823
+ClientHeight=1001
+TBDockHeight=2057
+LRDockWidth=3479
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 Dockable=1
 StayOnTop=0
 
@@ -555,6 +761,7 @@ Docked=1
 State=0
 Left=0
 Top=0
+<<<<<<< HEAD
 Width=1286
 Height=7455
 MaxLeft=-1
@@ -563,6 +770,16 @@ ClientWidth=1286
 ClientHeight=7455
 TBDockHeight=4877
 LRDockWidth=7146
+=======
+Width=1288
+Height=7184
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=1288
+ClientHeight=7184
+TBDockHeight=4884
+LRDockWidth=7149
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 Dockable=1
 StayOnTop=0
 
@@ -594,11 +811,19 @@ State=0
 Left=0
 Top=0
 Width=3823
+<<<<<<< HEAD
 Height=396
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=3823
 ClientHeight=396
+=======
+Height=1001
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=3823
+ClientHeight=1001
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 TBDockHeight=1551
 LRDockWidth=8740
 Dockable=1
@@ -619,6 +844,7 @@ Docked=1
 State=0
 Left=0
 Top=0
+<<<<<<< HEAD
 Width=1521
 Height=3251
 MaxLeft=-1
@@ -627,6 +853,16 @@ ClientWidth=1521
 ClientHeight=3251
 TBDockHeight=3679
 LRDockWidth=1896
+=======
+Width=2339
+Height=3245
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=2339
+ClientHeight=3245
+TBDockHeight=3685
+LRDockWidth=1895
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 Dockable=1
 StayOnTop=0
 
@@ -676,6 +912,7 @@ Docked=1
 State=0
 Left=0
 Top=0
+<<<<<<< HEAD
 Width=760
 Height=7455
 MaxLeft=-1
@@ -684,6 +921,16 @@ ClientWidth=760
 ClientHeight=7455
 TBDockHeight=3679
 LRDockWidth=1896
+=======
+Width=1172
+Height=7184
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=1172
+ClientHeight=7184
+TBDockHeight=3685
+LRDockWidth=1895
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 Dockable=1
 StayOnTop=0
 
@@ -719,8 +966,13 @@ Docked=1
 State=0
 Left=0
 Top=0
+<<<<<<< HEAD
 Width=2339
 Height=1476
+=======
+Width=2334
+Height=1474
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=2339
@@ -744,17 +996,26 @@ State=0
 Left=0
 Top=23
 Width=3823
+<<<<<<< HEAD
 Height=684
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=3823
 ClientHeight=684
 TBDockHeight=684
+=======
+Height=1298
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=3823
+ClientHeight=1298
+TBDockHeight=1298
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 LRDockWidth=3823
 Dockable=1
 StayOnTop=0
 TabPosition=1
-ActiveTabID=DebugLogView
+ActiveTabID=BreakpointWindow
 TabDockClients=DebugLogView,BreakpointWindow,ThreadStatusWindow,CallStackWindow,WatchWindow,LocalVarsWindow
 
 [DockSite2]
@@ -771,10 +1032,17 @@ Width=1286
 Height=4588
 MaxLeft=-1
 MaxTop=-1
+<<<<<<< HEAD
 ClientWidth=1286
 ClientHeight=4588
 TBDockHeight=7743
 LRDockWidth=1286
+=======
+ClientWidth=1288
+ClientHeight=4587
+TBDockHeight=7481
+LRDockWidth=1288
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 Dockable=1
 StayOnTop=0
 TabPosition=1
@@ -791,6 +1059,7 @@ Docked=1
 State=0
 Left=0
 Top=23
+<<<<<<< HEAD
 Width=1521
 Height=3540
 MaxLeft=-1
@@ -799,6 +1068,16 @@ ClientWidth=1521
 ClientHeight=3540
 TBDockHeight=7743
 LRDockWidth=1521
+=======
+Width=2339
+Height=3542
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=2339
+ClientHeight=3542
+TBDockHeight=7481
+LRDockWidth=2339
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 Dockable=1
 StayOnTop=0
 TabPosition=1
@@ -814,6 +1093,7 @@ Visible=1
 Docked=1
 State=0
 Left=0
+<<<<<<< HEAD
 Top=479
 Width=1286
 Height=3037
@@ -823,6 +1103,17 @@ ClientWidth=1286
 ClientHeight=3037
 TBDockHeight=7743
 LRDockWidth=1286
+=======
+Top=467
+Width=1288
+Height=2145
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=1288
+ClientHeight=2145
+TBDockHeight=7481
+LRDockWidth=1288
+>>>>>>> Branch_BugFix_DOM_ApproverEmail
 Dockable=1
 StayOnTop=0
 TabPosition=1
