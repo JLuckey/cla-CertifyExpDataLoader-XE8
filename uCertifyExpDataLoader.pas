@@ -180,7 +180,7 @@ type
     Procedure ValidateRecords(Const BatchTimeIn: Tdatetime);
     Procedure UpdateDupeEmailRecs( Const EMailIn: String; BatchTimeIn: TDateTime);
     Procedure BuildCrewLogFile();
-    Procedure BuildCrewTailFile();
+    Procedure BuildCrewTailFile(Const BatchTimeIn : TDateTime);
     Procedure BuildCrewTripFile();
     Procedure BuildTripLogFile();
     Procedure BuildTailTripFile();
@@ -189,7 +189,7 @@ type
     Procedure BuildGenericValidationFile(const TargetFileName, SQLIn: String) ;
     Procedure BuildGenericValidationFile2(const TargetFileName, SQLIn: String) ;
     Procedure LoadTripsIntoStartBucket;
-    Procedure BuildValidationFiles;
+    Procedure BuildValidationFiles(Const BatchTimeIn : TDateTime);
     Procedure BuildTripAccountantFile(Const FileNameIn: String);
     Procedure CalculateApproverEmail(Const BatchTimeIn: TDateTime) ;
     Procedure FilterTripsByCount;
@@ -240,6 +240,9 @@ type
     Function EmployeeTerminated(Const EMailIn: String; ImportDateIn: TDateTime): Boolean;
 
     Function GroupIsIn(Const GroupIn, GroupSetIn: String): Boolean;
+
+    Function CalcCrewTailFileName(Const BatchTimeIn: TDateTime): String;
+
   public
     { Public declarations }
   end;
@@ -289,7 +292,7 @@ begin
 
   FilterTripsByCount;
 
-  BuildValidationFiles;
+  BuildValidationFiles(BatchTime);
 
   CreateEmployeeErrorReport(BatchTime);
 
@@ -392,7 +395,7 @@ begin
 end;
 
 
-procedure TufrmCertifyExpDataLoader.BuildValidationFiles;
+procedure TufrmCertifyExpDataLoader.BuildValidationFiles(Const BatchTimeIn : TDateTime);
 var
   TargetDirectory : string;
 
@@ -400,7 +403,7 @@ begin
 
   TargetDirectory :=  edOutputDirectory.Text;  // 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\';
 
-  BuildCrewTailFile;
+  BuildCrewTailFile(BatchTimeIn);
   BuildCrewTripFile;
   BuildCrewLogFile;
 
@@ -1178,17 +1181,20 @@ end;  { BuildCrewLogFile }
 
 
 
-procedure TufrmCertifyExpDataLoader.BuildCrewTailFile;
+procedure TufrmCertifyExpDataLoader.BuildCrewTailFile(Const BatchTimeIn : TDateTime);
 Var
   RowOut : String;
   WorkFile : TextFile;
+  CrewTailFileName: String;
 
 begin
 
   StatusBar1.Panels[1].Text := 'Current Task:  Writing crew_tail.csv'  ;
   Application.ProcessMessages;
 
-  AssignFile(WorkFile, edOutputDirectory.Text + 'crew_tail.csv');
+//  AssignFile(WorkFile, edOutputDirectory.Text + 'crew_tail.csv');
+  CrewTailFileName := CalcCrewTailFileName(BatchTimeIn);
+  AssignFile(WorkFile, CrewTailFileName );
   Rewrite(WorkFile);
 
   qryBuildValFile.Close;
@@ -1428,7 +1434,6 @@ begin
   end;
 
 end;
-
 
 
 function TufrmCertifyExpDataLoader.CalcDepartmentName(const GroupValIn: String): String;
@@ -1773,6 +1778,27 @@ begin
   gloPaycomErrorFile := Result;
 
 end;  { CalcPaycomErrorFileName }
+
+
+function TufrmCertifyExpDataLoader.CalcCrewTailFileName(const BatchTimeIn: TDateTime): String;
+var
+  myMonth, myDay, myYear: word;
+  strMonth, strDay: String;
+
+begin
+  DecodeDate(Trunc(BatchTimeIn), myYear, myMonth, myDay);
+
+  strMonth := IntToStr(myMonth);
+  if myMonth < 10 then
+    strMonth := '0' + strMonth ;
+
+  strDay := IntToStr(myDay);
+  if myDay < 10 then
+    strDay := '0' + strDay;
+
+  Result := myIni.ReadString('OutputFiles', 'CrewTailDestination', '') + IntToStr(myYear) + strMonth + strDay + '.csv';
+
+end;  { CalcCrewTailFileName }
 
 
 procedure TufrmCertifyExpDataLoader.AppendSpecialUsers(Const FileToAppend: TextFile);

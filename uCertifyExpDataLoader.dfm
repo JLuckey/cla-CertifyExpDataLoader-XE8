@@ -847,8 +847,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'RRENT_TIMESTAMP + :parmDaysForward )'
       '  and STATUS = '#39'confirmed'#39
       'order by QUOTENO')
-    Left = 442
-    Top = 298
+    Left = 421
+    Top = 358
     ParamData = <
       item
         DataType = ftInteger
