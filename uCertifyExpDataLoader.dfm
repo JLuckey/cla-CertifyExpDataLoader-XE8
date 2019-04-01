@@ -319,8 +319,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Username = 'sa'
     Server = '192.168.1.122'
     LoginPrompt = False
-    Left = 128
-    Top = 65531
+    Left = 57
+    Top = 3
     EncryptedPassword = '9CFF93FF9EFF8CFF8EFF93FF8CFF8DFF89FFCDFFCFFFCEFFC9FF'
   end
   object qryGetEmployees: TUniQuery

@@ -386,11 +386,10 @@ begin
           Result  := arrJson.Items[0].GetValue<string>('Status');
         end else begin
           If RESTResponse.JSONValue.GetValue<string>('ID') <> '' Then
-            Result := 'Added:' + RESTResponse.JSONValue.GetValue<string>('ID')
+            Result := 'added'     // :' + RESTResponse.JSONValue.GetValue<string>('ID')
           else
-            Result := 'Add-Failed';
+            Result := 'add_failed';
         end;
-
       End;
 
     400..499:

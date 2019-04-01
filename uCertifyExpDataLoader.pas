@@ -351,15 +351,6 @@ end;  { LoadData() }
 
 procedure TufrmCertifyExpDataLoader.btnGoHourlyClick(Sender: TObject);
 begin
-// LoadCharterVisaTripsIntoStartBucket;
-// LoadDOMsIntoStartBucket(StrToDateTime('12/20/2018 12:44:42.020'));
-
-//  ShowMessage(FindLeadPilot('N32MJ',  StrToDateTime('12/20/2018 12:44:42.020')));
-//  LoadCertFileFields(StrToDateTime('01/11/2019 11:36:58.410'));
-
-//  Load_IFS_IntoStartBucket(StrToDateTime('01/13/2019 13:45:30.227'));
-
-//  ShowMessage(CalcCertfileDepartmentName('Hybrid'));
 
   HourlyPushMain;
 
@@ -2122,7 +2113,6 @@ begin
   gloPusher.free ;
 
   StatusBar1.Panels[1].Text := 'Current Task:  All done!'  ;
-
 
 end;  { HourlyPushMain }
 
