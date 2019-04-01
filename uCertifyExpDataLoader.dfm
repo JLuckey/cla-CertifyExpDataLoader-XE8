@@ -94,7 +94,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object Label12: TLabel
     Left = 185
-    Top = 159
+    Top = 157
     Width = 27
     Height = 13
     Caption = 'days.'
@@ -133,6 +133,20 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 88
     Height = 13
     Caption = 'Tail_LeadPilot File:'
+  end
+  object Label18: TLabel
+    Left = 238
+    Top = 413
+    Width = 21
+    Height = 13
+    Caption = 'New'
+  end
+  object Label19: TLabel
+    Left = 409
+    Top = 413
+    Width = 41
+    Height = 13
+    Caption = 'Previous'
   end
   object edPayComInputFile: TEdit
     Left = 257
@@ -271,9 +285,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     OnClick = btnLoadTailLeadPilotTableClick
   end
   object DBGrid1: TDBGrid
-    Left = 380
-    Top = 440
-    Width = 320
+    Left = 20
+    Top = 456
+    Width = 679
     Height = 120
     DataSource = DataSource1
     TabOrder = 14
@@ -282,6 +296,22 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     TitleFont.Height = -11
     TitleFont.Name = 'Tahoma'
     TitleFont.Style = []
+  end
+  object edNewDate: TEdit
+    Left = 174
+    Top = 429
+    Width = 152
+    Height = 21
+    TabOrder = 15
+    Text = 'edNewDate'
+  end
+  object edPreviousDate: TEdit
+    Left = 356
+    Top = 429
+    Width = 158
+    Height = 21
+    TabOrder = 16
+    Text = 'edPreviousDate'
   end
   object UniConnection1: TUniConnection
     ProviderName = 'SQL Server'
@@ -631,8 +661,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     SQL.Strings = (
       'select distinct TripNum, AirportID'
       'from CertifyExp_TripStop_Step1')
-    Left = 282
-    Top = 380
+    Left = 279
+    Top = 353
   end
   object qryGetStartBucketSorted: TUniQuery
     Connection = UniConnection1
@@ -1141,38 +1171,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Left = 130
     Top = 469
   end
-  object qryGetAddedRecs_CrewTail: TUniQuery
-    Connection = UniConnection1
-    SQL.Strings = (
-      '/* Get Added Records */'
-      
-        'select ID, CrewMemberVendorNum, TailNumber, CreatedOn, RecordSta' +
-        'tus, UploadedOn, UploadStatus, UploadStatusMessage, UploadBatchI' +
-        'D'
-      'from CertifyExp_CrewTail_History'
-      'where CreatedOn = :parmNewDateTime                '
-      '  and concat(CrewMemberVendorNum, '#39'|'#39', TailNumber) not in '
-      '  (select concat(CrewMemberVendorNum, '#39'|'#39', TailNumber) '
-      '   from CertifyExp_CrewTail_History'
-      '   where CreatedOn = :parmOldDateTime  )            '
-      ''
-      ''
-      ''
-      '')
-    Left = 159
-    Top = 532
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'parmNewDateTime'
-        Value = nil
-      end
-      item
-        DataType = ftUnknown
-        Name = 'parmOldDateTime'
-        Value = nil
-      end>
-  end
   object qryGetFailedRecs_CrewTail: TUniQuery
     Connection = UniConnection1
     Left = 62
@@ -1214,7 +1212,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       end>
   end
   object DataSource1: TDataSource
-    DataSet = qryGetDeletedRecs_CrewTail
+    DataSet = qryGetCrewTailRecs
     Left = 386
     Top = 524
   end
@@ -1228,7 +1226,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'where RecordStatus = :parmRecStatusIn'
       '  and CreatedOn    = :parmCreatedOnIn'
       '')
-    Left = 209
+    Left = 207
     Top = 441
     ParamData = <
       item
@@ -1249,14 +1247,20 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'update CertifyExp_CrewTail_History'
       'set RecordStatus = :parmRecStatus       /* '#39'deleted'#39', '#39'added'#39' */'
       'where CreatedOn = :parmOlderDate '
-      '  and RecordStatus = '#39'imported'#39'        '
-      '  and concat(CrewMemberVendorNum, '#39'|'#39', TailNumber) not in '
-      '  (select concat(CrewMemberVendorNum, '#39'|'#39', TailNumber) '
-      '   from CertifyExp_CrewTail_History'
-      '   where CreatedOn = :parmNewerDate       '
-      '     and RecordStatus = '#39'imported'#39' )   ')
-    Left = 301
-    Top = 459
+      
+        '                                        /* and RecordStatus = '#39'i' +
+        'mported'#39' */'
+      '  and concat(CrewMemberVendorNum, '#39'|'#39', TailNumber) '
+      '  not in '
+      '    (select concat(CrewMemberVendorNum, '#39'|'#39', TailNumber) '
+      '     from CertifyExp_CrewTail_History'
+      '     where CreatedOn = :parmNewerDate )'
+      
+        '                                        /* and RecordStatus = '#39'i' +
+        'mported'#39' */   '
+      '   ')
+    Left = 300
+    Top = 458
     ParamData = <
       item
         DataType = ftUnknown

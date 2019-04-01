@@ -171,13 +171,16 @@ type
     qryGetIFS: TUniQuery;
     qryInsertCrewTailHist: TUniQuery;
     qryGetCrewTailBatchDates: TUniQuery;
-    qryGetAddedRecs_CrewTail: TUniQuery;
     qryGetFailedRecs_CrewTail: TUniQuery;
     qryGetDeletedRecs_CrewTail: TUniQuery;
     DataSource1: TDataSource;
     DBGrid1: TDBGrid;
     qryGetCrewTailRecs: TUniQuery;
     qryUpdateRecStatus_CrewTail: TUniQuery;
+    edNewDate: TEdit;
+    edPreviousDate: TEdit;
+    Label18: TLabel;
+    Label19: TLabel;
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -2086,7 +2089,6 @@ begin
   LoadCrewTailHistoryTable(BatchTime);              // puts latest batch into CrewTailHistory table
   GetBatchDates(PreviousBatchDate, NewBatchDate);   // those params are output
 
-(*
   gloPusher := TfrmPushToCertify.Create(self);
   gloPusher.theBaseURL := 'https://api.certify.com/v1/exprptglds';
   gloPusher.APIKey     := 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv' ;
@@ -2099,12 +2101,12 @@ begin
 //  SendToCertify(qryGetFailedRecs_CrewTail, BatchTime);
 //  qryGetFailedRecs_CrewTail.Close;
 
-
   // Get Added recs from this new batch
   UpdateRecordStatus_CrewTail('added', PreviousBatchDate, NewBatchDate);
   qryGetCrewTailRecs.ParamByName('parmCreatedOnIn').AsDateTime := NewBatchDate;    // modify this query to exclude already uploaded recs  ???JL
   qryGetCrewTailRecs.ParamByName('parmRecStatusIn').AsString   := 'added';
   qryGetCrewTailRecs.Open;
+  Application.ProcessMessages;
   SendToCertify(qryGetCrewTailRecs, BatchTime);
   qryGetCrewTailRecs.Close;
 
@@ -2113,12 +2115,11 @@ begin
   qryGetCrewTailRecs.ParamByName('parmCreatedOnIn').AsDateTime := PreviousBatchDate;
   qryGetCrewTailRecs.ParamByName('parmRecStatusIn').AsString   := 'deleted';
   qryGetCrewTailRecs.Open;
+  Application.ProcessMessages;
   SendToCertify(qryGetCrewTailRecs, BatchTime);
   qryGetCrewTailRecs.Close;
 
   gloPusher.free ;
-
-*)
 
   StatusBar1.Panels[1].Text := 'Current Task:  All done!'  ;
 
@@ -2206,6 +2207,10 @@ begin
   qryGetCrewTailBatchDates.Next;
   PreviousBatchDateOut := qryGetCrewTailBatchDates.FieldByName('CreatedOn').AsDateTime;
   qryGetCrewTailBatchDates.Close;
+
+  //  Test/Debug Code   ???JL
+  edPreviousDate.Text := DateTimeToStr( PreviousBatchDateOut);
+  edNewDate.Text      := DateTimeToStr( NewBatchDateOut);
 
 //  ShowMessage('NewBatchDate: '      + DateTimeToStr(NewBatchDateOut) + #13 +
 //              'PreviousBatchDate: ' + DateTimeToStr(PreviousBatchDateOut) );
