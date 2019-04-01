@@ -1192,7 +1192,6 @@ begin
   StatusBar1.Panels[1].Text := 'Current Task:  Writing crew_tail.csv'  ;
   Application.ProcessMessages;
 
-//  AssignFile(WorkFile, edOutputDirectory.Text + 'crew_tail.csv');
   CrewTailFileName := CalcCrewTailFileName(BatchTimeIn);
   AssignFile(WorkFile, CrewTailFileName );
   Rewrite(WorkFile);
