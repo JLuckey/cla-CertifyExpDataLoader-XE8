@@ -111,6 +111,8 @@ type
     Function  GetCertifyRecKey(Const CodeFieldValIn: String; DimenIn: Integer): String;
     Function  DecodeUploadStatus(): String;
 
+    Procedure  BuildJSONBody(Const TripTailLogValIn: String; Var stlOut : TStringList);
+
   public
 
 
@@ -248,7 +250,7 @@ begin
   End else if FDataAction = 'deleted' then begin
     case FCertifyDimension of
       1: strSearch := FCrewMemberVendorNum + '|' + FTailNumber;
-      2: strSearch := FCrewMemberVendorNum + '|' + FTripNumber;   // confirm order here  ???JL
+      2: strSearch := FCrewMemberVendorNum + '|' + FTripNumber;
       3: strSearch := FCrewMemberVendorNum + '|' + FLogNumber;
     end;
     DeleteRec(strSearch, FCertifyDimension);
@@ -338,7 +340,7 @@ begin
       stlBody.Add(' "ExpRptGLDLabel": "Tail #", ');
       stlBody.Add(Format(' "Name": "%s",',  [FTailNumber]));
       stlBody.Add(Format(' "Code": "%s", ', [strVendorTail] ) );
-      stlBody.Add(Format(' "Data": "%s", ', [FTailNumber ] ) );
+      stlBody.Add(Format(' "Data": "%s", ', [FTailNumber] ) );
       stlBody.Add(' "Active": 1 }');
 
       Memo1.Lines.AddStrings(stlBody);
@@ -373,6 +375,80 @@ end;  { Add_Crew_Tail_Rec }
 
 
 
+procedure TfrmPushToCertify.Add_CrewTrip_Rec;
+var
+  stlBody: TStringList;
+  strVendorTrip : String;
+  RecordKey : String;
+
+begin
+  Memo1.Lines.Clear;
+  strVendorTrip := Format('%s|%s', [FCrewMemberVendorNum, FTripNumber] ) ;
+
+  // Check if crew_tail value already exists
+  RecordKey := GetCertifyRecKey(strVendorTrip, FCertifyDimension);
+  if RecordKey = 'NOT_FOUND' then begin           // If Not Found then create new record
+    stlBody := TStringList.Create;
+    try
+      RESTClient.BaseURL := FtheBaseURL + '/' + IntToStr(FCertifyDimension) ;      // 'https://api.certify.com/v1/exprptglds/1';
+      RESTRequest.Method := rmPUT;
+      Memo1.Lines.Add( RESTClient.BaseURL );
+
+//      BuildJSONBody(FTripNumber, stlBody);   // refactor Add_CrewTrip_Rec to use BuildJSONBody carefully. The level of abstraction may make code un-readable  ???JL
+
+      // Format JSON data packet
+      stlBody.Add('{"ExpRptGLDIndex": ' + IntToStr(FCertifyDimension) + ',' );
+      stlBody.Add(' "ExpRptGLDLabel": "Trip #", ');
+      stlBody.Add(Format(' "Name": "%s",',  [FTripNumber]));
+      stlBody.Add(Format(' "Code": "%s", ', [strVendorTrip] ) );
+      stlBody.Add(Format(' "Data": "%s", ', [FTripNumber] ) );
+      stlBody.Add(' "Active": 1 }');
+
+      Memo1.Lines.AddStrings(stlBody);
+      RESTRequest.ClearBody;
+      RESTRequest.AddBody( stlBody.Text );
+      Application.ProcessMessages;
+      RESTRequest.Params.Items[0].ContentType := ctAPPLICATION_JSON;
+      try
+        RESTRequest.Execute;
+        FHTTPReturnCode      := RESTResponse.StatusCode ;
+        FUploadStatus        := DecodeUploadStatus();
+        FUploadStatusMessage := RESTResponse.JSONText ;
+
+        memo1.lines.append(IntToStr(RESTResponse.StatusCode));
+        memo1.lines.append(FUploadStatus);
+        memo1.lines.append(RESTResponse.StatusText);
+        memo1.lines.append(RESTResponse.JSONText);
+        memo1.lines.append(RESTResponse.Content);
+      except on E: Exception do
+        Memo1.Lines.Append('Exception! ' + #13 + E.Message);
+      end;
+
+    finally
+      stlBody.Free;
+    end;
+
+  end else begin
+    SetCertifyActiveFlag(1, RecordKey, 1);      // if Found then set it's Active Flag to TRUE
+  end;
+
+end;  { Add_CrewTrip_Rec }
+
+
+Procedure TfrmPushToCertify.BuildJSONBody(const TripTailLogValIn: String; Var stlOut : TStringList) ;
+begin
+  // Format JSON data packet
+  stlOut.Add('{"ExpRptGLDIndex": ' + IntToStr(FCertifyDimension) + ',' );
+  stlOut.Add(' "ExpRptGLDLabel": "Trip #", ');
+  stlOut.Add(Format(' "Name": "%s",',  [FTripNumber]));
+//  stlOut.Add(Format(' "Code": "%s", ', [strVendorTrip] ) );
+  stlOut.Add(Format(' "Data": "%s", ', [FTripNumber] ) );
+  stlOut.Add(' "Active": 1 }');
+
+end;
+
+
+
 function TfrmPushToCertify.DecodeUploadStatus: String;
 var
   arrJson : TJSONArray;
@@ -402,12 +478,6 @@ end;  { CalcUploadStatus }
 
 
 procedure TfrmPushToCertify.Add_CrewLog_Rec;
-begin
-
-end;
-
-
-procedure TfrmPushToCertify.Add_CrewTrip_Rec;
 begin
 
 end;
