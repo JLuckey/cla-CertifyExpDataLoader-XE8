@@ -435,6 +435,68 @@ begin
 end;  { Add_CrewTrip_Rec }
 
 
+
+procedure TfrmPushToCertify.Add_CrewLog_Rec;
+var
+  stlBody: TStringList;
+  strVendorLog : String;
+  RecordKey : String;
+
+begin
+  Memo1.Lines.Clear;
+  strVendorLog := Format('%s|%s', [FCrewMemberVendorNum, FLogNumber] ) ;
+
+  // Check if crew_tail value already exists
+  RecordKey := GetCertifyRecKey(strVendorLog, FCertifyDimension);
+  if RecordKey = 'NOT_FOUND' then begin           // If Not Found then create new record
+    stlBody := TStringList.Create;
+    try
+      RESTClient.BaseURL := FtheBaseURL + '/' + IntToStr(FCertifyDimension) ;      // 'https://api.certify.com/v1/exprptglds/1';
+      RESTRequest.Method := rmPUT;
+      Memo1.Lines.Add( RESTClient.BaseURL );
+
+//      BuildJSONBody(FTripNumber, stlBody);   // refactor Add_CrewTrip_Rec to use BuildJSONBody carefully. The level of abstraction may make code un-readable  ???JL
+
+      // Format JSON data packet
+      stlBody.Add('{"ExpRptGLDIndex": ' + IntToStr(FCertifyDimension) + ',' );
+      stlBody.Add(' "ExpRptGLDLabel": "Log #", ');
+      stlBody.Add(Format(' "Name": "%s",',  [FLogNumber]));
+      stlBody.Add(Format(' "Code": "%s", ', [strVendorLog] ) );
+      stlBody.Add(Format(' "Data": "%s", ', [FLogNumber] ) );
+      stlBody.Add(' "Active": 1 }');
+
+      Memo1.Lines.AddStrings(stlBody);
+      RESTRequest.ClearBody;
+      RESTRequest.AddBody( stlBody.Text );
+      Application.ProcessMessages;
+      RESTRequest.Params.Items[0].ContentType := ctAPPLICATION_JSON;
+      try
+        RESTRequest.Execute;
+        FHTTPReturnCode      := RESTResponse.StatusCode ;
+        FUploadStatus        := DecodeUploadStatus();
+        FUploadStatusMessage := RESTResponse.JSONText ;
+
+        memo1.lines.append(IntToStr(RESTResponse.StatusCode));
+        memo1.lines.append(FUploadStatus);
+        memo1.lines.append(RESTResponse.StatusText);
+        memo1.lines.append(RESTResponse.JSONText);
+        memo1.lines.append(RESTResponse.Content);
+      except on E: Exception do
+        Memo1.Lines.Append('Exception! ' + #13 + E.Message);
+      end;
+
+    finally
+      stlBody.Free;
+    end;
+
+  end else begin
+    SetCertifyActiveFlag(1, RecordKey, 1);      // if Found then set it's Active Flag to TRUE
+  end;
+
+end;  {Add_CrewLog_Rec}
+
+
+
 Procedure TfrmPushToCertify.BuildJSONBody(const TripTailLogValIn: String; Var stlOut : TStringList) ;
 begin
   // Format JSON data packet
@@ -474,13 +536,6 @@ begin
   end;  { Case }
 
 end;  { CalcUploadStatus }
-
-
-
-procedure TfrmPushToCertify.Add_CrewLog_Rec;
-begin
-
-end;
 
 
 //  get https://api.certify.com/v1/exprptglds/1?code=13748|N113CS

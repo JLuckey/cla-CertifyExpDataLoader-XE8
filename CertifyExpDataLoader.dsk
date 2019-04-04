@@ -1,7 +1,7 @@
 ﻿[Closed Files]
-File_0=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.pas',0,1,29861,1,29893,0,0,,
-File_1=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\dmCertifyGroupClass_Corporate.pas',0,1,1,3,110,0,0,,
-File_2=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.Controls.pas',0,1,9765,1,9794,0,0,,
+File_0=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.Controls.pas',0,1,9765,1,9794,0,0,,
+File_1=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.pas',0,1,29861,1,29893,0,0,,
+File_2=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\dmCertifyGroupClass_Corporate.pas',0,1,1,3,110,0,0,,
 File_3=TSourceModule,'F:\XDrive\DCS\CLA\DataWarehouse\DataLoader\TripLoader_hourly\DelphiSourceXE8\uQuoteLoader.pas',0,1,620,1,647,0,0,,
 File_4=TSourceModule,'c:\codegear\delphixe8\source\Indy10\Protocols\IdSSLOpenSSLHeaders.pas',0,1,24069,3,24096,0,0,,
 File_5=TSourceModule,'F:\XDrive\DCS\CLA\Avinode\Source_XE8\ufoAvinodeSOAPRequest.pas',0,1,612,1,630,0,0,,
@@ -17,34 +17,39 @@ File_13=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.StdCtrls.pas',0,1,31
 [Modules]
 Module0=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
 Module1=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uPushToCertify.pas
-Module2=Main_Page
+Module2=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
 Module3=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj
-Count=4
+Module4=Main_Page
+Count=5
 EditWindowCount=1
 
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas]
 ModuleType=TSourceModule
 FormState=1
-FormOnTop=1
+FormOnTop=0
 
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uPushToCertify.pas]
 ModuleType=TSourceModule
 FormState=1
 FormOnTop=0
 
-[Main_Page]
-ModuleType=TURLModule
+[F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini]
+ModuleType=TSourceModule
 
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj]
 ModuleType=TBaseProject
 
+[Main_Page]
+ModuleType=TURLModule
+
 [EditWindow0]
-ViewCount=4
+ViewCount=5
 CurrentEditView=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
 View0=0
 View1=1
 View2=2
 View3=3
+View4=4
 PercentageSizes=1
 Create=1
 Visible=1
@@ -72,7 +77,7 @@ BottomPanelClients=DockSite1,MessageView
 BottomPanelData=0000080001020100000009000000446F636B5369746531EC4C000000000000027C030000000000000100000000EC4C00000F0000004D65737361676556696577466F726DFFFFFFFF
 BottomMiddlePanelSize=0
 BottomMiddlePanelClients=DockSite0,GraphDrawingModel
-BottomMiddelPanelData=0000080001020200000009000000446F636B536974653010000000477261706844726177696E67566965779B1D00000000000002F906000000000000FFFFFFFF
+BottomMiddelPanelData=0000080001020200000009000000446F636B536974653010000000477261706844726177696E6756696577B93200000000000002C504000000000000FFFFFFFF
 
 [View0]
 CustomEditViewType=TWelcomePageView
@@ -92,24 +97,35 @@ EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpD
 [View2]
 CustomEditViewType=TEditView
 Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-CursorX=3
-CursorY=1241
-TopLine=1213
+CursorX=1
+CursorY=2159
+TopLine=2112
 LeftCol=1
 Elisions=
-Bookmarks={1,1248,34}
-EditViewName=Borland.FormDesignerView
+Bookmarks={1,2142,1}{9,1694,1}
+EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
 
 [View3]
 CustomEditViewType=TEditView
 Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uPushToCertify.pas
-CursorX=31
-CursorY=369
-TopLine=313
+CursorX=3
+CursorY=385
+TopLine=360
+LeftCol=1
+Elisions=
+Bookmarks={1,397,3}
+EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uPushToCertify.pas
+
+[View4]
+CustomEditViewType=TEditView
+Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
+CursorX=97
+CursorY=7
+TopLine=1
 LeftCol=1
 Elisions=
 Bookmarks=
-EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uPushToCertify.pas
+EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
 
 [Watches]
 Count=0
@@ -136,8 +152,7 @@ Dockable=1
 StayOnTop=0
 
 [Breakpoints]
-Count=1
-Breakpoint0='F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',350,'',0,1,'',1,0,0,'',1,'','','',0,''
+Count=0
 
 [EmbarcaderoWin32Debugger_AddressBreakpoints]
 Count=0
@@ -269,11 +284,11 @@ State=0
 Left=0
 Top=0
 Width=2339
-Height=1187
+Height=1070
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=2339
-ClientHeight=1187
+ClientHeight=1070
 TBDockHeight=4834
 LRDockWidth=3562
 Dockable=1
@@ -288,11 +303,11 @@ State=0
 Left=0
 Top=0
 Width=2339
-Height=1187
+Height=1070
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=2339
-ClientHeight=1187
+ClientHeight=1070
 TBDockHeight=4834
 LRDockWidth=3562
 Dockable=1
@@ -321,7 +336,7 @@ SplitPos=150
 [PropInspDesignerSelection]
 ArrangeBy=Name
 SelectedItem=Name,
-ExpandedItems=Anchors=0,BorderIcons=0,"LiveBindings Designer=0",Constraints=0,FilterOptions=0,Options=0,Encryption=0,RefreshOptions=0,SmartFetch=0,LiveBindings=0,Margins=0,Font=0,StyleElements=0
+ExpandedItems=Anchors=0,BorderIcons=0,"LiveBindings Designer=0",Constraints=0,FilterOptions=0,Options=0,Encryption=0,RefreshOptions=0,SmartFetch=0,LiveBindings=0,Margins=0,Font=0,StyleElements=0,ImageMargins=0,GlassFrame=0,HorzScrollBar=0,PoolingOptions=0
 
 [frmDesignPreview]
 PercentageSizes=1
@@ -491,11 +506,11 @@ State=0
 Left=0
 Top=0
 Width=2339
-Height=1187
+Height=1070
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=2339
-ClientHeight=1187
+ClientHeight=1070
 TBDockHeight=3209
 LRDockWidth=2828
 Dockable=1
@@ -510,11 +525,11 @@ State=0
 Left=0
 Top=0
 Width=2339
-Height=1187
+Height=738
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=2339
-ClientHeight=1187
+ClientHeight=738
 TBDockHeight=1155
 LRDockWidth=3677
 Dockable=1
@@ -699,14 +714,14 @@ Visible=0
 Docked=1
 State=0
 Left=0
-Top=0
+Top=23
 Width=2339
-Height=1476
+Height=1027
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=2339
-ClientHeight=1476
-TBDockHeight=1476
+ClientHeight=1027
+TBDockHeight=1027
 LRDockWidth=2339
 Dockable=1
 StayOnTop=0

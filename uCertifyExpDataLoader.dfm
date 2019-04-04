@@ -1168,8 +1168,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from CertifyExp_CrewTail_History'
       'where RecordStatus = '#39'imported'#39'        '
       'order by CreatedOn desc')
-    Left = 130
-    Top = 469
+    Left = 42
+    Top = 496
   end
   object qryGetFailedRecs_CrewTail: TUniQuery
     Connection = UniConnection1
@@ -1213,8 +1213,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object DataSource1: TDataSource
     DataSet = qryGetCrewTailRecs
-    Left = 286
-    Top = 527
+    Left = 316
+    Top = 549
   end
   object qryGetCrewTailRecs: TUniQuery
     Connection = UniConnection1
@@ -1226,8 +1226,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'where RecordStatus = :parmRecStatusIn'
       '  and CreatedOn    = :parmCreatedOnIn'
       '')
-    Left = 207
-    Top = 441
+    Left = 115
+    Top = 437
     ParamData = <
       item
         DataType = ftUnknown
@@ -1243,7 +1243,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryUpdateRecStatus_CrewTail: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
-      '/* Flag Deleted Recs */'
+      
+        '/* This query is used to detect and flag Deleted or Added Recs *' +
+        '/'
       'update CertifyExp_CrewTail_History'
       'set RecordStatus = :parmRecStatus       /* '#39'deleted'#39', '#39'added'#39' */'
       'where CreatedOn = :parmOlderDate '
@@ -1259,8 +1261,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '                                        /* and RecordStatus = '#39'i' +
         'mported'#39' */   '
       '   ')
-    Left = 300
-    Top = 458
+    Left = 135
+    Top = 479
     ParamData = <
       item
         DataType = ftUnknown
@@ -1281,7 +1283,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryUpdateRecStatus_CrewTrip: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
-      '/* Flag Deleted Recs */'
+      
+        '/* This query is used to detect and flag Deleted or Added Recs *' +
+        '/'
       'update CertifyExp_CrewTrip_History'
       'set RecordStatus = :parmRecStatus       /* '#39'deleted'#39', '#39'added'#39' */'
       'where CreatedOn = :parmOlderDate '
@@ -1365,5 +1369,95 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'order by CreatedOn desc')
     Left = 506
     Top = 502
+  end
+  object qryInsertCrewLogHist: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      
+        'insert into CertifyExp_CrewLog_History (CrewMemberVendorNum,LogN' +
+        'umber,CreatedOn,RecordStatus)'
+      
+        'select distinct CrewMemberVendorNum, LogSheet, :parmBatchDateTim' +
+        'e, '#39'imported'#39
+      'from CertifyExp_Trips_StartBucket '
+      'where CrewMemberVendorNum is not null '
+      '  and LogSheet is not null and CrewMemberVendorNum > 0')
+    Left = 283
+    Top = 457
+    ParamData = <
+      item
+        DataType = ftString
+        Name = 'parmBatchDateTime'
+        Value = '2019-01-15 18:00:34.423'
+      end>
+  end
+  object qryGetCrewLogBatchDates: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select distinct CreatedOn'
+      'from CertifyExp_CrewLog_History'
+      'where RecordStatus = '#39'imported'#39'        '
+      'order by CreatedOn desc')
+    Left = 283
+    Top = 499
+  end
+  object qryUpdateRecStatus_CrewLog: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      
+        '/* This query is used to detect and flag Deleted or Added Recs *' +
+        '/'
+      'update CertifyExp_CrewLog_History'
+      'set RecordStatus = :parmRecStatus       /* '#39'deleted'#39', '#39'added'#39' */'
+      'where CreatedOn = :parmOlderDate '
+      '  and concat(CrewMemberVendorNum, '#39'|'#39', LogNumber) '
+      '  not in '
+      '    (select concat(CrewMemberVendorNum, '#39'|'#39', LogNumber) '
+      '     from CertifyExp_CrewLog_History'
+      '     where CreatedOn = :parmNewerDate )'
+      '                                        '
+      '   ')
+    Left = 377
+    Top = 444
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmRecStatus'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmOlderDate'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmNewerDate'
+        Value = nil
+      end>
+  end
+  object qryGetCrewLogRecs: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select ID, CrewMemberVendorNum, LogNumber, CreatedOn, '
+      '       RecordStatus, UploadedOn, UploadStatus, '
+      '       UploadStatusMessage, UploadBatchID, HTTPResultCode'
+      'from CertifyExp_CrewLog_History'
+      'where RecordStatus = :parmRecStatusIn'
+      '  and CreatedOn    = :parmCreatedOnIn'
+      '')
+    Left = 363
+    Top = 487
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmRecStatusIn'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmCreatedOnIn'
+        Value = nil
+      end>
   end
 end
