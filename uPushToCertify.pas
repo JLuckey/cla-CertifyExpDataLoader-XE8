@@ -368,7 +368,7 @@ begin
     end;
 
   end else begin
-    SetCertifyActiveFlag(1, RecordKey, 1);      // if Found then set it's Active Flag to TRUE
+    SetCertifyActiveFlag(FCertifyDimension, RecordKey, 1);      // if Found then set it's Active Flag to TRUE
   end;
 
 end;  { Add_Crew_Tail_Rec }
@@ -429,7 +429,7 @@ begin
     end;
 
   end else begin
-    SetCertifyActiveFlag(1, RecordKey, 1);      // if Found then set it's Active Flag to TRUE
+    SetCertifyActiveFlag(FCertifyDimension, RecordKey, 1);      // if Found then set it's Active Flag to TRUE
   end;
 
 end;  { Add_CrewTrip_Rec }
@@ -490,7 +490,7 @@ begin
     end;
 
   end else begin
-    SetCertifyActiveFlag(1, RecordKey, 1);      // if Found then set it's Active Flag to TRUE
+    SetCertifyActiveFlag(FCertifyDimension, RecordKey, 1);      // if Found then set it's Active Flag to TRUE
   end;
 
 end;  {Add_CrewLog_Rec}
