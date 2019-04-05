@@ -313,6 +313,16 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     TabOrder = 16
     Text = 'edPreviousDate'
   end
+  object btnFixer: TButton
+    Left = 633
+    Top = 425
+    Width = 75
+    Height = 25
+    Caption = 'Fixer'
+    Enabled = False
+    TabOrder = 17
+    OnClick = btnFixerClick
+  end
   object UniConnection1: TUniConnection
     ProviderName = 'SQL Server'
     Database = 'WarehouseDEV'
@@ -1322,7 +1332,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '       RecordStatus, UploadedOn, UploadStatus, '
       '       UploadStatusMessage, UploadBatchID, HTTPResultCode'
       'from CertifyExp_CrewTrip_History'
-      'where RecordStatus = :parmRecStatusIn'
+      'where RecordStatus = :parmRecStatusIn '
       '  and CreatedOn    = :parmCreatedOnIn'
       '')
     Left = 594
@@ -1443,11 +1453,11 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '       RecordStatus, UploadedOn, UploadStatus, '
       '       UploadStatusMessage, UploadBatchID, HTTPResultCode'
       'from CertifyExp_CrewLog_History'
-      'where RecordStatus = :parmRecStatusIn'
+      'where RecordStatus = :parmRecStatusIn '
       '  and CreatedOn    = :parmCreatedOnIn'
       '')
     Left = 363
-    Top = 487
+    Top = 486
     ParamData = <
       item
         DataType = ftUnknown

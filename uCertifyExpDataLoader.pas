@@ -189,11 +189,13 @@ type
     qryGetCrewLogBatchDates: TUniQuery;
     qryUpdateRecStatus_CrewLog: TUniQuery;
     qryGetCrewLogRecs: TUniQuery;
+    btnFixer: TButton;
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnGoHourlyClick(Sender: TObject);
     procedure btnLoadTailLeadPilotTableClick(Sender: TObject);
+    procedure btnFixerClick(Sender: TObject);
 
   private
     Procedure Main();
@@ -366,6 +368,47 @@ begin
 
 
 end;  { LoadData() }
+
+
+
+procedure TufrmCertifyExpDataLoader.btnFixerClick(Sender: TObject);
+begin
+  gloPusher := TfrmPushToCertify.Create(self);
+  gloPusher.theBaseURL := 'https://api.certify.com/v1/exprptglds';
+  gloPusher.APIKey     := 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv' ;
+  gloPusher.APISecret  := '4843793A-6326-4F92-86EB-D34070C34CDC' ;
+
+  (*
+  qryGetCrewTripRecs.Close;
+  qryGetCrewTripRecs.ParamByName('parmCreatedOnIn').AsString := '2019-04-05 07:42:00.823';
+//  qryGetCrewTripRecs.ParamByName('parmRecStatusIn').AsString := 'added';
+  qryGetCrewTripRecs.Open;
+
+  DataSource1.DataSet := qryGetCrewTripRecs;          // Update data grid in UI for test/dev purposes
+  Application.ProcessMessages;
+  Sleep(5000);                                        // wait so user can see data in grid
+
+  SendToCertify(qryGetCrewTripRecs, Now(), 'crew_trip');
+  qryGetCrewTripRecs.Close;
+*)
+
+  qryGetCrewLogRecs.Close;
+  qryGetCrewLogRecs.ParamByName('parmCreatedOnIn').AsString := '2019-04-05 07:42:00.823';
+//  qryGetCrewTripRecs.ParamByName('parmRecStatusIn').AsString := 'added';
+  qryGetCrewLogRecs.Open;
+
+  DataSource1.DataSet := qryGetCrewLogRecs;          // Update data grid in UI for test/dev purposes
+  Application.ProcessMessages;
+  Sleep(5000);                                        // wait so user can see data in grid
+
+  SendToCertify(qryGetCrewLogRecs, Now(), 'crew_log');
+  qryGetCrewLogRecs.Close;
+
+
+  gloPusher.free;
+
+end;
+
 
 
 
@@ -2128,7 +2171,7 @@ begin
   // crew_tail
   Load_CrewTail_HistoryTable(BatchTime);                       // puts latest batch into CrewTailHistory table
   GetBatchDates_CrewTail(PreviousBatchDate, NewBatchDate);     // identifies "added" & "deleted" recs; (those params are output)
-  Do_CrewTail_API(Now(), PreviousBatchDate, NewBatchDate); // sends data to Certify via API
+  Do_CrewTail_API(Now(), PreviousBatchDate, NewBatchDate);     // sends data to Certify via API
 
   // crew_trip
   Load_CrewTrip_HistoryTable(BatchTime);
@@ -2143,7 +2186,7 @@ begin
   gloPusher.free ;
   StatusBar1.Panels[1].Text := 'Current Task:  All done!'  ;
 
-  //  //  Get Failed Recs from previous Pushes
+//  //  Get Failed Recs from previous Pushes
 //  qryGetFailedRecs_CrewTail.Close;
 //  qryGetFailedRecs_CrewTail.ParamByName('parmNewBatchDateIn').AsDateTime := NewBatchDate;
 //  qryGetFailedRecs_CrewTail.Open;
@@ -2160,7 +2203,7 @@ begin
   Application.ProcessMessages;
   // Get Added recs from this new batch
   UpdateRecordStatus_CrewTail('added', PreviousBatchDateIn, NewBatchDateIn);
-  qryGetCrewTailRecs.ParamByName('parmCreatedOnIn').AsDateTime := NewBatchDateIn;    // modify this query to exclude already uploaded recs  ???JL
+  qryGetCrewTailRecs.ParamByName('parmCreatedOnIn').AsDateTime := NewBatchDateIn;
   qryGetCrewTailRecs.ParamByName('parmRecStatusIn').AsString   := 'added';
   qryGetCrewTailRecs.Open;
 
@@ -2197,13 +2240,13 @@ begin
 
   UpdateRecordStatus_CrewTrip('added', PreviousBatchDateIn, NewBatchDateIn);
   qryGetCrewTripRecs.Close;
-  qryGetCrewTripRecs.ParamByName('parmCreatedOnIn').AsDateTime := NewBatchDateIn;    // modify this query to exclude already uploaded recs  ???JL
+  qryGetCrewTripRecs.ParamByName('parmCreatedOnIn').AsDateTime := NewBatchDateIn;
   qryGetCrewTripRecs.ParamByName('parmRecStatusIn').AsString   := 'added';
   qryGetCrewTripRecs.Open;
 
   DataSource1.DataSet := qryGetCrewTripRecs;          // Update data grid in UI for test/dev purposes
   Application.ProcessMessages;
-  Sleep(5000);
+  Sleep(5000);                                        // wait so user can see data in grid
 
   SendToCertify(qryGetCrewTripRecs, BatchTimeIn, 'crew_trip');
   qryGetCrewTripRecs.Close;
@@ -2278,7 +2321,7 @@ begin
   Application.ProcessMessages;
 
   while Not WorkingQueryIn.eof do begin
-    gloPusher.DataSetName := DataSetNameIn;  // values are: 'crew_tail' or 'crew_trip' or 'crew_log';  sets Certify "Dimension" in Pusher.  See DataSetName setter
+    gloPusher.DataSetName := DataSetNameIn;  // DataSetName values are: 'crew_tail' or 'crew_trip' or 'crew_log';  sets Certify "Dimension" in Pusher.  See DataSetName setter
     case gloPusher.CertifyDimension of
       1: gloPusher.TailNumber := WorkingQueryIn.FieldByName('TailNumber').AsString;
       2: gloPusher.TripNumber := WorkingQueryIn.FieldByName('TripNumber').AsString;
