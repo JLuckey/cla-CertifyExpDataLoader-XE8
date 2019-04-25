@@ -451,8 +451,12 @@ end;
 procedure TufrmCertifyExpDataLoader.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
 
-  UniConnection1.Close;
-  myIni.Free;
+  try
+    UniConnection1.Close;
+
+  finally
+    myIni.Free;
+  end;
 
 end;
 
@@ -2452,7 +2456,7 @@ Var
   strTableName : String;
 
 begin
-  strTableName := 'Certify_' + TableNameIn + '_History' ;    // must match table name exactly
+  strTableName := 'CertifyExp_' + TableNameIn + '_History' ;    // must match table name exactly
   strDaysBack  := '3';                                       // for performance reasons, keep only the last 3 days of data (and for T/S purposes)
                                                              //   (the more records in these tables the slower the 'NOT IN' queries run)
   qryPruneHistoryTables.SQL.Clear;

@@ -396,8 +396,6 @@ begin
       RESTRequest.Method := rmPUT;
       Memo1.Lines.Add( RESTClient.BaseURL );
 
-//      BuildJSONBody(FTripNumber, stlBody);   // refactor Add_CrewTrip_Rec to use BuildJSONBody carefully. The level of abstraction may make code un-readable  ???JL
-
       // Format JSON data packet
       stlBody.Add('{"ExpRptGLDIndex": ' + IntToStr(FCertifyDimension) + ',' );
       stlBody.Add(' "ExpRptGLDLabel": "Trip #", ');
@@ -648,9 +646,10 @@ begin
   FtheBaseURL := Value;
 end;
 
+
 procedure TfrmPushToCertify.SetTripNumber(const Value: String);
 begin
-  FTripNumber := Value;
+  FTripNumber := Trim(Value);
 end;
 
 
@@ -661,7 +660,7 @@ end;
 
 procedure TfrmPushToCertify.SetCrewMemberVendorNum(const Value: String);
 begin
-  FCrewMemberVendorNum := Value;
+  FCrewMemberVendorNum := Trim(Value);
 end;
 
 procedure TfrmPushToCertify.SetDataAction(const Value: String);
