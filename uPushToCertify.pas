@@ -327,6 +327,7 @@ begin
   strVendorTail := Format('%s|%s', [FCrewMemberVendorNum, FTailNumber] ) ;
 
   // Check if crew_tail value already exists
+  RecordKey := 'NOT_FOUND';
   RecordKey := GetCertifyRecKey(strVendorTail, FCertifyDimension);
   if RecordKey = 'NOT_FOUND' then begin           // If Not Found then create new record
     stlBody := TStringList.Create;
@@ -348,6 +349,7 @@ begin
       RESTRequest.AddBody( stlBody.Text );
       Application.ProcessMessages;
       RESTRequest.Params.Items[0].ContentType := ctAPPLICATION_JSON;
+
       try
         RESTRequest.Execute;
         FHTTPReturnCode      := RESTResponse.StatusCode ;
@@ -680,7 +682,7 @@ end;
 
 procedure TfrmPushToCertify.SetTailNumber(const Value: String);
 begin
-  FTailNumber := Value;
+  FTailNumber := Trim(Value);
 end;
 
 procedure TfrmPushToCertify.SetUploadStatus(const Value: String);

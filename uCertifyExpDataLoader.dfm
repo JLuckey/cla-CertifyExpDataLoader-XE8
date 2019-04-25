@@ -1470,4 +1470,22 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Value = nil
       end>
   end
+  object qryPruneHistoryTables: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select certify_gp_vendornum'
+      'from CertifyExp_PayComHistory'
+      'where Upper(certfile_group) = '#39'IFS'#39
+      
+        '  and imported_on = :parmImportedOn      /* '#39'2019-01-13 13:45:30' +
+        '.227'#39' */')
+    Left = 580
+    Top = 391
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmImportedOn'
+        Value = nil
+      end>
+  end
 end

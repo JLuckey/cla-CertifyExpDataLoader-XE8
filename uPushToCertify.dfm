@@ -84,7 +84,10 @@ object frmPushToCertify: TfrmPushToCertify
   end
   object RESTClient: TRESTClient
     BaseURL = 'https://api.certify.com/v1/exprptglds/1'
-    Params = <>
+    Params = <
+      item
+        Options = [poDoNotEncode]
+      end>
     HandleRedirects = True
     Left = 85
     Top = 180
@@ -99,6 +102,6 @@ object frmPushToCertify: TfrmPushToCertify
   end
   object RESTResponse: TRESTResponse
     Left = 35
-    Top = 203
+    Top = 212
   end
 end

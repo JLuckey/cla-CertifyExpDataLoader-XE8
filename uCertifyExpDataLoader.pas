@@ -190,6 +190,7 @@ type
     qryUpdateRecStatus_CrewLog: TUniQuery;
     qryGetCrewLogRecs: TUniQuery;
     btnFixer: TButton;
+    qryPruneHistoryTables: TUniQuery;
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -277,6 +278,8 @@ type
     Procedure Load_CrewTail_HistoryTable(Const BatchTimeIn: TDateTime);
     Procedure Load_CrewTrip_HistoryTable(Const BatchTimeIn: TDateTime);
     Procedure Load_CrewLog_HistoryTable(const BatchTimeIn: TDateTime);
+
+    Procedure PruneHistoryTables(Const TableNameIn : String);
 
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
@@ -507,6 +510,7 @@ begin
 //  LoadCrewTripHistoryTable();
 //  LoadCrewLogHistoryTable();
 
+//  BuildCrewTailFile;
   BuildCrewTripFile;
   BuildCrewLogFile;
 
@@ -2169,16 +2173,19 @@ begin
   gloPusher.APISecret  := '4843793A-6326-4F92-86EB-D34070C34CDC' ;
 
   // crew_tail
+  PruneHistoryTables('CrewTail');
   Load_CrewTail_HistoryTable(BatchTime);                       // puts latest batch into CrewTailHistory table
   GetBatchDates_CrewTail(PreviousBatchDate, NewBatchDate);     // identifies "added" & "deleted" recs; (those params are output)
   Do_CrewTail_API(Now(), PreviousBatchDate, NewBatchDate);     // sends data to Certify via API
 
   // crew_trip
+  PruneHistoryTables('CrewTrip');
   Load_CrewTrip_HistoryTable(BatchTime);
   GetBatchDates_CrewTrip(PreviousBatchDate, NewBatchDate);
   Do_CrewTrip_API(Now(), PreviousBatchDate, NewBatchDate);
 
   // crew_log
+  PruneHistoryTables('CrewLog');
   Load_CrewLog_HistoryTable(BatchTime);
   GetBatchDates_CrewLog(PreviousBatchDate, NewBatchDate);
   Do_CrewLog_API(Now(), PreviousBatchDate, NewBatchDate);
@@ -2437,6 +2444,24 @@ begin
   edNewDate.Text      := DateTimeToStr( NewBatchDateOut );
 
 end;  { GetBatchDates_CrewLog }
+
+
+procedure TufrmCertifyExpDataLoader.PruneHistoryTables(Const TableNameIn : String);
+Var
+  strDaysBack  : String;
+  strTableName : String;
+
+begin
+  strTableName := 'Certify_' + TableNameIn + '_History' ;    // must match table name exactly
+  strDaysBack  := '3';                                       // for performance reasons, keep only the last 3 days of data (and for T/S purposes)
+                                                             //   (the more records in these tables the slower the 'NOT IN' queries run)
+  qryPruneHistoryTables.SQL.Clear;
+  qryPruneHistoryTables.SQL.Add( ' delete from ' + strTableName );
+  qryPruneHistoryTables.SQL.Add( ' where CreatedOn < CAST(CURRENT_TIMESTAMP - ' + strDaysBack + ' AS DATE) ' );
+  qryPruneHistoryTables.Execute;
+
+end;  { PruneHistoryTables }
+
 
 
 procedure TufrmCertifyExpDataLoader.LogIt(ErrorMsgIn: String);
