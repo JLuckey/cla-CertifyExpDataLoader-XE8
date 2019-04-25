@@ -16,9 +16,9 @@ File_13=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.StdCtrls.pas',0,1,31
 
 [Modules]
 Module0=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-Module1=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj
-Module2=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uPushToCertify.pas
-Module3=Main_Page
+Module1=Main_Page
+Module2=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj
+Module3=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uPushToCertify.pas
 Module4=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
 Count=5
 EditWindowCount=1
@@ -26,7 +26,10 @@ EditWindowCount=1
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas]
 ModuleType=TSourceModule
 FormState=1
-FormOnTop=0
+FormOnTop=1
+
+[Main_Page]
+ModuleType=TURLModule
 
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj]
 ModuleType=TBaseProject
@@ -35,9 +38,6 @@ ModuleType=TBaseProject
 ModuleType=TSourceModule
 FormState=1
 FormOnTop=0
-
-[Main_Page]
-ModuleType=TURLModule
 
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini]
 ModuleType=TSourceModule
@@ -103,7 +103,7 @@ TopLine=395
 LeftCol=1
 Elisions=
 Bookmarks={1,2180,34}{9,2470,1}
-EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
+EditViewName=Borland.FormDesignerView
 
 [View3]
 CustomEditViewType=TEditView
@@ -335,7 +335,7 @@ SplitPos=204
 
 [PropInspDesignerSelection]
 ArrangeBy=Name
-SelectedItem=Name,OnClick
+SelectedItem=Caption,OnActivate
 ExpandedItems=Anchors=0,Constraints=0,FieldOptions=0,"LiveBindings Designer=0",FilterOptions=0,Font=0,InvokeOptions=0,HTTPOptions=1,ProxyParams=0,Request=0,LiveBindings=0,Margins=0,BorderIcons=0,StyleElements=0,SASLMechanisms=0,"LiveBindings Designer.Element Layers=1",GlassFrame=0,BevelEdges=0,Options=1,ImageMargins=0,HorzScrollBar=0
 
 [frmDesignPreview]

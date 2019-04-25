@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'ufrmCertifyExpDataLoader-Phase 2C v 0.2 - Hourly'
+  Caption = 'ufrmCertifyExpDataLoader-Phase 2C v 0.3 - Hourly'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
