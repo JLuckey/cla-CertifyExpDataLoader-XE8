@@ -2,7 +2,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
   Caption = 'CertifyExpDataLoader-Phase 2D v 0.4'
-  ClientHeight = 446
+  ClientHeight = 618
   ClientWidth = 716
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -146,7 +146,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 427
+    Top = 599
     Width = 716
     Height = 19
     Panels = <
@@ -268,6 +268,19 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Caption = 'Load Tail_LeadPilot Table'
     TabOrder = 13
     OnClick = btnLoadTailLeadPilotTableClick
+  end
+  object DBGrid1: TDBGrid
+    Left = 18
+    Top = 441
+    Width = 690
+    Height = 152
+    DataSource = DataSource1
+    TabOrder = 14
+    TitleFont.Charset = DEFAULT_CHARSET
+    TitleFont.Color = clWindowText
+    TitleFont.Height = -11
+    TitleFont.Name = 'Tahoma'
+    TitleFont.Style = []
   end
   object UniConnection1: TUniConnection
     ProviderName = 'SQL Server'
@@ -1080,5 +1093,10 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Name = 'parmImportedOn'
         Value = nil
       end>
+  end
+  object DataSource1: TDataSource
+    DataSet = qryGetImportedRecs
+    Left = 201
+    Top = 486
   end
 end

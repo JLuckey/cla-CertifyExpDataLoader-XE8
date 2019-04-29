@@ -85,7 +85,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, UniProvider, SQLServerUniProvider, Data.DB, MemDS, DBAccess, Uni, Vcl.ComCtrls,
   IdMessage, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdExplicitTLSClientServerBase, IdMessageClient, IdSMTPBase,
   IdSMTP, IdAttachment, IdAttachmentFile, DAScript, UniScript , IniFiles
-  , System.UITypes
+  , System.UITypes, Vcl.Grids, Vcl.DBGrids
   ;
 
 type
@@ -163,6 +163,8 @@ type
     qryGetTerminationDate: TUniQuery;
     qryInsertIFS: TUniQuery;
     qryGetIFS: TUniQuery;
+    DBGrid1: TDBGrid;
+    DataSource1: TDataSource;
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -454,6 +456,7 @@ begin
 
     qryGetImportedRecs.Post;
     qryGetImportedRecs.Next;
+//    application.ProcessMessages;
   end;
 
   qryGetImportedRecs.Close;
@@ -1948,6 +1951,12 @@ var
 
 begin
   Result := 'NotFound';
+
+  if AssignedACString = '' then Begin
+    FlagRecordAsError('warning', 'Assigned Aircraft (paycom_assigned_ac) is missing');
+    Result := 'NotFound';
+    Exit;
+  End;
 
   // step 1: parse AssignedACString, it could contain multiple aircraft seperated by forward slash: 'N855LD/N5504B'
   stlACList := TStringList.Create;
