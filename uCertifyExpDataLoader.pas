@@ -454,9 +454,11 @@ begin
   try
     UniConnection1.Close;
 
-  finally
-    myIni.Free;
+  except
+
   end;
+
+  myIni.Free;
 
 end;
 
@@ -2084,6 +2086,12 @@ var
 
 begin
   Result := 'NotFound';
+
+  if AssignedACString = '' then begin
+    FlagRecordAsError('warning', 'Assigned Aircraft (paycom_assigned_ac) is missing');
+    Result := 'NotFound';
+    Exit;
+  end;
 
   // step 1: parse AssignedACString, it could contain multiple aircraft seperated by forward slash: 'N855LD/N5504B'
   stlACList := TStringList.Create;
