@@ -183,12 +183,11 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Text = 'certify_employees.csv'
   end
   object btnMain: TButton
-    Left = 395
-    Top = 305
+    Left = 192
+    Top = 304
     Width = 99
     Height = 25
     Caption = 'btnMain'
-    Enabled = False
     TabOrder = 3
     OnClick = btnMainClick
   end
@@ -247,9 +246,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Text = '45'
   end
   object btnGoHourly: TButton
-    Left = 633
-    Top = 396
-    Width = 75
+    Left = 431
+    Top = 304
+    Width = 88
     Height = 25
     Caption = 'btnGoHourly'
     TabOrder = 10
@@ -285,10 +284,10 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     OnClick = btnLoadTailLeadPilotTableClick
   end
   object DBGrid1: TDBGrid
-    Left = 18
-    Top = 441
+    Left = 8
+    Top = 456
     Width = 690
-    Height = 152
+    Height = 110
     DataSource = DataSource1
     TabOrder = 14
     TitleFont.Charset = DEFAULT_CHARSET
@@ -378,8 +377,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '    AND imported_on = :parmImportDateIn'
       ''
       '')
-    Left = 194
-    Top = 221
+    Left = 214
+    Top = 183
     ParamData = <
       item
         DataType = ftUnknown
@@ -638,8 +637,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'where QuoteNum is not null'
       '  and CrewMemberVendorNum is not null'
       '  and FarPart is not null')
-    Left = 172
-    Top = 268
+    Left = 211
+    Top = 232
   end
   object scrLoadTripStopData: TUniScript
     SQL.Strings = (
@@ -955,7 +954,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'where cast(certify_gp_vendornum as char(15)) not in (select dist' +
         'inct vendorid from V_DynamicsGP_Vendors)'
       '  and imported_on = :parmImportedOn'
-      '')
+      '  and record_status not in ('#39'error'#39', '#39'terminated'#39')')
     Left = 641
     Top = 326
     ParamData = <
@@ -1048,8 +1047,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '19-03-25 22:15:00'#39') )   -- ended within the past 10 days'
       ''
       '*/')
-    Left = 133
-    Top = 251
+    Left = 120
+    Top = 242
     ParamData = <
       item
         DataType = ftUnknown
@@ -1085,8 +1084,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'SELECT Email'
       'FROM   CertifyExp_Tail_LeadPilot'
       'WHERE Tail = :parmTailNumIn')
-    Left = 208
-    Top = 368
+    Left = 210
+    Top = 371
     ParamData = <
       item
         DataType = ftUnknown
@@ -1101,8 +1100,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from CertifyExp_PayComHistory'
       'where imported_on = :parmImportedOn'
       '  and work_email  = :parmEMail')
-    Left = 126
-    Top = 380
+    Left = 129
+    Top = 393
     ParamData = <
       item
         DataType = ftUnknown
@@ -1152,8 +1151,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object DataSource1: TDataSource
     DataSet = qryGetImportedRecs
-    Left = 201
-    Top = 486
+    Left = 191
+    Top = 534
   end
   object qryInsertCrewTailHist: TUniQuery
     Connection = UniConnection1
@@ -1166,7 +1165,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         ', '#39'imported'#39
       'from CertifyExp_Trips_StartBucket '
       'where CrewMemberVendorNum is not null '
-      '  and TailNum is not null and CrewMemberVendorNum > 0')
+      '  and TailNum is not null '
+      '  and CrewMemberVendorNum > 0')
     Left = 47
     Top = 448
     ParamData = <

@@ -217,7 +217,7 @@ type
     Procedure ValidateRecords(Const BatchTimeIn: Tdatetime);
     Procedure UpdateDupeEmailRecs( Const EMailIn: String; BatchTimeIn: TDateTime);
     Procedure BuildCrewLogFile();
-    Procedure BuildCrewTailFile(Const BatchTimeIn : TDateTime);
+    Procedure BuildCrewTailFile(Const CurrBatchTimeIn: TDatetime);
     Procedure BuildCrewTripFile();
     Procedure BuildTripLogFile();
     Procedure BuildTailTripFile();
@@ -308,11 +308,7 @@ type
 
     Function GroupIsIn(Const GroupIn, GroupSetIn: String): Boolean;
 
-//<<<<<<< HEAD
     Function CalcCrewTailFileName(Const BatchTimeIn: TDateTime): String;
-//=======
-
-//>>>>>>> Branch_Phase2C
 
   public
     { Public declarations }
@@ -353,7 +349,59 @@ begin
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
   Application.ProcessMessages;
 
+
 end;  { Main }
+
+
+(*
+  1. Upload 'failed' recs from previous batches, in chronological order
+  2. Upload added recs
+  3. Upload deleted recs
+*)
+procedure TufrmCertifyExpDataLoader.HourlyPushMain;
+var
+  BatchTime : TDateTime;
+  stlNewCrewTail : TStringList;
+  PreviousBatchDate, NewBatchDate : TDateTime;
+
+begin
+  BatchTime := GetTimeFromDBServer();          //StrToDateTime('03/25/2019 22:15:00');
+  LoadData(BatchTime);                         // loads data into StartBucket
+
+  gloPusher := TfrmPushToCertify.Create(self);
+  gloPusher.theBaseURL := 'https://api.certify.com/v1/exprptglds';
+  gloPusher.APIKey     := 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv' ;
+  gloPusher.APISecret  := '4843793A-6326-4F92-86EB-D34070C34CDC' ;
+
+  // crew_tail
+  PruneHistoryTables('CrewTail');
+  Load_CrewTail_HistoryTable(BatchTime);                       // puts latest batch into CrewTailHistory table
+  GetBatchDates_CrewTail(PreviousBatchDate, NewBatchDate);     // identifies "added" & "deleted" recs; (those params are output)
+  Do_CrewTail_API(Now(), PreviousBatchDate, NewBatchDate);     // sends data to Certify via API
+
+  // crew_trip
+  PruneHistoryTables('CrewTrip');
+  Load_CrewTrip_HistoryTable(BatchTime);
+  GetBatchDates_CrewTrip(PreviousBatchDate, NewBatchDate);
+  Do_CrewTrip_API(Now(), PreviousBatchDate, NewBatchDate);
+
+  // crew_log
+  PruneHistoryTables('CrewLog');
+  Load_CrewLog_HistoryTable(BatchTime);
+  GetBatchDates_CrewLog(PreviousBatchDate, NewBatchDate);
+  Do_CrewLog_API(Now(), PreviousBatchDate, NewBatchDate);
+
+  gloPusher.free ;
+  StatusBar1.Panels[1].Text := 'Current Task:  All done!'  ;
+
+//  //  Get Failed Recs from previous Pushes
+//  qryGetFailedRecs_CrewTail.Close;
+//  qryGetFailedRecs_CrewTail.ParamByName('parmNewBatchDateIn').AsDateTime := NewBatchDate;
+//  qryGetFailedRecs_CrewTail.Open;
+//  SendToCertify(qryGetFailedRecs_CrewTail, BatchTime);
+//  qryGetFailedRecs_CrewTail.Close;
+
+end;  { HourlyPushMain }
 
 
 procedure TufrmCertifyExpDataLoader.LoadData(Const BatchTimeIn: TDateTime);
@@ -383,7 +431,7 @@ begin
 
 
 //<<<<<<< HEAD
-  BuildValidationFiles(BatchTimeIn);
+//        BuildValidationFiles(BatchTimeIn);
 //=======
 end;  { LoadData() }
 //>>>>>>> Branch_Phase2C
@@ -451,15 +499,23 @@ begin
   edSpecialUsersFile.Text := myIni.ReadString('Startup', 'SpecialUsersFileName', '') ;
 
   //  ShowMessage(ParamStr(1));
-  if ParamStr(1) = '-autorun' then begin
-    StatusBar1.Panels[2].Text := '*AutoRun: Active';
+//  if ParamStr(1) = '-autorun' then begin
+  if ParamStr(1) = '-hourly' then begin
+    StatusBar1.Panels[2].Text := '*AutoRun: Hourly, Active';
     Self.Show;
     Application.ProcessMessages;
-    Sleep(2000);
     HourlyPushMain;
-    Sleep(2000);
     Application.Terminate;
+
+  end else if ParamStr(1) = '-nightly' then begin
+    StatusBar1.Panels[2].Text := '*AutoRun: Nightly, Active';
+    Self.Show;
+    Application.ProcessMessages;
+    Main;
+    Application.Terminate;
+
   end;
+
 
 end;
 
@@ -468,7 +524,7 @@ procedure TufrmCertifyExpDataLoader.FormClose(Sender: TObject; var Action: TClos
 begin
 
   try
-    UniConnection1.Close;                               //  ???JL  this still may be cause the program to hang on exist under some unknown conditions  14 may 2019
+    UniConnection1.Close;              //  ???JL  this still may be cause the program to hang on exist under some unknown conditions  14 may 2019
 
   except
 
@@ -530,13 +586,12 @@ begin
   TargetDirectory :=  edOutputDirectory.Text;  // 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\';
 
 // <<<<<<< HEAD
-  BuildCrewTailFile(BatchTimeIn);
+//  BuildCrewTailFile();
 // =======
 //  LoadCrewTripHistoryTable();
 //  LoadCrewLogHistoryTable();
 
-//  BuildCrewTailFile;
-//>>>>>>> Branch_Phase2C
+  BuildCrewTailFile(BatchTimeIn);
   BuildCrewTripFile;
   BuildCrewLogFile;
 
@@ -1372,29 +1427,36 @@ end;  { Load_Crew_Trip_HistoryTable }
 //>>>>>>> Branch_Phase2C
 
 
-procedure TufrmCertifyExpDataLoader.BuildCrewTailFile;    // may want to piggy-back this on to LoadCrewHistoryTable  ???JL
+procedure TufrmCertifyExpDataLoader.BuildCrewTailFile(Const CurrBatchTimeIn: TDatetime);
 Var
   RowOut : String;
   WorkFile : TextFile;
-  CurrentBatchDateTime : TDateTime;
+//  CurrentBatchDateTime : TDateTime;
 
 begin
+//  qryBuildValFile.Close;
+//  qryBuildValFile.SQL.Clear;
+//  qryBuildValFile.SQL.Add('select TailNumber, CrewMemberVendorNum ');
+//  qryBuildValFile.SQL.Add('from CertifyExp_CrewTail_History ');
+//  qryBuildValFile.SQL.Add('where CrewMemberVendorNum is not null and TailNumber is not null ');
+//  qryBuildValFile.SQL.Add('  and CrewMemberVendorNum > 0 and CreatedOn =  ' + QuotedStr(DateTimeToStr(CurrentBatchDateTime))) ;
+//  qryBuildValFile.Open ;
+
+
   qryBuildValFile.Close;
   qryBuildValFile.SQL.Clear;
-  qryBuildValFile.SQL.Add('select TailNumber, CrewMemberVendorNum ');
-  qryBuildValFile.SQL.Add('from CertifyExp_CrewTail_History ');
-  qryBuildValFile.SQL.Add('where CrewMemberVendorNum is not null and TailNumber is not null ');
-  qryBuildValFile.SQL.Add('  and CrewMemberVendorNum > 0 and CreatedOn =  ' + QuotedStr(DateTimeToStr(CurrentBatchDateTime))) ;
+  qryBuildValFile.SQL.Text := 'select distinct TailNum, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and TailNum is not null and CrewMemberVendorNum > 0' ;
   qryBuildValFile.Open ;
 
+  AssignFile(WorkFile, CalcCrewTailFileName(CurrBatchTimeIn));
+//  AssignFile(WorkFile, edOutputDirectory.Text + 'crew_tail.csv');
 
-  AssignFile(WorkFile, edOutputDirectory.Text + 'crew_tail.csv');
   Rewrite(WorkFile);
   RowOut := 'TailNumber,CrewMemberID';
   WriteLn(WorkFile, RowOut) ;
   while not qryBuildValFile.eof do begin
-    RowOut := Trim(qryBuildValFile.FieldByName('TailNumber').AsString) + ',' +
-              qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + Trim(qryBuildValFile.FieldByName('TailNumber').AsString);
+    RowOut := Trim(qryBuildValFile.FieldByName('TailNum').AsString) + ',' +
+              qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + Trim(qryBuildValFile.FieldByName('TailNum').AsString);
 
     WriteLn(WorkFile, RowOut) ;
     qryBuildValFile.Next;
@@ -1992,6 +2054,8 @@ begin
     strDay := '0' + strDay;
 
   Result := myIni.ReadString('OutputFiles', 'CrewTailDestination', '') + IntToStr(myYear) + strMonth + strDay + '.csv';
+  //  add feature: if last char of CrewTailDestination is "_" then append time stamp         ???JL
+
 
 end;  { CalcCrewTailFileName }
 
@@ -2227,57 +2291,6 @@ begin
   qryGetImportedRecs.FieldByName('error_text').AsString    := ErrorMsgIn + AdditionalErrorMsg;
 
 end;  { FlagRecordAsError }
-
-
-(*
-  1. Upload 'failed' recs from previous batches, in chronological order
-  2. Upload added recs
-  3. Upload deleted recs
-*)
-procedure TufrmCertifyExpDataLoader.HourlyPushMain;
-var
-  BatchTime : TDateTime;
-  stlNewCrewTail : TStringList;
-  PreviousBatchDate, NewBatchDate : TDateTime;
-
-begin
-  BatchTime := GetTimeFromDBServer();          //StrToDateTime('03/25/2019 22:15:00');
-  LoadData(BatchTime);                         // loads data into StartBucket
-
-  gloPusher := TfrmPushToCertify.Create(self);
-  gloPusher.theBaseURL := 'https://api.certify.com/v1/exprptglds';
-  gloPusher.APIKey     := 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv' ;
-  gloPusher.APISecret  := '4843793A-6326-4F92-86EB-D34070C34CDC' ;
-
-  // crew_tail
-  PruneHistoryTables('CrewTail');
-  Load_CrewTail_HistoryTable(BatchTime);                       // puts latest batch into CrewTailHistory table
-  GetBatchDates_CrewTail(PreviousBatchDate, NewBatchDate);     // identifies "added" & "deleted" recs; (those params are output)
-  Do_CrewTail_API(Now(), PreviousBatchDate, NewBatchDate);     // sends data to Certify via API
-
-  // crew_trip
-  PruneHistoryTables('CrewTrip');
-  Load_CrewTrip_HistoryTable(BatchTime);
-  GetBatchDates_CrewTrip(PreviousBatchDate, NewBatchDate);
-  Do_CrewTrip_API(Now(), PreviousBatchDate, NewBatchDate);
-
-  // crew_log
-  PruneHistoryTables('CrewLog');
-  Load_CrewLog_HistoryTable(BatchTime);
-  GetBatchDates_CrewLog(PreviousBatchDate, NewBatchDate);
-  Do_CrewLog_API(Now(), PreviousBatchDate, NewBatchDate);
-
-  gloPusher.free ;
-  StatusBar1.Panels[1].Text := 'Current Task:  All done!'  ;
-
-//  //  Get Failed Recs from previous Pushes
-//  qryGetFailedRecs_CrewTail.Close;
-//  qryGetFailedRecs_CrewTail.ParamByName('parmNewBatchDateIn').AsDateTime := NewBatchDate;
-//  qryGetFailedRecs_CrewTail.Open;
-//  SendToCertify(qryGetFailedRecs_CrewTail, BatchTime);
-//  qryGetFailedRecs_CrewTail.Close;
-
-end;  { HourlyPushMain }
 
 
 procedure TufrmCertifyExpDataLoader.Do_CrewTail_API(Const BatchTimeIn, PreviousBatchDateIn, NewBatchDateIn : TDateTime);
