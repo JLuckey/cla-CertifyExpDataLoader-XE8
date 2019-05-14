@@ -16,10 +16,17 @@ File_13=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.StdCtrls.pas',0,1,31
 
 [Modules]
 Module0=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
+<<<<<<< HEAD
 Module1=Main_Page
 Module2=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj
 Module3=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uPushToCertify.pas
 Module4=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
+=======
+Module1=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj
+Module2=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uPushToCertify.pas
+Module3=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
+Module4=Main_Page
+>>>>>>> Branch_Phase2C
 Count=5
 EditWindowCount=1
 
@@ -28,8 +35,13 @@ ModuleType=TSourceModule
 FormState=1
 FormOnTop=0
 
-[Main_Page]
-ModuleType=TURLModule
+[F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj]
+ModuleType=TBaseProject
+
+[F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uPushToCertify.pas]
+ModuleType=TSourceModule
+FormState=1
+FormOnTop=0
 
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj]
 ModuleType=TBaseProject
@@ -41,6 +53,9 @@ FormOnTop=0
 
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini]
 ModuleType=TSourceModule
+
+[Main_Page]
+ModuleType=TURLModule
 
 [EditWindow0]
 ViewCount=5
@@ -99,7 +114,11 @@ CustomEditViewType=TEditView
 Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
 CursorX=3
 CursorY=1026
+<<<<<<< HEAD
 TopLine=422
+=======
+TopLine=1016
+>>>>>>> Branch_Phase2C
 LeftCol=1
 Elisions=
 Bookmarks={1,2180,34}{9,2470,1}
@@ -332,6 +351,14 @@ LRDockWidth=1521
 Dockable=1
 StayOnTop=0
 SplitPos=90
+<<<<<<< HEAD
+=======
+
+[PropInspDesignerSelection]
+ArrangeBy=Name
+SelectedItem=Name,
+ExpandedItems=Options=0,RefreshOptions=0,SmartFetch=0
+>>>>>>> Branch_Phase2C
 
 [frmDesignPreview]
 PercentageSizes=1

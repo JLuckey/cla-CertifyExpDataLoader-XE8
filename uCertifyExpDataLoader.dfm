@@ -1,8 +1,13 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
+<<<<<<< HEAD
   Caption = 'CertifyExpDataLoader-Phase 2D v 0.4'
   ClientHeight = 618
+=======
+  Caption = 'ufrmCertifyExpDataLoader-Phase 2C v 0.5 - Hourly'
+  ClientHeight = 601
+>>>>>>> Branch_Phase2C
   ClientWidth = 716
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -94,7 +99,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object Label12: TLabel
     Left = 185
-    Top = 159
+    Top = 157
     Width = 27
     Height = 13
     Caption = 'days.'
@@ -134,6 +139,20 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Height = 13
     Caption = 'Tail_LeadPilot File:'
   end
+  object Label18: TLabel
+    Left = 238
+    Top = 413
+    Width = 21
+    Height = 13
+    Caption = 'New'
+  end
+  object Label19: TLabel
+    Left = 409
+    Top = 413
+    Width = 41
+    Height = 13
+    Caption = 'Previous'
+  end
   object edPayComInputFile: TEdit
     Left = 257
     Top = 24
@@ -146,7 +165,11 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object StatusBar1: TStatusBar
     Left = 0
+<<<<<<< HEAD
     Top = 599
+=======
+    Top = 582
+>>>>>>> Branch_Phase2C
     Width = 716
     Height = 19
     Panels = <
@@ -169,11 +192,12 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Text = 'certify_employees.csv'
   end
   object btnMain: TButton
-    Left = 396
+    Left = 395
     Top = 305
     Width = 99
     Height = 25
     Caption = 'btnMain'
+    Enabled = False
     TabOrder = 3
     OnClick = btnMainClick
   end
@@ -231,15 +255,14 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     TabOrder = 9
     Text = '45'
   end
-  object btnTest: TButton
+  object btnGoHourly: TButton
     Left = 633
     Top = 396
     Width = 75
     Height = 25
-    Caption = 'btnTest'
+    Caption = 'btnGoHourly'
     TabOrder = 10
-    Visible = False
-    OnClick = btnTestClick
+    OnClick = btnGoHourlyClick
   end
   object edCharterVisaUsers: TEdit
     Left = 14
@@ -258,7 +281,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     TabOrder = 12
     Text = 
       'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\InputFiles\tail_lea' +
-      'dpilot_20190107.csv'
+      'dpilot_20190215.csv'
   end
   object btnLoadTailLeadPilotTable: TButton
     Left = 569
@@ -266,14 +289,22 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 139
     Height = 25
     Caption = 'Load Tail_LeadPilot Table'
+    Enabled = False
     TabOrder = 13
     OnClick = btnLoadTailLeadPilotTableClick
   end
   object DBGrid1: TDBGrid
+<<<<<<< HEAD
     Left = 18
     Top = 441
     Width = 690
     Height = 152
+=======
+    Left = 20
+    Top = 456
+    Width = 679
+    Height = 120
+>>>>>>> Branch_Phase2C
     DataSource = DataSource1
     TabOrder = 14
     TitleFont.Charset = DEFAULT_CHARSET
@@ -282,15 +313,43 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     TitleFont.Name = 'Tahoma'
     TitleFont.Style = []
   end
+<<<<<<< HEAD
+=======
+  object edNewDate: TEdit
+    Left = 174
+    Top = 429
+    Width = 152
+    Height = 21
+    TabOrder = 15
+    Text = 'edNewDate'
+  end
+  object edPreviousDate: TEdit
+    Left = 356
+    Top = 429
+    Width = 158
+    Height = 21
+    TabOrder = 16
+    Text = 'edPreviousDate'
+  end
+  object btnFixer: TButton
+    Left = 633
+    Top = 425
+    Width = 75
+    Height = 25
+    Caption = 'Fixer'
+    Enabled = False
+    TabOrder = 17
+    OnClick = btnFixerClick
+  end
+>>>>>>> Branch_Phase2C
   object UniConnection1: TUniConnection
     ProviderName = 'SQL Server'
     Database = 'WarehouseDEV'
     Username = 'sa'
     Server = '192.168.1.122'
-    Connected = True
     LoginPrompt = False
-    Left = 20
-    Top = 256
+    Left = 58
+    Top = 11
     EncryptedPassword = '9CFF93FF9EFF8CFF8EFF93FF8CFF8DFF89FFCDFFCFFFCEFFC9FF'
   end
   object qryGetEmployees: TUniQuery
@@ -492,8 +551,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     SQL.Strings = (
       'select distinct LogSheet, CrewMemberID'
       'from CertifyExp_Trips_StartBucket')
-    Left = 78
-    Top = 284
+    Left = 37
+    Top = 265
   end
   object qryGetAirCrewVendorNum: TUniQuery
     Connection = UniConnection1
@@ -631,8 +690,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     SQL.Strings = (
       'select distinct TripNum, AirportID'
       'from CertifyExp_TripStop_Step1')
-    Left = 282
-    Top = 380
+    Left = 279
+    Top = 353
   end
   object qryGetStartBucketSorted: TUniQuery
     Connection = UniConnection1
@@ -860,8 +919,13 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'RRENT_TIMESTAMP + :parmDaysForward )'
       '  and STATUS = '#39'confirmed'#39
       'order by QUOTENO')
+<<<<<<< HEAD
     Left = 421
     Top = 358
+=======
+    Left = 473
+    Top = 289
+>>>>>>> Branch_Phase2C
     ParamData = <
       item
         DataType = ftInteger
@@ -872,8 +936,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object tblStartBucket: TUniTable
     TableName = 'CertifyExp_Trips_StartBucket'
     Connection = UniConnection1
-    Left = 508
-    Top = 274
+    Left = 523
+    Top = 251
   end
   object qryUpdateHasCCField: TUniQuery
     Connection = UniConnection1
@@ -991,14 +1055,30 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'RRENT_TIMESTAMP) )   -- in-progress'
       
         '   OR ( (departure > (CURRENT_TIMESTAMP - 10)) and (arrival < CU' +
-        'RRENT_TIMESTAMP) )   -- ended within the past 10 days')
-    Left = 131
+        'RRENT_TIMESTAMP) )   -- ended within the past 10 days'
+      ''
+      '/*'
+      
+        'select distinct L.logsheet, '#39'CharterVisa'#39', T.QUOTENO, L.acregno,' +
+        ' null, :parmCrewMemberVendorNum, null'
+      
+        'from QuoteSys_TripLeg L LEFT OUTER JOIN QuoteSys_Trip T ON L.ACR' +
+        'EGNO = T.ACREGNO AND L.LOGSHEET = T.LOGSHEET'
+      
+        'where ( (departure < '#39'2019-03-25 22:15:00'#39')        and (arrival ' +
+        '> '#39'2019-03-25 22:15:00'#39') )   -- in-progress'
+      
+        '   OR ( (departure > ('#39'2019-03-13 22:14:00'#39')) and (arrival < '#39'20' +
+        '19-03-25 22:15:00'#39') )   -- ended within the past 10 days'
+      ''
+      '*/')
+    Left = 133
     Top = 251
     ParamData = <
       item
-        DataType = ftInteger
+        DataType = ftUnknown
         Name = 'parmCrewMemberVendorNum'
-        Value = 77777
+        Value = nil
       end>
   end
   object qryGetDOMEmployees: TUniQuery
@@ -1094,9 +1174,349 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Value = nil
       end>
   end
+<<<<<<< HEAD
   object DataSource1: TDataSource
     DataSet = qryGetImportedRecs
     Left = 201
     Top = 486
+=======
+  object qryInsertCrewTailHist: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      
+        'insert into CertifyExp_CrewTail_History (CrewMemberVendorNum,Tai' +
+        'lNumber,CreatedOn,RecordStatus)'
+      
+        'select distinct CrewMemberVendorNum, TailNum, :parmBatchDateTime' +
+        ', '#39'imported'#39
+      'from CertifyExp_Trips_StartBucket '
+      'where CrewMemberVendorNum is not null '
+      '  and TailNum is not null and CrewMemberVendorNum > 0')
+    Left = 47
+    Top = 448
+    ParamData = <
+      item
+        DataType = ftString
+        Name = 'parmBatchDateTime'
+        Value = '2019-01-15 18:00:34.423'
+      end>
+  end
+  object qryGetCrewTailBatchDates: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select distinct CreatedOn'
+      'from CertifyExp_CrewTail_History'
+      'where RecordStatus = '#39'imported'#39'        '
+      'order by CreatedOn desc')
+    Left = 42
+    Top = 496
+  end
+  object qryGetFailedRecs_CrewTail: TUniQuery
+    Connection = UniConnection1
+    Left = 62
+    Top = 545
+  end
+  object qryGetDeletedRecs_CrewTail: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      '/* Get Deleted Recs  */'
+      
+        'select ID, CrewMemberVendorNum, TailNumber, CreatedOn, RecordSta' +
+        'tus, UploadedOn, UploadStatus, UploadStatusMessage, UploadBatchI' +
+        'D'
+      'from CertifyExp_CrewTail_History'
+      'where CreatedOn = :parmOldDateTime '
+      '  and RecordStatus = '#39'imported'#39'        '
+      '  and concat(CrewMemberVendorNum, '#39'|'#39', TailNumber) not in '
+      '  (select concat(CrewMemberVendorNum, '#39'|'#39', TailNumber) '
+      '   from CertifyExp_CrewTail_History'
+      '   where CreatedOn = :parmNewDateTime                '
+      '     and RecordStatus = '#39'imported'#39' )       '
+      ''
+      '   '
+      ''
+      ''
+      '')
+    Left = 620
+    Top = 544
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmOldDateTime'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmNewDateTime'
+        Value = nil
+      end>
+  end
+  object DataSource1: TDataSource
+    DataSet = qryGetCrewTailRecs
+    Left = 316
+    Top = 549
+  end
+  object qryGetCrewTailRecs: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select ID, CrewMemberVendorNum, TailNumber, CreatedOn, '
+      '       RecordStatus, UploadedOn, UploadStatus, '
+      '       UploadStatusMessage, UploadBatchID, HTTPResultCode'
+      'from CertifyExp_CrewTail_History'
+      'where RecordStatus = :parmRecStatusIn'
+      '  and CreatedOn    = :parmCreatedOnIn'
+      '')
+    Left = 115
+    Top = 437
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmRecStatusIn'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmCreatedOnIn'
+        Value = nil
+      end>
+  end
+  object qryUpdateRecStatus_CrewTail: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      
+        '/* This query is used to detect and flag Deleted or Added Recs *' +
+        '/'
+      'update CertifyExp_CrewTail_History'
+      'set RecordStatus = :parmRecStatus       /* '#39'deleted'#39', '#39'added'#39' */'
+      'where CreatedOn = :parmOlderDate '
+      
+        '                                        /* and RecordStatus = '#39'i' +
+        'mported'#39' */'
+      '  and concat(CrewMemberVendorNum, '#39'|'#39', TailNumber) '
+      '  not in '
+      '    (select concat(CrewMemberVendorNum, '#39'|'#39', TailNumber) '
+      '     from CertifyExp_CrewTail_History'
+      '     where CreatedOn = :parmNewerDate )'
+      
+        '                                        /* and RecordStatus = '#39'i' +
+        'mported'#39' */   '
+      '   ')
+    Left = 135
+    Top = 479
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmRecStatus'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmOlderDate'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmNewerDate'
+        Value = nil
+      end>
+  end
+  object qryUpdateRecStatus_CrewTrip: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      
+        '/* This query is used to detect and flag Deleted or Added Recs *' +
+        '/'
+      'update CertifyExp_CrewTrip_History'
+      'set RecordStatus = :parmRecStatus       /* '#39'deleted'#39', '#39'added'#39' */'
+      'where CreatedOn = :parmOlderDate '
+      '  and concat(CrewMemberVendorNum, '#39'|'#39', TripNumber) '
+      '  not in '
+      '    (select concat(CrewMemberVendorNum, '#39'|'#39', TripNumber) '
+      '     from CertifyExp_CrewTrip_History'
+      '     where CreatedOn = :parmNewerDate )'
+      '                                        '
+      '   ')
+    Left = 503
+    Top = 456
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmRecStatus'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmOlderDate'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmNewerDate'
+        Value = nil
+      end>
+  end
+  object qryGetCrewTripRecs: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select ID, CrewMemberVendorNum, TripNumber, CreatedOn, '
+      '       RecordStatus, UploadedOn, UploadStatus, '
+      '       UploadStatusMessage, UploadBatchID, HTTPResultCode'
+      'from CertifyExp_CrewTrip_History'
+      'where RecordStatus = :parmRecStatusIn '
+      '  and CreatedOn    = :parmCreatedOnIn'
+      '')
+    Left = 594
+    Top = 437
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmRecStatusIn'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmCreatedOnIn'
+        Value = nil
+      end>
+  end
+  object qryInsertCrewTripHist: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      
+        'insert into CertifyExp_CrewTrip_History (CrewMemberVendorNum,Tri' +
+        'pNumber,CreatedOn,RecordStatus)'
+      
+        'select distinct CrewMemberVendorNum, QuoteNum, :parmBatchDateTim' +
+        'e, '#39'imported'#39
+      'from CertifyExp_Trips_StartBucket '
+      'where CrewMemberVendorNum is not null '
+      '  and QuoteNum is not null and CrewMemberVendorNum > 0')
+    Left = 636
+    Top = 486
+    ParamData = <
+      item
+        DataType = ftString
+        Name = 'parmBatchDateTime'
+        Value = '2019-01-15 18:00:34.423'
+      end>
+  end
+  object qryGetCrewTripBatchDates: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select distinct CreatedOn'
+      'from CertifyExp_CrewTrip_History'
+      'where RecordStatus = '#39'imported'#39'        '
+      'order by CreatedOn desc')
+    Left = 506
+    Top = 502
+  end
+  object qryInsertCrewLogHist: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      
+        'insert into CertifyExp_CrewLog_History (CrewMemberVendorNum,LogN' +
+        'umber,CreatedOn,RecordStatus)'
+      
+        'select distinct CrewMemberVendorNum, LogSheet, :parmBatchDateTim' +
+        'e, '#39'imported'#39
+      'from CertifyExp_Trips_StartBucket '
+      'where CrewMemberVendorNum is not null '
+      '  and LogSheet is not null and CrewMemberVendorNum > 0')
+    Left = 283
+    Top = 457
+    ParamData = <
+      item
+        DataType = ftString
+        Name = 'parmBatchDateTime'
+        Value = '2019-01-15 18:00:34.423'
+      end>
+  end
+  object qryGetCrewLogBatchDates: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select distinct CreatedOn'
+      'from CertifyExp_CrewLog_History'
+      'where RecordStatus = '#39'imported'#39'        '
+      'order by CreatedOn desc')
+    Left = 283
+    Top = 499
+  end
+  object qryUpdateRecStatus_CrewLog: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      
+        '/* This query is used to detect and flag Deleted or Added Recs *' +
+        '/'
+      'update CertifyExp_CrewLog_History'
+      'set RecordStatus = :parmRecStatus       /* '#39'deleted'#39', '#39'added'#39' */'
+      'where CreatedOn = :parmOlderDate '
+      '  and concat(CrewMemberVendorNum, '#39'|'#39', LogNumber) '
+      '  not in '
+      '    (select concat(CrewMemberVendorNum, '#39'|'#39', LogNumber) '
+      '     from CertifyExp_CrewLog_History'
+      '     where CreatedOn = :parmNewerDate )'
+      '                                        '
+      '   ')
+    Left = 377
+    Top = 444
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmRecStatus'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmOlderDate'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmNewerDate'
+        Value = nil
+      end>
+  end
+  object qryGetCrewLogRecs: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select ID, CrewMemberVendorNum, LogNumber, CreatedOn, '
+      '       RecordStatus, UploadedOn, UploadStatus, '
+      '       UploadStatusMessage, UploadBatchID, HTTPResultCode'
+      'from CertifyExp_CrewLog_History'
+      'where RecordStatus = :parmRecStatusIn '
+      '  and CreatedOn    = :parmCreatedOnIn'
+      '')
+    Left = 363
+    Top = 486
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmRecStatusIn'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmCreatedOnIn'
+        Value = nil
+      end>
+  end
+  object qryPruneHistoryTables: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select certify_gp_vendornum'
+      'from CertifyExp_PayComHistory'
+      'where Upper(certfile_group) = '#39'IFS'#39
+      
+        '  and imported_on = :parmImportedOn      /* '#39'2019-01-13 13:45:30' +
+        '.227'#39' */')
+    Left = 580
+    Top = 391
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmImportedOn'
+        Value = nil
+      end>
+>>>>>>> Branch_Phase2C
   end
 end
