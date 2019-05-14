@@ -1,13 +1,8 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-<<<<<<< HEAD
-  Caption = 'CertifyExpDataLoader-Phase 2D v 0.4'
-  ClientHeight = 618
-=======
-  Caption = 'ufrmCertifyExpDataLoader-Phase 2C v 0.5 - Hourly'
+  Caption = 'ufrmCertifyExpDataLoader-Phase 2C v 0.5 - Hourly - merged'
   ClientHeight = 601
->>>>>>> Branch_Phase2C
   ClientWidth = 716
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -165,11 +160,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object StatusBar1: TStatusBar
     Left = 0
-<<<<<<< HEAD
-    Top = 599
-=======
     Top = 582
->>>>>>> Branch_Phase2C
     Width = 716
     Height = 19
     Panels = <
@@ -294,17 +285,10 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     OnClick = btnLoadTailLeadPilotTableClick
   end
   object DBGrid1: TDBGrid
-<<<<<<< HEAD
     Left = 18
     Top = 441
     Width = 690
     Height = 152
-=======
-    Left = 20
-    Top = 456
-    Width = 679
-    Height = 120
->>>>>>> Branch_Phase2C
     DataSource = DataSource1
     TabOrder = 14
     TitleFont.Charset = DEFAULT_CHARSET
@@ -313,8 +297,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     TitleFont.Name = 'Tahoma'
     TitleFont.Style = []
   end
-<<<<<<< HEAD
-=======
   object edNewDate: TEdit
     Left = 174
     Top = 429
@@ -341,7 +323,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     TabOrder = 17
     OnClick = btnFixerClick
   end
->>>>>>> Branch_Phase2C
   object UniConnection1: TUniConnection
     ProviderName = 'SQL Server'
     Database = 'WarehouseDEV'
@@ -919,13 +900,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'RRENT_TIMESTAMP + :parmDaysForward )'
       '  and STATUS = '#39'confirmed'#39
       'order by QUOTENO')
-<<<<<<< HEAD
     Left = 421
     Top = 358
-=======
-    Left = 473
-    Top = 289
->>>>>>> Branch_Phase2C
     ParamData = <
       item
         DataType = ftInteger
@@ -1174,12 +1150,11 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Value = nil
       end>
   end
-<<<<<<< HEAD
   object DataSource1: TDataSource
     DataSet = qryGetImportedRecs
     Left = 201
     Top = 486
-=======
+  end
   object qryInsertCrewTailHist: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
@@ -1250,11 +1225,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Name = 'parmNewDateTime'
         Value = nil
       end>
-  end
-  object DataSource1: TDataSource
-    DataSet = qryGetCrewTailRecs
-    Left = 316
-    Top = 549
   end
   object qryGetCrewTailRecs: TUniQuery
     Connection = UniConnection1
@@ -1517,6 +1487,5 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Name = 'parmImportedOn'
         Value = nil
       end>
->>>>>>> Branch_Phase2C
   end
 end

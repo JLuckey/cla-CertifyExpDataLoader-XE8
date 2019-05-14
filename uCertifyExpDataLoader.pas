@@ -85,19 +85,17 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, UniProvider, SQLServerUniProvider, Data.DB, MemDS, DBAccess, Uni, Vcl.ComCtrls,
   IdMessage, IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdExplicitTLSClientServerBase, IdMessageClient, IdSMTPBase,
   IdSMTP, IdAttachment, IdAttachmentFile, DAScript, UniScript , IniFiles
-<<<<<<< HEAD
-  , System.UITypes, Vcl.Grids, Vcl.DBGrids
+  , System.UITypes
+  , Vcl.Grids
+  , Vcl.DBGrids
+  , uPushToCertify
   ;
-=======
-// <<<<<<< HEAD
-  , uPushToCertify, Vcl.Grids, Vcl.DBGrids;
 
 
 // =======
 //  , System.UITypes
 //  ;
 //>>>>>>> Branch_BugFix_DOM_ApproverEmail
->>>>>>> Branch_Phase2C
 
 type
   TufrmCertifyExpDataLoader = class(TForm)
@@ -174,10 +172,10 @@ type
     qryGetTerminationDate: TUniQuery;
     qryInsertIFS: TUniQuery;
     qryGetIFS: TUniQuery;
-<<<<<<< HEAD
-    DBGrid1: TDBGrid;
-    DataSource1: TDataSource;
-=======
+//<<<<<<< HEAD
+//    DBGrid1: TDBGrid;
+//    DataSource1: TDataSource;
+//=======
     qryInsertCrewTailHist: TUniQuery;
     qryGetCrewTailBatchDates: TUniQuery;
     qryGetFailedRecs_CrewTail: TUniQuery;
@@ -200,7 +198,7 @@ type
     qryGetCrewLogRecs: TUniQuery;
     btnFixer: TButton;
     qryPruneHistoryTables: TUniQuery;
->>>>>>> Branch_Phase2C
+//>>>>>>> Branch_Phase2C
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -310,11 +308,11 @@ type
 
     Function GroupIsIn(Const GroupIn, GroupSetIn: String): Boolean;
 
-<<<<<<< HEAD
+//<<<<<<< HEAD
     Function CalcCrewTailFileName(Const BatchTimeIn: TDateTime): String;
-=======
+//=======
 
->>>>>>> Branch_Phase2C
+//>>>>>>> Branch_Phase2C
 
   public
     { Public declarations }
@@ -346,7 +344,7 @@ begin
 
   BuildEmployeeFile(BatchTime);
 
-  BuildValidationFiles;
+  BuildValidationFiles(BatchTime);
 
   CreateEmployeeErrorReport(BatchTime);
 
@@ -384,11 +382,11 @@ begin
   FilterTripsByCount;                           // removes recs from StartBucket
 
 
-<<<<<<< HEAD
-  BuildValidationFiles(BatchTime);
-=======
+//<<<<<<< HEAD
+  BuildValidationFiles(BatchTimeIn);
+//=======
 end;  { LoadData() }
->>>>>>> Branch_Phase2C
+//>>>>>>> Branch_Phase2C
 
 
 
@@ -470,7 +468,7 @@ procedure TufrmCertifyExpDataLoader.FormClose(Sender: TObject; var Action: TClos
 begin
 
   try
-    UniConnection1.Close;
+    UniConnection1.Close;                               //  ???JL  this still may be cause the program to hang on exist under some unknown conditions  14 may 2019
 
   except
 
@@ -531,14 +529,14 @@ begin
 
   TargetDirectory :=  edOutputDirectory.Text;  // 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\';
 
-<<<<<<< HEAD
+// <<<<<<< HEAD
   BuildCrewTailFile(BatchTimeIn);
-=======
+// =======
 //  LoadCrewTripHistoryTable();
 //  LoadCrewLogHistoryTable();
 
 //  BuildCrewTailFile;
->>>>>>> Branch_Phase2C
+//>>>>>>> Branch_Phase2C
   BuildCrewTripFile;
   BuildCrewLogFile;
 
@@ -1316,19 +1314,20 @@ end;  { BuildCrewLogFile }
 
 
 
-<<<<<<< HEAD
-procedure TufrmCertifyExpDataLoader.BuildCrewTailFile(Const BatchTimeIn : TDateTime);
-Var
-  RowOut : String;
-  WorkFile : TextFile;
-  CrewTailFileName: String;
-=======
+//<<<<<<< HEAD
+//procedure TufrmCertifyExpDataLoader.BuildCrewTailFile(Const BatchTimeIn : TDateTime);
+//Var
+//  RowOut : String;
+//  WorkFile : TextFile;
+//  CrewTailFileName: String;
+//=======
 procedure TufrmCertifyExpDataLoader.Load_CrewTail_HistoryTable(Const BatchTimeIn: TDateTime);
 Var
   RowOut : String;
   WorkFile : TextFile;                // ??? superfluous?
   CurrentBatchDateTime : TDateTime;
->>>>>>> Branch_Phase2C
+  CrewTailFileName: String;
+//>>>>>>> Branch_Phase2C
 
 begin
   StatusBar1.Panels[1].Text := 'Current Task:  Loading data into CrewTail_History table'  ;
@@ -1341,16 +1340,17 @@ begin
 end;  { LoadCrewTailHistoryTable }
 
 
+
 procedure TufrmCertifyExpDataLoader.Load_CrewTrip_HistoryTable(const BatchTimeIn: TDateTime);
 begin
   StatusBar1.Panels[1].Text := 'Current Task:  Loading data into CrewTrip_History table'  ;
   Application.ProcessMessages;
 
-<<<<<<< HEAD
-  CrewTailFileName := CalcCrewTailFileName(BatchTimeIn);
-  AssignFile(WorkFile, CrewTailFileName );
-  Rewrite(WorkFile);
-=======
+//<<<<<<< HEAD
+//  CrewTailFileName := CalcCrewTailFileName(BatchTimeIn);
+//  AssignFile(WorkFile, CrewTailFileName );
+//  Rewrite(WorkFile);
+//=======
   qryInsertCrewTripHist.Close;
   qryInsertCrewTripHist.ParamByName('parmBatchDateTime').AsDateTime := BatchTimeIn ;
   qryInsertCrewTripHist.Execute;
@@ -1369,7 +1369,7 @@ begin
 
 end;  { Load_Crew_Trip_HistoryTable }
 
->>>>>>> Branch_Phase2C
+//>>>>>>> Branch_Phase2C
 
 
 procedure TufrmCertifyExpDataLoader.BuildCrewTailFile;    // may want to piggy-back this on to LoadCrewHistoryTable  ???JL
@@ -2144,19 +2144,19 @@ var
 begin
   Result := 'NotFound';
 
-<<<<<<< HEAD
+//<<<<<<< HEAD
   if AssignedACString = '' then Begin
     FlagRecordAsError('warning', 'Assigned Aircraft (paycom_assigned_ac) is missing');
     Result := 'NotFound';
     Exit;
   End;
-=======
-  if AssignedACString = '' then begin
-    FlagRecordAsError('warning', 'Assigned Aircraft (paycom_assigned_ac) is missing');
-    Result := 'NotFound';
-    Exit;
-  end;
->>>>>>> Branch_Phase2C
+//=======
+//  if AssignedACString = '' then begin
+//    FlagRecordAsError('warning', 'Assigned Aircraft (paycom_assigned_ac) is missing');
+//    Result := 'NotFound';
+//    Exit;
+//  end;
+//>>>>>>> Branch_Phase2C
 
   // step 1: parse AssignedACString, it could contain multiple aircraft seperated by forward slash: 'N855LD/N5504B'
   stlACList := TStringList.Create;
