@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'ufrmCertifyExpDataLoader-Phase 2C v 0.5 - Hourly - merged'
+  Caption = 'Certify Data Loader - Phase 3, ver 1.0'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -676,6 +676,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryGetStartBucketSorted: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
+      '/* do not change the ORDER BY clause !!! */'
       'SELECT *     '
       '  FROM CertifyExp_Trips_StartBucket'
       

@@ -231,7 +231,7 @@ type
     Procedure CalculateApproverEmail(Const BatchTimeIn: TDateTime) ;
     Procedure FilterTripsByCount;
     Procedure FindPilotsNotInPaycom(Const BatchTimeIn : TDateTime);               // de-cruft, appears not to be called  ???JL  3 dec 2018
-    Procedure DeleteTrip(Const LogSheetIn, CrewMemberIDIn, QuoteNumIn : Integer);
+    Procedure DeleteTrip(Const LogSheetIn, QuoteNumIn : Integer; CrewMemberIDIn: String);
 
     Procedure AddContractorsNotInPaycom(Const BatchTimeIn: TDateTime);
     Procedure WriteContractorsToPaycomTable(Const BatchTimeIn: TDateTime);
@@ -329,6 +329,38 @@ implementation
 
 {$R *.dfm}
 
+procedure TufrmCertifyExpDataLoader.FormCreate(Sender: TObject);
+begin
+  myIni := TIniFile.Create( ExtractFilePath(ParamStr(0)) + 'CertifyExpDataLoader.ini' );
+
+  ConnectToDB;
+
+  edPayComInputFile.Text  := myIni.ReadString('Startup', 'PaycomFileName',   '') ;
+  edOutputFileName.Text   := myIni.ReadString('Startup', 'CertifyEmployeeFileName', '') ;
+  edOutputDirectory.Text  := myIni.ReadString('Startup', 'OutputDirectory', '') ;
+  edSpecialUsersFile.Text := myIni.ReadString('Startup', 'SpecialUsersFileName', '') ;
+
+  //  ShowMessage(ParamStr(1));
+//  if ParamStr(1) = '-autorun' then begin
+  if ParamStr(1) = '-hourly' then begin
+    StatusBar1.Panels[2].Text := '*AutoRun: Hourly, Active';
+    Self.Show;
+    Application.ProcessMessages;
+    HourlyPushMain;
+    Application.Terminate;
+
+  end else if ParamStr(1) = '-nightly' then begin
+    StatusBar1.Panels[2].Text := '*AutoRun: Nightly, Active';
+    Self.Show;
+    Application.ProcessMessages;
+    Main;
+    Application.Terminate;
+
+  end;
+
+end;    {FormCreate}
+
+
 
 procedure TufrmCertifyExpDataLoader.Main;
 var
@@ -336,6 +368,7 @@ var
 
 begin
   BatchTime := GetTimeFromDBServer;
+
   LoadData(BatchTime);
 
   BuildEmployeeFile(BatchTime);
@@ -354,9 +387,8 @@ end;  { Main }
 
 
 (*
-  1. Upload 'failed' recs from previous batches, in chronological order
-  2. Upload added recs
-  3. Upload deleted recs
+  1. Upload added recs
+  2. Upload deleted recs
 *)
 procedure TufrmCertifyExpDataLoader.HourlyPushMain;
 var
@@ -366,7 +398,7 @@ var
 
 begin
   BatchTime := GetTimeFromDBServer();          //StrToDateTime('03/25/2019 22:15:00');
-  LoadData(BatchTime);                         // loads data into StartBucket
+  LoadData(BatchTime);                         // loads data into StartBucket & PaycomHistory tables
 
   gloPusher := TfrmPushToCertify.Create(self);
   gloPusher.theBaseURL := 'https://api.certify.com/v1/exprptglds';
@@ -394,7 +426,7 @@ begin
   gloPusher.free ;
   StatusBar1.Panels[1].Text := 'Current Task:  All done!'  ;
 
-//  //  Get Failed Recs from previous Pushes
+//  //  Get Failed Recs from previous Pushes                     ???JL unnecessary, remove
 //  qryGetFailedRecs_CrewTail.Close;
 //  qryGetFailedRecs_CrewTail.ParamByName('parmNewBatchDateIn').AsDateTime := NewBatchDate;
 //  qryGetFailedRecs_CrewTail.Open;
@@ -427,7 +459,7 @@ begin
 
     Load_IFS_IntoStartBucket(BatchTimeIn);
 
-  FilterTripsByCount;                           // removes recs from StartBucket
+  FilterTripsByCount;                           // removes selected recs from StartBucket
 
 
 //<<<<<<< HEAD
@@ -471,7 +503,6 @@ begin
   SendToCertify(qryGetCrewLogRecs, Now(), 'crew_log');
   qryGetCrewLogRecs.Close;
 
-
   gloPusher.free;
 
 end;
@@ -483,39 +514,6 @@ procedure TufrmCertifyExpDataLoader.btnGoHourlyClick(Sender: TObject);
 begin
 
   HourlyPushMain;
-
-end;
-
-
-procedure TufrmCertifyExpDataLoader.FormCreate(Sender: TObject);
-begin
-  myIni := TIniFile.Create( ExtractFilePath(ParamStr(0)) + 'CertifyExpDataLoader.ini' );
-
-  ConnectToDB;
-
-  edPayComInputFile.Text  := myIni.ReadString('Startup', 'PaycomFileName',   '') ;
-  edOutputFileName.Text   := myIni.ReadString('Startup', 'CertifyEmployeeFileName', '') ;
-  edOutputDirectory.Text  := myIni.ReadString('Startup', 'OutputDirectory', '') ;
-  edSpecialUsersFile.Text := myIni.ReadString('Startup', 'SpecialUsersFileName', '') ;
-
-  //  ShowMessage(ParamStr(1));
-//  if ParamStr(1) = '-autorun' then begin
-  if ParamStr(1) = '-hourly' then begin
-    StatusBar1.Panels[2].Text := '*AutoRun: Hourly, Active';
-    Self.Show;
-    Application.ProcessMessages;
-    HourlyPushMain;
-    Application.Terminate;
-
-  end else if ParamStr(1) = '-nightly' then begin
-    StatusBar1.Panels[2].Text := '*AutoRun: Nightly, Active';
-    Self.Show;
-    Application.ProcessMessages;
-    Main;
-    Application.Terminate;
-
-  end;
-
 
 end;
 
@@ -815,7 +813,7 @@ begin
 
   Limit := StrToInt(edLastNTrips.Text);
   qryGetStartBucketSorted.close;
-  qryGetStartBucketSorted.Open;
+  qryGetStartBucketSorted.Open;              // do not change the sort order of this query
 
   Counter := 1;
   PriorCrewID := qryGetStartBucketSorted.FieldByName('CrewMemberID').AsString;
@@ -824,8 +822,8 @@ begin
       counter := counter + 1;
       if Counter > Limit then
         DeleteTrip(qryGetStartBucketSorted.FieldByName('LogSheet').AsInteger,
-                   qryGetStartBucketSorted.FieldByName('CrewMemberID').AsInteger,
-                   qryGetStartBucketSorted.FieldByName('QuoteNum').AsInteger );
+                   qryGetStartBucketSorted.FieldByName('QuoteNum').AsInteger, 
+                   qryGetStartBucketSorted.FieldByName('CrewMemberID').AsString );
 
     end else begin
       PriorCrewID := qryGetStartBucketSorted.FieldByName('CrewMemberID').AsString;
@@ -1164,9 +1162,6 @@ begin
   qryLoadTripData.SQL.Append('  AND AssignedAC   NOT IN (' + QuotedStr( 'NORDSTROM' ) + ', ' + QuotedStr('NORDSTROMS') + ')' );  // ... except for a few goofy records
   qryLoadTripData.SQL.Append('  AND VendorNumber IS NOT NULL' );                                      // Need to have Vendor Number
   qryLoadTripData.SQL.Append('  AND ArchiveFlag  IS NULL' );                                          // Get only non-terminated flight crew
-
-  ShowMessage(qryLoadTripData.SQL.Text);
-
   qryLoadTripData.Execute;
   qryLoadTripData.SQL.Clear;
 
@@ -1836,7 +1831,7 @@ begin
 end;  { FindPilotsNotInPaycom }
 
 
-procedure TufrmCertifyExpDataLoader.DeleteTrip(const LogSheetIn, CrewMemberIDIn, QuoteNumIn: Integer);
+procedure TufrmCertifyExpDataLoader.DeleteTrip(const LogSheetIn, QuoteNumIn: Integer; CrewMemberIDIn : String);
 begin
 
 //  LogIt('LogSheet: '  + IntToStr(LogSheetIn) + '; ' +
@@ -1846,7 +1841,10 @@ begin
 
   qryDeleteTrips.Close;
   qryDeleteTrips.ParamByName('parmLogSheetIn').AsInteger     := LogSheetIn;
-  qryDeleteTrips.ParamByName('parmCrewMemberIDIn').AsInteger := CrewMemberIDIn;
+  qryDeleteTrips.ParamByName('parmCrewMemberIDIn').AsString  := CrewMemberIDIn;
+
+//  qryDeleteTrips.ParamByName('parmCrewMemberIDIn').AsInteger := CrewMemberIDIn;
+
   qryDeleteTrips.ParamByName('parmQuoteNumIn').AsInteger     := QuoteNumIn;
 
   try
@@ -2325,6 +2323,7 @@ begin
 
   StatusBar1.Panels[1].Text := 'Current Task:  Retrieving added CrewTail_History recs'  ;
   Application.ProcessMessages;
+
   // Get Added recs from this new batch
   UpdateRecordStatus_CrewTail('added', PreviousBatchDateIn, NewBatchDateIn);
   qryGetCrewTailRecs.ParamByName('parmCreatedOnIn').AsDateTime := NewBatchDateIn;
@@ -2416,6 +2415,7 @@ begin
   SendToCertify(qryGetCrewLogRecs, BatchTimeIn, 'crew_log');
   qryGetCrewLogRecs.Close;
 
+
   //  Get Deleted recs from this new batch
   StatusBar1.Panels[1].Text := 'Current Task:  Retrieving deleted CrewTrip_History recs'  ;
   Application.ProcessMessages;
@@ -2454,7 +2454,7 @@ begin
 
     gloPusher.DataAction          := WorkingQueryIn.FieldByName('RecordStatus').AsString;
     gloPusher.CrewMemberVendorNum := WorkingQueryIn.FieldByName('CrewMemberVendorNum').AsString;
-    gloPusher.Push;
+    gloPusher.Push;    // ???JL
 
     WorkingQueryIn.Edit;
     WorkingQueryIn.FieldByName('HTTPResultCode').AsString      := IntToStr(gloPusher.HTTPReturnCode);
