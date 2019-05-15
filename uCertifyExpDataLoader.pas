@@ -413,7 +413,7 @@ begin
 
     Load_CharterVisa_IntoStartBucket;
 
-    Load_DOM_IntoStartBucket(BatchTimeIn);
+(*    Load_DOM_IntoStartBucket(BatchTimeIn); *) // disabled per Phase 3 Tasks & Estimates item # 14;   14 May 2019  Jeff@dcsit.com
 
   AddContractorsNotInPaycom(BatchTimeIn);
 
@@ -745,7 +745,7 @@ begin
 
       qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := strAccountantEmail;
 
-(* 15May2019 - added per Phase3 Tasks & Estimates item #21 *)
+(* 15May2019 - added per "Phase3 Tasks & Estimates" item #21 *)
       qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString  := strAccountantEmail;
       qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString  := strAccountantEmail;
 
@@ -1154,6 +1154,22 @@ begin
   qryLoadTripData.SQL.Clear;
 
   qryGetAirCrewVendorNum.Execute;
+
+
+  // Load default crew & tail pairs regardless of whether any trips flown recently. per  Phase3 Tasks & Estimates item #4    15May2019
+  qryLoadTripData.SQL.Append('INSERT INTO CertifyExp_Trips_StartBucket (CrewMemberVendorNum, TailNum, CrewMemberID)');
+  qryLoadTripData.SQL.Append('SELECT DISTINCT VendorNumber, AssignedAC, ' + QuotedStr('DefaultCrewTail') );
+  qryLoadTripData.SQL.Append('FROM [Warehouse].[dbo].[QuoteSys_PilotMaster] ' );
+  qryLoadTripData.SQL.Append('WHERE AssignedAC   LIKE ' + QuotedStr('N%'));                           // Valid Tail Numbers begin w/ N ...
+  qryLoadTripData.SQL.Append('  AND AssignedAC   NOT IN (' + QuotedStr( 'NORDSTROM' ) + ', ' + QuotedStr('NORDSTROMS') + ')' );  // ... except for a few goofy records
+  qryLoadTripData.SQL.Append('  AND VendorNumber IS NOT NULL' );                                      // Need to have Vendor Number
+  qryLoadTripData.SQL.Append('  AND ArchiveFlag  IS NULL' );                                          // Get only non-terminated flight crew
+
+  ShowMessage(qryLoadTripData.SQL.Text);
+
+  qryLoadTripData.Execute;
+  qryLoadTripData.SQL.Clear;
+
 
 end;  { LoadTripsIntoStartBucket }
 
@@ -2133,10 +2149,12 @@ end;  { LoadCharterVisaTripsIntoStartBucket }
 
 
 
-(*  must handle the case where multiple aircraft could be listed in the paycom_assigned_ac field, separated by a forward slash '/'
-    for example:  N225MC/N8241W  or  N225MC/N8241W/N550WT
+(*
+must handle the case where multiple aircraft could be listed in the paycom_assigned_ac field, separated by a forward slash '/'
+  for example:  N225MC/N8241W  or  N225MC/N8241W/N550WT
 
-      However most of the time there is only one aircraft listed,  N225MC              *)
+However most of the time there is only one aircraft listed              
+*)
 procedure TufrmCertifyExpDataLoader.Load_DOM_IntoStartBucket(Const BatchTimeIn: TDatetime);
 var
   stlACList : TStringList;
@@ -2145,25 +2163,28 @@ var
 begin
   stlACList := TStringList.Create;
   stlACList.Delimiter := '/';
+  Try
+    tblStartBucket.Open;
 
-  tblStartBucket.Open;
+    qryGetDOMEmployees.Close;
+    qryGetDOMEmployees.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
+    qryGetDOMEmployees.Open;
 
-  qryGetDOMEmployees.Close;
-  qryGetDOMEmployees.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
-  qryGetDOMEmployees.Open;
+    while not qryGetDOMEmployees.eof do begin
+      stlACList.DelimitedText := qryGetDOMEmployees.FieldByName('paycom_assigned_ac').AsString;
+      for i := 0 to stlACList.Count - 1 do begin
+        InsertCrewTail(Trim(stlACList[i]), qryGetDOMEmployees.FieldByName('certify_gp_vendornum').AsInteger);
+      end;  {for}
+      qryGetDOMEmployees.Next;
+    end;  { while }
 
-  while not qryGetDOMEmployees.eof do begin
-    stlACList.DelimitedText := qryGetDOMEmployees.FieldByName('paycom_assigned_ac').AsString;
-    for i := 0 to stlACList.Count - 1 do begin
-      InsertCrewTail(Trim(stlACList[i]), qryGetDOMEmployees.FieldByName('certify_gp_vendornum').AsInteger);
-    end;  {for}
-    qryGetDOMEmployees.Next;
-  end;  { while }
+    qryGetDOMEmployees.Close;
+    tblStartBucket.CLose;
 
-  qryGetDOMEmployees.Close;
-  tblStartBucket.CLose;
-  stlACList.Free;
-
+  Finally
+    stlACList.Free;
+  End;  { Try/finally }
+  
 end;  { LoadDOMsIntoStartBucket }
 
 
