@@ -917,13 +917,14 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryUpdateHasCCField: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
-      ' update CertifyExp_PayComHistory set has_credit_card = '#39'T'#39
+      ' update CertifyExp_PayComHistory '
+      ' set has_credit_card = '#39'T'#39
       
         ' where certify_gp_vendornum in (select distinct vendorid from V_' +
         'DynamicsGP_Alternate_Payment_Vendor)'
       '    and imported_on = :parmImportedOn')
-    Left = 253
-    Top = 308
+    Left = 284
+    Top = 304
     ParamData = <
       item
         DataType = ftUnknown

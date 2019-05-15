@@ -745,8 +745,14 @@ begin
 
       qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := strAccountantEmail;
 
+(* 15May2019 - added per Phase3 Tasks & Estimates item #21 *)
+      qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString  := strAccountantEmail;
+      qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString  := strAccountantEmail;
 
-(* Note 13: This logic is now handled by Certify "Workflows" within the Certify system      4Feb2019 -JL
+
+
+(*  4Feb2019 -JL
+    Note 13: This logic is now handled by Certify "Workflows" within the Certify system
       //  Assign Approver1 Email
       qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := strAccountantEmail;
 
