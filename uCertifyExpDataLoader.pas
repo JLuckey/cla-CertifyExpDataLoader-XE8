@@ -1894,7 +1894,7 @@ procedure TufrmCertifyExpDataLoader.WriteContractorsToPaycomTable( Const BatchTi
 begin
 
   tblPaycomHistory.Insert;
-  tblPaycomHistory.FieldByName('employee_code').AsString           := 'contractor-test-85';
+  tblPaycomHistory.FieldByName('employee_code').AsString           := 'contractor';
   tblPaycomHistory.FieldByName('employee_name').AsString           := CalcPilotName;
   tblPaycomHistory.FieldByName('work_email').AsString              := qryGetPilotDetails.FieldByName('EMail').AsString;
   tblPaycomHistory.FieldByName('position').AsString                := qryGetPilotDetails.FieldByName('JobTitle').AsString;
@@ -1903,7 +1903,7 @@ begin
   tblPaycomHistory.FieldByName('supervisor_primary_code').AsString := '';
   tblPaycomHistory.FieldByName('certify_gp_vendornum').AsInteger   := qryGetPilotDetails.FieldByName('VendorNumber').AsInteger;
   tblPaycomHistory.FieldByName('certify_department').AsString      := 'FlightCrew';
-  tblPaycomHistory.FieldByName('certify_role').AsString            := 'Employee';
+  tblPaycomHistory.FieldByName('certify_role').AsString            := 'Manager';
 
   tblPaycomHistory.FieldByName('certfile_approver1_email').AsString  := 'FlightCrew@ClayLacy.com';
   tblPaycomHistory.FieldByName('certfile_approver2_email').AsString  := 'FlightCrew@ClayLacy.com';
