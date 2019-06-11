@@ -327,6 +327,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Database = 'WarehouseDEV'
     Username = 'sa'
     Server = '192.168.1.122'
+    Connected = True
     LoginPrompt = False
     Left = 58
     Top = 11
@@ -662,7 +663,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       '')
     Connection = UniConnection1
-    Left = 221
+    Left = 223
     Top = 12
   end
   object qryGetTripStopRecs: TUniQuery
@@ -670,8 +671,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     SQL.Strings = (
       'select distinct TripNum, AirportID'
       'from CertifyExp_TripStop_Step1')
-    Left = 279
-    Top = 353
+    Left = 595
+    Top = 377
   end
   object qryGetStartBucketSorted: TUniQuery
     Connection = UniConnection1
@@ -737,8 +738,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'where LogSheet     = :parmLogSheetIn'
       '  and CrewMemberID = :parmCrewMemberIDIn'
       '  and QuoteNum     = :parmQuoteNumIn')
-    Left = 639
-    Top = 145
+    Left = 660
+    Top = 165
     ParamData = <
       item
         DataType = ftUnknown
@@ -808,8 +809,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '          and certify_gp_vendornum is not null'
       #9#9'  and data_source = '#39'paycom_file'#39
       '      )')
-    Left = 609
-    Top = 26
+    Left = 616
+    Top = 18
     ParamData = <
       item
         DataType = ftUnknown
@@ -847,9 +848,15 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '      ,[AssignedAC]'
       ''
       'from QuoteSys_PilotMaster'
-      'where PilotID in (select PilotID from CertifyExp_Contractors45)')
-    Left = 636
-    Top = 72
+      'where PilotID in (select PilotID from CertifyExp_Contractors45)'
+      ''
+      
+        '/* where EmployedOn > (CURRENT_TIMESTAMP - :parmNewHireDaysBack)' +
+        ' */'
+      ''
+      '')
+    Left = 630
+    Top = 66
   end
   object qryGetEmployeeErrors: TUniQuery
     Connection = UniConnection1
@@ -874,8 +881,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  FROM CertifyExp_PayComHistory'
       '  where imported_on = :parmBatchTimeIn'
       '    and record_status = :parmRecStatusIn')
-    Left = 360
-    Top = 371
+    Left = 316
+    Top = 378
     ParamData = <
       item
         DataType = ftUnknown
@@ -900,8 +907,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'RRENT_TIMESTAMP + :parmDaysForward )'
       '  and STATUS = '#39'confirmed'#39
       'order by QUOTENO')
-    Left = 421
-    Top = 358
+    Left = 383
+    Top = 365
     ParamData = <
       item
         DataType = ftInteger
@@ -1124,8 +1131,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'select distinct null, '#39'IFS'#39', null, Tail, null, :parmCrewMemberVe' +
         'ndorNum, null'
       'from CertifyExp_Tail_LeadPilot')
-    Left = 470
-    Top = 368
+    Left = 456
+    Top = 377
     ParamData = <
       item
         DataType = ftInteger
@@ -1142,8 +1149,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '  and imported_on = :parmImportedOn      /* '#39'2019-01-13 13:45:30' +
         '.227'#39' */')
-    Left = 524
-    Top = 380
+    Left = 500
+    Top = 364
     ParamData = <
       item
         DataType = ftUnknown
@@ -1481,13 +1488,49 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '  and imported_on = :parmImportedOn      /* '#39'2019-01-13 13:45:30' +
         '.227'#39' */')
-    Left = 580
-    Top = 391
+    Left = 542
+    Top = 407
     ParamData = <
       item
         DataType = ftUnknown
         Name = 'parmImportedOn'
         Value = nil
       end>
+  end
+  object qryFindVendorNumInStartBucket: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select [PilotID]'
+      '      ,[LastName]'
+      '      ,[FirstName]'
+      '      ,[VendorNumber]'
+      ''
+      'from CertifyExp_Trips_StartBucket'
+      'where VendorNumber = :parmVendorNumIn'
+      ''
+      '')
+    Left = 616
+    Top = 111
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmVendorNumIn'
+        Value = nil
+      end>
+  end
+  object tblTripStop: TUniTable
+    TableName = 'CertifyExp_TripStop_Step1'
+    Connection = UniConnection1
+    Left = 659
+    Top = 367
+  end
+  object qryGetNewHireRecs: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select QuoteNum'
+      'from CertifyExp_Trips_StartBucket'
+      'where CrewMemberID in ('#39'ConNewHire'#39', '#39'EmpNewHire'#39')')
+    Left = 377
+    Top = 540
   end
 end
