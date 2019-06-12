@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'Certify Data Loader - Phase 3, ver 1.1'
+  Caption = 'Certify Data Loader - Phase 3, ver 1.2'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
