@@ -1,11 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-<<<<<<< HEAD
-  Caption = 'Certify Data Loader - Phase 3, ver 1.3'
-=======
-  Caption = 'Certify Data Loader - Phase 3, ver 1.2'
->>>>>>> Branch_Implemment_T&E-24
+  Caption = 'Certify Data Loader - Phase 3, ver 1.4'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace

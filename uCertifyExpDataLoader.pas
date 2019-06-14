@@ -486,9 +486,6 @@ end;  { LoadData() }
 procedure TufrmCertifyExpDataLoader.btnFixerClick(Sender: TObject);
 begin
 
-
-
-
 {
   gloPusher := TfrmPushToCertify.Create(self);
   gloPusher.theBaseURL := 'https://api.certify.com/v1/exprptglds';
@@ -522,12 +519,8 @@ begin
   qryGetCrewLogRecs.Close;
 
   gloPusher.free;
-<<<<<<< HEAD
-
-
-=======
 }
->>>>>>> Branch_Implemment_T&E-24
+
 end;
 
 
@@ -603,12 +596,7 @@ var
   TargetDirectory : string;
 
 begin
-
-<<<<<<< HEAD
-  TargetDirectory := edOutputDirectory.Text;  // 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\';
-=======
   TargetDirectory :=  edOutputDirectory.Text;  // 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\';
->>>>>>> Branch_Implemment_T&E-24
 
   BuildCrewTailFile(BatchTimeIn);
   BuildCrewTripFile;
@@ -1475,10 +1463,6 @@ begin
 
 end;  { Load_Crew_Trip_HistoryTable }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> Branch_Implemment_T&E-24
 
 procedure TufrmCertifyExpDataLoader.BuildCrewTailFile(Const CurrBatchTimeIn: TDatetime);
 Var
@@ -1975,7 +1959,9 @@ begin
   qryGetFlightCrewNewHire.Open;
 
   while not qryGetFlightCrewNewHire.eof do  begin
-    AddDummyTripToStartBucket(qryGetFlightCrewNewHire.FieldByName('certify_gp_vendornum').AsInteger, 'EmpNewHire');
+    if Not FindVendorNumInStartBucket(qryGetFlightCrewNewHire.FieldByName('certify_gp_vendornum').AsInteger) then begin
+      AddDummyTripToStartBucket(qryGetFlightCrewNewHire.FieldByName('certify_gp_vendornum').AsInteger, 'EmpNewHire');
+    end;
     qryGetFlightCrewNewHire.Next;
   end;
 
