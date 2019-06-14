@@ -201,7 +201,7 @@ type
     qryFindVendorNumInStartBucket: TUniQuery;
     tblTripStop: TUniTable;
     qryGetNewHireRecs: TUniQuery;
-//>>>>>>> Branch_Phase2C
+
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -237,7 +237,7 @@ type
     Procedure DeleteTrip(Const LogSheetIn, QuoteNumIn : Integer; CrewMemberIDIn: String);
 
     Procedure AddContractorsNotInPaycom(Const BatchTimeIn: TDateTime);
-    Procedure WriteContractorsToPaycomTable(Const BatchTimeIn: TDateTime);
+    Procedure WriteContractorsToPaycomTable(Const BatchTimeIn: TDateTime; NewHireFlag: Boolean);
 
     Procedure ConnectToDB();
     Procedure SendStatusEmail;
@@ -461,7 +461,7 @@ begin
 
   AddContractorsNotInPaycom(BatchTimeIn);       // writes Contractors to PaycomHistory table
 
-    ProcessNewHireContractors(BatchTimeIn);
+    ProcessNewHireContractors(BatchTimeIn);     // writes New-Hire contractors to PaycomHistory, if they have not yet flown any trips
 
   UpdateCCField(BatchTimeIn);                   // Update Credit Card Field
 
@@ -513,6 +513,7 @@ begin
   qryGetCrewLogRecs.Close;
 
   gloPusher.free;
+
 
 end;
 
@@ -610,7 +611,7 @@ begin
     InsertDummyNewHireTripStop;   // adds NewHire records to working table CertifyExp_TripStop_Step1
 
   BuildGenericValidationFile2(TargetDirectory + 'trip_stop.csv',
-                             'select distinct TripNum, AirportID from CertifyExp_TripStop_Step1' );
+                             'select distinct TripNum, AirportID from CertifyExp_TripStop_Step1 where AirportID is not null' );
 
 end;  { BuildValidationFiles }
 
@@ -1053,6 +1054,7 @@ Paycom file columns:
     tblPaycomHistory.FieldByName('status_timestamp').AsDateTime     := BatchTimeIn;
     tblPaycomHistory.FieldByName('imported_on').AsDateTime          := BatchTimeIn;
     tblPaycomHistory.FieldByName('data_source').AsString            := 'paycom_file';
+    tblPaycomHistory.FieldByName('hire_date').AsString              := slInputFileRec[14];
     tblPaycomHistory.post;
 
   except on E: Exception do begin
@@ -1414,20 +1416,12 @@ end;  { BuildCrewLogFile }
 
 
 
-//<<<<<<< HEAD
-//procedure TufrmCertifyExpDataLoader.BuildCrewTailFile(Const BatchTimeIn : TDateTime);
-//Var
-//  RowOut : String;
-//  WorkFile : TextFile;
-//  CrewTailFileName: String;
-//=======
 procedure TufrmCertifyExpDataLoader.Load_CrewTail_HistoryTable(Const BatchTimeIn: TDateTime);
 Var
   RowOut : String;
   WorkFile : TextFile;                // ??? superfluous?
   CurrentBatchDateTime : TDateTime;
   CrewTailFileName: String;
-//>>>>>>> Branch_Phase2C
 
 begin
   StatusBar1.Panels[1].Text := 'Current Task:  Loading data into CrewTail_History table'  ;
@@ -1446,11 +1440,6 @@ begin
   StatusBar1.Panels[1].Text := 'Current Task:  Loading data into CrewTrip_History table'  ;
   Application.ProcessMessages;
 
-//<<<<<<< HEAD
-//  CrewTailFileName := CalcCrewTailFileName(BatchTimeIn);
-//  AssignFile(WorkFile, CrewTailFileName );
-//  Rewrite(WorkFile);
-//=======
   qryInsertCrewTripHist.Close;
   qryInsertCrewTripHist.ParamByName('parmBatchDateTime').AsDateTime := BatchTimeIn ;
   qryInsertCrewTripHist.Execute;
@@ -1468,8 +1457,6 @@ begin
   qryInsertCrewLogHist.Execute;
 
 end;  { Load_Crew_Trip_HistoryTable }
-
-//>>>>>>> Branch_Phase2C
 
 
 procedure TufrmCertifyExpDataLoader.BuildCrewTailFile(Const CurrBatchTimeIn: TDatetime);
@@ -1910,7 +1897,7 @@ begin
   qryGetPilotDetails.open;
 
   while not qryGetPilotDetails.eof do begin
-    WriteContractorsToPaycomTable(BatchTimeIn);
+    WriteContractorsToPaycomTable(BatchTimeIn, False);
     qryGetPilotDetails.Next;
   end ;
 
@@ -1935,7 +1922,7 @@ end;  { AddContractorsNotInPaycom }
   -------------------------------------------------------- *)
 procedure TufrmCertifyExpDataLoader.ProcessNewHireContractors(const BatchTimeIn: TDateTime);
 begin
-  gloNewHireDummyQuoteNum := 888888;
+  gloNewHireDummyQuoteNum := 818181;
 
   tblPaycomHistory.Open;
 
@@ -1945,7 +1932,7 @@ begin
 
   while not qryGetPilotDetails.eof do begin
     if Not FindVendorNumInStartBucket(qryGetPilotDetails.FieldByName('VendorNumber').AsInteger) then begin
-      WriteContractorsToPaycomTable(BatchTimeIn);                                            // should we use parameter to signify Contractor New Hire  ???JL
+      WriteContractorsToPaycomTable(BatchTimeIn, True);                                            // should we use parameter to signify Contractor New Hire  ???JL
       AddDummyTripToStartBucket(qryGetPilotDetails.FieldByName('VendorNumber').AsInteger );
     end;
 
@@ -1958,23 +1945,28 @@ begin
 end;  { ProcessNewHireContractors }
 
 
+
+
+
 procedure TufrmCertifyExpDataLoader.AddDummyTripToStartBucket(const VendorNumIn: Integer);
 begin
   // Set values for Dummy trip for New Hire
+  tblStartBucket.Open;
   tblStartBucket.Insert;
   tblStartBucket.FieldByName('LogSheet').AsInteger            := 123456;
   tblStartBucket.FieldByName('CrewMemberID').AsString         := 'ConNewHire';
   tblStartBucket.FieldByName('QuoteNum').AsInteger            := gloNewHireDummyQuoteNum;
   tblStartBucket.FieldByName('TailNum').AsString              := 'NTEST1';
-  tblStartBucket.FieldByName('FarPart').AsString              := '';
+  // tblStartBucket.FieldByName('FarPart').AsString              := '';
   tblStartBucket.FieldByName('CrewMemberVendorNum').AsInteger := VendorNumIn;
   //  tblStartBucket.FieldByName('TripDepartDate').AsString := 'NTEST1';   // Is this field needed?   ???JL
   tblStartBucket.Post;
+  tblStartBucket.Close;
 
 end;  { AddDummyTripToStartBucket }
 
 
-procedure TufrmCertifyExpDataLoader.WriteContractorsToPaycomTable( Const BatchTimeIn: TDateTime ) ;
+procedure TufrmCertifyExpDataLoader.WriteContractorsToPaycomTable( Const BatchTimeIn: TDateTime; NewHireFlag: Boolean ) ;
 begin
 
   tblPaycomHistory.Insert;
@@ -1999,7 +1991,10 @@ begin
   tblPaycomHistory.FieldByName('record_status').AsString           := 'imported';
   tblPaycomHistory.FieldByName('status_timestamp').AsDateTime      := BatchTimeIn;
   tblPaycomHistory.FieldByName('imported_on').AsDateTime           := BatchTimeIn;
-  tblPaycomHistory.FieldByName('data_source').AsString             := 'pilot_master';
+
+  tblPaycomHistory.FieldByName('data_source').AsString             := 'PilotMaster';         // how about pilot_masterNewHire
+  If NewHireFlag then
+    tblPaycomHistory.FieldByName('data_source').AsString           := 'PilotMaster-NewHire';         // how about pilot_masterNewHire
 
   tblPaycomHistory.Post;
 
@@ -2037,10 +2032,20 @@ begin
   if QryKind = 'FlownRecent' then
     qryGetPilotDetails.SQL.Add('where PilotID in (select PilotID from CertifyExp_Contractors45) ')
 
-  else if QryKind ='NewHire' then
-    qryGetPilotDetails.SQL.Add('where EmployedOn > (CURRENT_TIMESTAMP - 45) ');   // param for days back?   ???JL
+  else if QryKind ='NewHire' then begin       // Refactor!! we have definition of contractor here & in qryContractorsNotInPaycom should only be 1 place   ???JL
+    qryGetPilotDetails.SQL.Add('where EmployedOn > (CURRENT_TIMESTAMP - 45) ') ;  // param for days back?   ???JL
+    qryGetPilotDetails.SQL.Add('  and Status         in ( ' + QuotedStr('Agent of CLA') + ',' + QuotedStr('Cabin Server') + ',' + QuotedStr('Parttime - CLA') + ' ) ') ;  // Definition of "Contractor"
+    qryGetPilotDetails.SQL.Add('  and EmployeeStatus in ( ' + QuotedStr('Part 91') + ',' + QuotedStr('Part 135') + ',' + QuotedStr('Cabin Serv') + ') ' );       // Definition of "Contractor"
 
-  ShowMessage(qryGetPilotDetails.SQL.Text);
+  end else
+    ShowMessage('CalcSQLForQryGetPilotDetails(): Unknown Value for param QryKind: ' + QryKind);
+
+//  where P.Status in ( 'Agent of CLA', 'Cabin Server', 'Parttime - CLA' )    -- Definition of "Contractor"
+//  and   P.EmployeeStatus in ( 'Part 91', 'Part 135', 'Cabin Serv' )         -- Definition of "Contractor"
+
+
+
+  ShowMessage(QryKind + #13 + qryGetPilotDetails.SQL.Text);        // debugging code
 
 end;  { CalcSQLForQryGetPilotDetails }
 

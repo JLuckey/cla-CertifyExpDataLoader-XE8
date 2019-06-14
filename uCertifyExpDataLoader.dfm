@@ -638,8 +638,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'where QuoteNum is not null'
       '  and CrewMemberVendorNum is not null'
       '  and FarPart is not null')
-    Left = 211
-    Top = 232
+    Left = 201
+    Top = 226
   end
   object scrLoadTripStopData: TUniScript
     SQL.Strings = (
@@ -782,7 +782,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '          -- Currrently employed/not terminated'
       '  and S.TripDepartDate > (CURRENT_TIMESTAMP - :parmDaysBack)'
       '')
-    Left = 491
+    Left = 492
     Top = 5
     ParamData = <
       item
@@ -1038,7 +1038,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'where ( (departure < CURRENT_TIMESTAMP)        and (arrival > CU' +
         'RRENT_TIMESTAMP) )   -- in-progress'
       
-        '   OR ( (departure > (CURRENT_TIMESTAMP - 10)) and (arrival < CU' +
+        '   OR ( (departure > (CURRENT_TIMESTAMP - 30)) and (arrival < CU' +
         'RRENT_TIMESTAMP) )   -- ended within the past 10 days'
       ''
       '/*'
@@ -1500,15 +1500,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryFindVendorNumInStartBucket: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
-      'select [PilotID]'
-      '      ,[LastName]'
-      '      ,[FirstName]'
-      '      ,[VendorNumber]'
-      ''
+      'select CrewMemberVendorNum, QuoteNum'
       'from CertifyExp_Trips_StartBucket'
-      'where VendorNumber = :parmVendorNumIn'
-      ''
-      '')
+      'where CrewMemberVendorNum = :parmVendorNumIn')
     Left = 616
     Top = 111
     ParamData = <
