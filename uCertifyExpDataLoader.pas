@@ -485,6 +485,11 @@ end;  { LoadData() }
 
 procedure TufrmCertifyExpDataLoader.btnFixerClick(Sender: TObject);
 begin
+
+
+
+
+{
   gloPusher := TfrmPushToCertify.Create(self);
   gloPusher.theBaseURL := 'https://api.certify.com/v1/exprptglds';
   gloPusher.APIKey     := 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv' ;
@@ -517,8 +522,12 @@ begin
   qryGetCrewLogRecs.Close;
 
   gloPusher.free;
+<<<<<<< HEAD
 
 
+=======
+}
+>>>>>>> Branch_Implemment_T&E-24
 end;
 
 
@@ -595,7 +604,11 @@ var
 
 begin
 
+<<<<<<< HEAD
   TargetDirectory := edOutputDirectory.Text;  // 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\';
+=======
+  TargetDirectory :=  edOutputDirectory.Text;  // 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\';
+>>>>>>> Branch_Implemment_T&E-24
 
   BuildCrewTailFile(BatchTimeIn);
   BuildCrewTripFile;
@@ -1439,7 +1452,6 @@ begin
 end;  { LoadCrewTailHistoryTable }
 
 
-
 procedure TufrmCertifyExpDataLoader.Load_CrewTrip_HistoryTable(const BatchTimeIn: TDateTime);
 begin
   StatusBar1.Panels[1].Text := 'Current Task:  Loading data into CrewTrip_History table'  ;
@@ -1463,6 +1475,10 @@ begin
 
 end;  { Load_Crew_Trip_HistoryTable }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> Branch_Implemment_T&E-24
 
 procedure TufrmCertifyExpDataLoader.BuildCrewTailFile(Const CurrBatchTimeIn: TDatetime);
 Var
@@ -2195,6 +2211,7 @@ function TufrmCertifyExpDataLoader.CalcCrewTailFileName(const BatchTimeIn: TDate
 var
   myMonth, myDay, myYear: word;
   strMonth, strDay: String;
+  FileDest : String;
 
 begin
   DecodeDate(Trunc(BatchTimeIn), myYear, myMonth, myDay);
@@ -2207,10 +2224,20 @@ begin
   if myDay < 10 then
     strDay := '0' + strDay;
 
-  Result := myIni.ReadString('OutputFiles', 'CrewTailDestination', '') + IntToStr(myYear) + strMonth + strDay + '.csv';
+
+  Result := myIni.ReadString('OutputFiles', 'CrewTailDestination', ''); // + '.csv'  ;
+
+(*
+  FileDest := myIni.ReadString('OutputFiles', 'CrewTailDestination', '');
+
+  ShowMessage(FileDest + #13 +  Copy(FileDest, Length(FileDest), 1) );
+
+  if Copy(FileDest, Length(FileDest), 1) = '_' then        // If file destination string ends with an underbar, "_"
+    Result := myIni.ReadString('OutputFiles', 'CrewTailDestination', '') + IntToStr(myYear) + strMonth + strDay + '.csv'
+  else
+
   //  add feature: if last char of CrewTailDestination is "_" then append time stamp         ???JL
-
-
+*)
 end;  { CalcCrewTailFileName }
 
 
@@ -2369,19 +2396,11 @@ var
 begin
   Result := 'NotFound';
 
-//<<<<<<< HEAD
   if AssignedACString = '' then Begin
     FlagRecordAsError('warning', 'Assigned Aircraft (paycom_assigned_ac) is missing');
     Result := 'NotFound';
     Exit;
   End;
-//=======
-//  if AssignedACString = '' then begin
-//    FlagRecordAsError('warning', 'Assigned Aircraft (paycom_assigned_ac) is missing');
-//    Result := 'NotFound';
-//    Exit;
-//  end;
-//>>>>>>> Branch_Phase2C
 
   // step 1: parse AssignedACString, it could contain multiple aircraft seperated by forward slash: 'N855LD/N5504B'
   stlACList := TStringList.Create;
