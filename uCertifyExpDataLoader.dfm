@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'Certify Data Loader - Phase 3, ver 1.1'
+  Caption = 'Certify Data Loader - Phase 3, ver 1.3'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -1386,8 +1386,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from CertifyExp_CrewTrip_History'
       'where RecordStatus = '#39'imported'#39'        '
       'order by CreatedOn desc')
-    Left = 506
-    Top = 502
+    Left = 459
+    Top = 497
   end
   object qryInsertCrewLogHist: TUniQuery
     Connection = UniConnection1
@@ -1526,5 +1526,26 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'where CrewMemberID in ('#39'ConNewHire'#39', '#39'EmpNewHire'#39')')
     Left = 377
     Top = 540
+  end
+  object qryGetFlightCrewNewHire: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select certify_gp_vendornum'
+      'from CertifyExp_PayComHistory'
+      'where imported_on = :parmImportedOn'
+      
+        '  and certify_department in ('#39'FlightCrew'#39', '#39'PoolPilot'#39', '#39'PoolFA'#39 +
+        ', '#39'FlightCrewCorp'#39', '#39'FlightCrewNonPCal'#39', '#39'IFS'#39')  /* definition o' +
+        'f Flight Crew, refactor to store in one place ???JL */'
+      '  and hire_date > (CURRENT_TIMESTAMP - 45)'
+      'order  by certify_gp_vendornum')
+    Left = 543
+    Top = 525
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmImportedOn'
+        Value = nil
+      end>
   end
 end
