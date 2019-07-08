@@ -920,7 +920,7 @@ begin
     slEmpRec.add( qryGetEmployees.FieldByName('certfile_work_email').AsString ) ;
     slEmpRec.add( qryGetEmployees.FieldByName('certfile_first_name').AsString  ) ;
     slEmpRec.add( qryGetEmployees.FieldByName('certfile_last_name').AsString  ) ;
-    slEmpRec.add( qryGetEmployees.FieldByName('certfile_employee_id').AsString ) ;
+    slEmpRec.add( qryGetEmployees.FieldByName('certfile_employee_id').AsString + '|') ;    // adding pipe to fix "1398" bug - 8 Jul 2019  JL
     slEmpRec.add( qryGetEmployees.FieldByName('certfile_employee_type').AsString ) ;
     slEmpRec.add( qryGetEmployees.FieldByName('certfile_group').AsString ) ;
     slEmpRec.add( qryGetEmployees.FieldByName('certfile_department_name').AsString ) ;
