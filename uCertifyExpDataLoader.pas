@@ -92,10 +92,6 @@ uses
   ;
 
 
-// =======
-//  , System.UITypes
-//  ;
-//>>>>>>> Branch_BugFix_DOM_ApproverEmail
 
 type
   TufrmCertifyExpDataLoader = class(TForm)
@@ -1133,6 +1129,7 @@ end;  { InsertTailLeadPilot }
 procedure TufrmCertifyExpDataLoader.LoadTripsIntoStartBucket;
 var
   strDaysBack: String;
+  i: Integer;
 
 begin
 (*  1. Empty Start Bucket & Load trips into Start Bucket from Trip tables
@@ -1200,6 +1197,28 @@ begin
   qryLoadTripData.SQL.Append('  AND ArchiveFlag  IS NULL' );                                          // Get only non-terminated flight crew
   qryLoadTripData.Execute;
   qryLoadTripData.SQL.Clear;
+
+
+//  T&E-25    ???JL
+
+//  Query PaycomHistory:
+//
+//    SELECT certify_gp_vendornum, certify_department, certfile_group, paycom_assigned_ac
+//    FROM [Warehouse].[dbo].[CertifyExp_PayComHistory]
+//    where imported_on = '2019-07-01 22:15:01.877'
+//      and certfile_group in ('FlightCrew','PoolPilot','PoolFA','FlightCrewCorp','FlightCrewNonPCal','IFS')
+//      and paycom_assigned_ac not blank
+
+
+//   Write recs to StartBucket
+//      while not qry.eof do begin
+//        stlAssignedAC := ParseACList(qry.fieldByName('paycom_assigned_ac').AsString);
+//        for i := 0 to stlAssignedAC.Count - 1 do begin
+//          InsertCrewTailRec(qry37.FieldByName('certify_gP_vendornum').asString, stlAssignedAC[i]);
+//        end;
+//
+//        qry.next;
+//      end;
 
 
 end;  { LoadTripsIntoStartBucket }
