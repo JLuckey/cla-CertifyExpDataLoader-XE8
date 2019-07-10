@@ -919,8 +919,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object tblStartBucket: TUniTable
     TableName = 'CertifyExp_Trips_StartBucket'
     Connection = UniConnection1
-    Left = 523
-    Top = 251
+    Left = 526
+    Top = 244
   end
   object qryUpdateHasCCField: TUniQuery
     Connection = UniConnection1

@@ -168,10 +168,6 @@ type
     qryGetTerminationDate: TUniQuery;
     qryInsertIFS: TUniQuery;
     qryGetIFS: TUniQuery;
-//<<<<<<< HEAD
-//    DBGrid1: TDBGrid;
-//    DataSource1: TDataSource;
-//=======
     qryInsertCrewTailHist: TUniQuery;
     qryGetCrewTailBatchDates: TUniQuery;
     qryGetFailedRecs_CrewTail: TUniQuery;
@@ -225,7 +221,7 @@ type
 
     Procedure BuildGenericValidationFile(const TargetFileName, SQLIn: String) ;
     Procedure BuildGenericValidationFile2(const TargetFileName, SQLIn: String) ;
-    Procedure LoadTripsIntoStartBucket;
+    Procedure LoadTripsIntoStartBucket(Const BatchTimeIn : TDateTime);
     Procedure BuildValidationFiles(Const BatchTimeIn : TDateTime);
     Procedure BuildTripAccountantFile(Const FileNameIn: String);
     Procedure CalculateApproverEmail(Const BatchTimeIn: TDateTime) ;
@@ -251,7 +247,7 @@ type
 
     Procedure Load_CharterVisa_IntoStartBucket;
     Procedure Load_DOM_IntoStartBucket(Const BatchTimeIn: TDatetime);
-    Procedure InsertCrewTail(Const TailNumIn:String; VendorNumIn: Integer);
+    Procedure InsertCrewTail(Const TailNumIn:String; VendorNumIn: Integer; DataSourceIn: String);
 
     Procedure LoadTailLeadPilot;
     Procedure InsertTailLeadPilot(Const TailNumIn, EMailIn: String);
@@ -296,6 +292,10 @@ type
     Procedure InsertDummyNewHireTripStop(Const QuoteNumIn : Integer);
     Procedure Process_NewHire_Employees_FlightCrew(Const BatchTimeIn: TDateTime);
 
+    // 10 Jul 2019
+    Procedure WriteToStartBucket(DataSetIn: TUniQuery);
+
+
 
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
@@ -321,6 +321,9 @@ type
     // 7 Jun 2019
     Function FindVendorNumInStartBucket(Const VendorNumIn: Integer): Boolean;
 
+
+    Function CalcInClause(Const GroupStrIn: String): String;
+
   public
     { Public declarations }
   end;
@@ -335,6 +338,8 @@ var
 
   gloPusher : TfrmPushToCertify;
   gloNewHireDummyQuoteNum : Integer;
+
+  gloFlightCrewGroup: String = 'FlightCrew|PoolPilot|PoolFA|FlightCrewCorp|FlightCrewNonPCal|IFS';
 
 implementation
 
@@ -452,7 +457,7 @@ begin
 
   ImportPayrollData(BatchTimeIn);               // rec status: imported or error
 
-  LoadTripsIntoStartBucket;
+  LoadTripsIntoStartBucket(BatchTimeIn);
 
     Load_CharterVisa_IntoStartBucket;
 
@@ -546,7 +551,6 @@ end;
 
 
 procedure TufrmCertifyExpDataLoader.btnMainClick(Sender: TObject);
-
 begin
   Main;
 
@@ -691,7 +695,7 @@ var
 begin
     strCertifyGroup := qryGetImportedRecs.FieldByName('certfile_group').AsString ;
 
-    if GroupIsIn(strCertifyGroup, '|Corporate|FBO|Maintenance|Marketing|AircraftManagement|HR|') then begin
+    if GroupIsIn(strCertifyGroup, 'Corporate|FBO|Maintenance|Marketing|AircraftManagement|HR') then begin
 
       // Assign Accountant Email
       if qryGetImportedRecs.FieldByName('has_credit_card').AsString = 'T' then
@@ -717,7 +721,7 @@ begin
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail;
 
 
-    end else if GroupIsIn(strCertifyGroup, '|DOM|') then begin
+    end else if GroupIsIn(strCertifyGroup, 'DOM') then begin
 
 
       strAssignedAC   := qryGetImportedRecs.FieldByName('paycom_assigned_ac').AsString;
@@ -763,8 +767,8 @@ begin
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := PaycomApprover2 ;
 
 
-    end else if GroupIsIn(strCertifyGroup, '|FlightCrew|PoolPilot|PoolFA|FlightCrewCorp|FlightCrewNonPCal|IFS|') then begin
-
+//    end else if GroupIsIn(strCertifyGroup, '|FlightCrew|PoolPilot|PoolFA|FlightCrewCorp|FlightCrewNonPCal|IFS|') then begin
+    end else if GroupIsIn(strCertifyGroup, gloFlightCrewGroup) then begin
 
       // Assign Accountant Email
       if qryGetImportedRecs.FieldByName('has_credit_card').AsString = 'T' then
@@ -793,7 +797,7 @@ begin
 *)
 
 
-    end else if GroupIsIn(strCertifyGroup, '|CharterVisa|') then begin
+    end else if GroupIsIn(strCertifyGroup, 'CharterVisa') then begin
 
 
       // Assign Accountant Email
@@ -822,13 +826,21 @@ end;  { CalculateApproverEmail }
 
 
 function TufrmCertifyExpDataLoader.GroupIsIn(const GroupIn, GroupSetIn: String): Boolean;
+var
+  stlGroupSet : TStringList;
+
 begin
 
   Result := False;
 
-  If Pos(UpperCase('|' + GroupIn + '|'), UpperCase(GroupSetIn) ) > 0 Then
-    Result := True;
-
+  stlGroupSet := TStringList.Create;
+  try
+    stlGroupSet.Delimiter := '|';
+    stlGroupSet.DelimitedText := GroupSetIn;    // GroupSetIn looks like: 'Corporate|FBO|Maintenance|Marketing|AircraftManagement|HR'
+    Result := stlGroupSet.IndexOf(GroupIn) > -1;
+  finally
+    stlGroupSet.Free;
+  end;
 end;
 
 
@@ -944,8 +956,7 @@ begin
     slEmpRec.Free;
   end;
 
-end;  { WriteToCertifyEmployeeFile }
-
+end; { WriteToCertifyEmployeeFile }
 
 
 procedure TufrmCertifyExpDataLoader.IdentifyNonCertifyRecs( Const BatchTimeIn : TDateTime );
@@ -1126,10 +1137,9 @@ end;  { InsertTailLeadPilot }
 
 
 
-procedure TufrmCertifyExpDataLoader.LoadTripsIntoStartBucket;
+procedure TufrmCertifyExpDataLoader.LoadTripsIntoStartBucket(Const BatchTimeIn : TDateTime);
 var
   strDaysBack: String;
-  i: Integer;
 
 begin
 (*  1. Empty Start Bucket & Load trips into Start Bucket from Trip tables
@@ -1196,32 +1206,83 @@ begin
   qryLoadTripData.SQL.Append('  AND VendorNumber IS NOT NULL' );                                      // Need to have Vendor Number
   qryLoadTripData.SQL.Append('  AND ArchiveFlag  IS NULL' );                                          // Get only non-terminated flight crew
   qryLoadTripData.Execute;
+
+
+  //  T&E-25  Adding default crew_tail recs for employees
   qryLoadTripData.SQL.Clear;
+  qryLoadTripData.SQL.Append('SELECT certify_gp_vendornum, certify_department, certfile_group, paycom_assigned_ac');
+  qryLoadTripData.SQL.Append('FROM CertifyExp_PaycomHistory' );
+  qryLoadTripData.SQL.Append('WHERE imported_on = ' + QuotedStr(FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', BatchTimeIn) ) );   // get current Batch
+  qryLoadTripData.SQL.Append('  AND certfile_group IN ( ' + CalcInClause(gloFlightCrewGroup) + ' )' );                        // build IN clause
+  qryLoadTripData.SQL.Append('  AND not (paycom_assigned_ac = ' + QuotedStr('') + ' or paycom_assigned_ac is null ) ');       // assigned_ac field not blank
+  qryLoadTripData.SQL.Append('  AND termination_date IS NULL' );                                                              // only currently employed people
+  qryLoadTripData.Open;
 
-
-//  T&E-25    ???JL
-
-//  Query PaycomHistory:
-//
-//    SELECT certify_gp_vendornum, certify_department, certfile_group, paycom_assigned_ac
-//    FROM [Warehouse].[dbo].[CertifyExp_PayComHistory]
-//    where imported_on = '2019-07-01 22:15:01.877'
-//      and certfile_group in ('FlightCrew','PoolPilot','PoolFA','FlightCrewCorp','FlightCrewNonPCal','IFS')
-//      and paycom_assigned_ac not blank
-
-
-//   Write recs to StartBucket
-//      while not qry.eof do begin
-//        stlAssignedAC := ParseACList(qry.fieldByName('paycom_assigned_ac').AsString);
-//        for i := 0 to stlAssignedAC.Count - 1 do begin
-//          InsertCrewTailRec(qry37.FieldByName('certify_gP_vendornum').asString, stlAssignedAC[i]);
-//        end;
-//
-//        qry.next;
-//      end;
-
+  WriteToStartBucket(qryLoadTripData);
+  qryLoadTripData.Close;
 
 end;  { LoadTripsIntoStartBucket }
+
+
+
+// The data is a little goofy here.
+//   The assigned_ac field (in the PaycomHistory table) can contain multiple aircraft separated by '/'
+//    like this:  'N880JM/N4D/N8241W/N345CL' or just a single aircraft: 'N880MJ'
+// This code creates a new record in the StartBucket table for each crew_member (identified by VendorNum), tail combination
+//                                                                                       - 10 Jul 2019  JL, Jeff@dcsit.com
+procedure TufrmCertifyExpDataLoader.WriteToStartBucket(DataSetIn: TUniQuery);
+var
+  stlAssignedAC : TStringList;
+  i : Integer;
+
+begin
+  tblStartBucket.Open;
+  stlAssignedAC := TStringList.Create;
+  try
+    stlAssignedAC.Delimiter := '/';
+
+    while not DataSetIn.eof do begin
+      stlAssignedAC.Clear;
+      stlAssignedAC.DelimitedText := DataSetIn.fieldByName('paycom_assigned_ac').AsString;   // parse multiple tails (if any) into StringList
+
+      for i := 0 to stlAssignedAC.Count - 1 do begin
+        InsertCrewTail(stlAssignedAC[i], DataSetIn.FieldByName('certify_gp_vendornum').AsInteger, 'DefaultCrewTail');   // Writes to tblStartBucket
+      end;
+
+      DataSetIn.next;
+    end;
+
+  finally
+    stlAssignedAC.Free;
+  end;
+  tblStartBucket.Close;
+
+end;  { WriteToStartBucket }
+
+
+
+function TufrmCertifyExpDataLoader.CalcInClause(const GroupStrIn: String): String;
+var
+  stlGroupString: TStringList;
+  i : Integer;
+  strOut : String;
+
+begin
+  stlGroupString := TStringList.Create;
+  stlGroupString.Delimiter := '|';
+  stlGroupString.DelimitedText := GroupStrIn;
+
+  for i := 0 to stlGroupString.Count - 1 do begin
+    strOut := StrOut + QuotedStr(stlGroupString[i]) + ', ';
+  end;
+
+  Result := Copy(strOut, 0, Length(strOut) - 2);  // get rid of trailing comma & space
+
+  stlGroupString.Free;
+
+end;  { CaldInClause }
+
+
 
 
 function TufrmCertifyExpDataLoader.RecIsValid(Const TimeStampIn:TDateTime): Boolean;
@@ -2338,7 +2399,7 @@ begin
     while not qryGetDOMEmployees.eof do begin
       stlACList.DelimitedText := qryGetDOMEmployees.FieldByName('paycom_assigned_ac').AsString;
       for i := 0 to stlACList.Count - 1 do begin
-        InsertCrewTail(Trim(stlACList[i]), qryGetDOMEmployees.FieldByName('certify_gp_vendornum').AsInteger);
+        InsertCrewTail(Trim(stlACList[i]), qryGetDOMEmployees.FieldByName('certify_gp_vendornum').AsInteger, 'DOM_processing');
       end;  {for}
       qryGetDOMEmployees.Next;
     end;  { while }
@@ -2380,12 +2441,12 @@ end;  { LoadIFSIntoStartBucket }
 
 
 
-procedure TufrmCertifyExpDataLoader.InsertCrewTail(const TailNumIn: String; VendorNumIn: Integer);
+procedure TufrmCertifyExpDataLoader.InsertCrewTail(const TailNumIn: String; VendorNumIn: Integer; DataSourceIn: String);
 begin
   tblStartBucket.Insert;
   tblStartBucket.FieldByName('TailNum').AsString              := TailNumIn;
   tblStartBucket.FieldByName('CrewMemberVendorNum').AsInteger := VendorNumIn;
-  tblStartBucket.FieldByName('CrewMemberID').AsString         := 'DOM_processing';
+  tblStartBucket.FieldByName('CrewMemberID').AsString         := DataSourceIn;
   tblStartBucket.Post;
 
 end;
