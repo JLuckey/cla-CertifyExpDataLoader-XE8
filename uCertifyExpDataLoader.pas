@@ -1223,13 +1223,13 @@ begin
   qryLoadTripData.SQL.Append('  AND certify_department IN ( ' + CalcInClause(gloFlightCrewGroup) + ' )' );                    // build IN clause
   qryLoadTripData.SQL.Append('  AND not (paycom_assigned_ac = ' + QuotedStr('') + ' or paycom_assigned_ac is null ) ');       // assigned_ac field not blank
   qryLoadTripData.SQL.Append('  AND termination_date IS NULL' );                                                              // only currently employed people
-  ShowMessage(qryLoadTripData.SQL.Text);
+//  ShowMessage(qryLoadTripData.SQL.Text);
   DataSource1.DataSet := qryLoadTripData;
   qryLoadTripData.Open;
 
   WriteToStartBucket(qryLoadTripData, 'paycom_assigned_ac');
   WriteToStartBucket(qryLoadTripData, 'paycom_assigned_ac_2');
-//  qryLoadTripData.Close;
+  qryLoadTripData.Close;
 
 end;  { LoadTripsIntoStartBucket }
 
