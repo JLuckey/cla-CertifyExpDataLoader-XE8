@@ -204,7 +204,7 @@ type
 
   private
     Procedure Main();
-    Procedure ImportPayrollData(Const BatchTimeIn : TDateTime);
+    Procedure ImportPaycomData(Const BatchTimeIn : TDateTime);
     Procedure InsertIntoHistoryTable(Const slInputFileRec: TStringList; BatchTimeIn: TDateTime);
     Procedure BuildEmployeeFile(Const BatchTimeIn: TDateTime)  ;
     Procedure WriteToCertifyEmployeeFile(Const BatchTimeIn: TDateTime)   ;
@@ -293,7 +293,7 @@ type
     Procedure Process_NewHire_Employees_FlightCrew(Const BatchTimeIn: TDateTime);
 
     // 10 Jul 2019
-    Procedure WriteToStartBucket(DataSetIn: TUniQuery);
+    Procedure WriteToStartBucket(DataSetIn: TUniQuery; FieldNameIn: String);
 
 
 
@@ -455,7 +455,7 @@ end;  { HourlyPushMain }
 procedure TufrmCertifyExpDataLoader.LoadData(Const BatchTimeIn: TDateTime);
 begin
 
-  ImportPayrollData(BatchTimeIn);               // rec status: imported or error
+  ImportPaycomData(BatchTimeIn);               // rec status: imported or error
 
   LoadTripsIntoStartBucket(BatchTimeIn);
 
@@ -553,6 +553,7 @@ end;
 procedure TufrmCertifyExpDataLoader.btnMainClick(Sender: TObject);
 begin
   Main;
+
 
 end;
 
@@ -971,7 +972,7 @@ begin
 end;
 
 
-procedure TufrmCertifyExpDataLoader.ImportPayrollData(Const BatchTimeIn : TDateTime);  // rename to PayCom instead of Payroll ???JL
+procedure TufrmCertifyExpDataLoader.ImportPaycomData(Const BatchTimeIn : TDateTime);
 var
   FileIn: TextFile;
   sl : TStringList;
@@ -1063,11 +1064,12 @@ Paycom file columns:
     tblPaycomHistory.FieldByName('paycom_approver1_email').AsString := slInputFileRec[11];
     tblPaycomHistory.FieldByName('paycom_approver2_email').AsString := slInputFileRec[12];
     tblPaycomHistory.FieldByName('paycom_assigned_ac').AsString     := slInputFileRec[13];
+    tblPaycomHistory.FieldByName('paycom_assigned_ac_2').AsString   := slInputFileRec[14];
     tblPaycomHistory.FieldByName('record_status').AsString          := recStatus ;
     tblPaycomHistory.FieldByName('status_timestamp').AsDateTime     := BatchTimeIn;
     tblPaycomHistory.FieldByName('imported_on').AsDateTime          := BatchTimeIn;
     tblPaycomHistory.FieldByName('data_source').AsString            := 'paycom_file';
-    tblPaycomHistory.FieldByName('hire_date').AsString              := slInputFileRec[14];
+    tblPaycomHistory.FieldByName('hire_date').AsString              := slInputFileRec[15];
     tblPaycomHistory.post;
 
   except on E: Exception do begin
@@ -1197,29 +1199,37 @@ begin
   qryGetAirCrewVendorNum.Execute;
 
 
-  // Load default crew & tail pairs regardless of whether any trips flown recently. per  Phase3 Tasks & Estimates item #4    15May2019
-  qryLoadTripData.SQL.Append('INSERT INTO CertifyExp_Trips_StartBucket (CrewMemberVendorNum, TailNum, CrewMemberID)');
-  qryLoadTripData.SQL.Append('SELECT DISTINCT VendorNumber, AssignedAC, ' + QuotedStr('DefaultCrewTail') );
-  qryLoadTripData.SQL.Append('FROM [Warehouse].[dbo].[QuoteSys_PilotMaster] ' );
-  qryLoadTripData.SQL.Append('WHERE AssignedAC   LIKE ' + QuotedStr('N%'));                           // Valid Tail Numbers begin w/ N ...
-  qryLoadTripData.SQL.Append('  AND AssignedAC   NOT IN (' + QuotedStr( 'NORDSTROM' ) + ', ' + QuotedStr('NORDSTROMS') + ')' );  // ... except for a few goofy records
-  qryLoadTripData.SQL.Append('  AND VendorNumber IS NOT NULL' );                                      // Need to have Vendor Number
-  qryLoadTripData.SQL.Append('  AND ArchiveFlag  IS NULL' );                                          // Get only non-terminated flight crew
-  qryLoadTripData.Execute;
+//  // Load default crew & tail pairs regardless of whether any trips flown recently. per  Phase3 Tasks & Estimates item #4    15May2019
+//  qryLoadTripData.SQL.Append('INSERT INTO CertifyExp_Trips_StartBucket (CrewMemberVendorNum, TailNum, CrewMemberID)');
+//  qryLoadTripData.SQL.Append('SELECT DISTINCT VendorNumber, AssignedAC, ' + QuotedStr('DefaultCrewTail') );
+//  qryLoadTripData.SQL.Append('FROM [Warehouse].[dbo].[QuoteSys_PilotMaster] ' );
+//  qryLoadTripData.SQL.Append('WHERE AssignedAC   LIKE ' + QuotedStr('N%'));                           // Valid Tail Numbers begin w/ N ...
+//  qryLoadTripData.SQL.Append('  AND AssignedAC   NOT IN (' + QuotedStr( 'NORDSTROM' ) + ', ' + QuotedStr('NORDSTROMS') + ')' );  // ... except for a few goofy records
+//  qryLoadTripData.SQL.Append('  AND VendorNumber IS NOT NULL' );                                      // Need to have Vendor Number
+//  qryLoadTripData.SQL.Append('  AND ArchiveFlag  IS NULL' );                                          // Get only non-terminated flight crew
+//  qryLoadTripData.Execute;
 
 
-  //  T&E-25  Adding default crew_tail recs for employees
+  //  T&E-25  Adding default crew_tail recs for employees & T&E:25b
+(*
+ D 1. import new field from paycom_employees.csv
+   2. run WriteToStartBucket twice w/ field name as param
+ D 3. add paycom_assigned_ac_2 field to PaycomHistory table
+*)
   qryLoadTripData.SQL.Clear;
-  qryLoadTripData.SQL.Append('SELECT certify_gp_vendornum, certify_department, certfile_group, paycom_assigned_ac');
+  qryLoadTripData.SQL.Append('SELECT certify_gp_vendornum, certify_department, certfile_group, paycom_assigned_ac, paycom_assigned_ac_2');
   qryLoadTripData.SQL.Append('FROM CertifyExp_PaycomHistory' );
   qryLoadTripData.SQL.Append('WHERE imported_on = ' + QuotedStr(FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', BatchTimeIn) ) );   // get current Batch
-  qryLoadTripData.SQL.Append('  AND certfile_group IN ( ' + CalcInClause(gloFlightCrewGroup) + ' )' );                        // build IN clause
+  qryLoadTripData.SQL.Append('  AND certify_department IN ( ' + CalcInClause(gloFlightCrewGroup) + ' )' );                    // build IN clause
   qryLoadTripData.SQL.Append('  AND not (paycom_assigned_ac = ' + QuotedStr('') + ' or paycom_assigned_ac is null ) ');       // assigned_ac field not blank
   qryLoadTripData.SQL.Append('  AND termination_date IS NULL' );                                                              // only currently employed people
+  ShowMessage(qryLoadTripData.SQL.Text);
+  DataSource1.DataSet := qryLoadTripData;
   qryLoadTripData.Open;
 
-  WriteToStartBucket(qryLoadTripData);
-  qryLoadTripData.Close;
+  WriteToStartBucket(qryLoadTripData, 'paycom_assigned_ac');
+  WriteToStartBucket(qryLoadTripData, 'paycom_assigned_ac_2');
+//  qryLoadTripData.Close;
 
 end;  { LoadTripsIntoStartBucket }
 
@@ -1228,9 +1238,9 @@ end;  { LoadTripsIntoStartBucket }
 // The data is a little goofy here.
 //   The assigned_ac field (in the PaycomHistory table) can contain multiple aircraft separated by '/'
 //    like this:  'N880JM/N4D/N8241W/N345CL' or just a single aircraft: 'N880MJ'
-// This code creates a new record in the StartBucket table for each crew_member (identified by VendorNum), tail combination
+// This code creates a new record in the StartBucket table for each crew_member, tail combination (crew_member identified by VendorNum)
 //                                                                                       - 10 Jul 2019  JL, Jeff@dcsit.com
-procedure TufrmCertifyExpDataLoader.WriteToStartBucket(DataSetIn: TUniQuery);
+procedure TufrmCertifyExpDataLoader.WriteToStartBucket(DataSetIn: TUniQuery; FieldNameIn: String);
 var
   stlAssignedAC : TStringList;
   i : Integer;
@@ -1240,10 +1250,12 @@ begin
   stlAssignedAC := TStringList.Create;
   try
     stlAssignedAC.Delimiter := '/';
+    stlAssignedAC.StrictDelimiter := true;      { tell stringList to not use space as delimeter }
 
+    DataSetIn.First;
     while not DataSetIn.eof do begin
       stlAssignedAC.Clear;
-      stlAssignedAC.DelimitedText := DataSetIn.fieldByName('paycom_assigned_ac').AsString;   // parse multiple tails (if any) into StringList
+      stlAssignedAC.DelimitedText := DataSetIn.fieldByName(FieldNameIn).AsString;   // parse multiple tails (if any) into StringList
 
       for i := 0 to stlAssignedAC.Count - 1 do begin
         InsertCrewTail(stlAssignedAC[i], DataSetIn.FieldByName('certify_gp_vendornum').AsInteger, 'DefaultCrewTail');   // Writes to tblStartBucket
