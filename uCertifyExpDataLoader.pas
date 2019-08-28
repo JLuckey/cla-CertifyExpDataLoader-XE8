@@ -303,7 +303,7 @@ type
     Function  GetTimeFromDBServer(): TDateTime;
     Function  RecIsValid(Const TimeStampIn:TDateTime): Boolean ;
 
-    Function  CalcPilotName: String;
+    Function  CalcPilotName(SourceQueryIn: TUniQuery): String;
     Function  CalcDeptDescrip: String;
     Function  ScrubFARPart(Const FarPartIn: String): String;
     Function  ScrubCertifyDept(Const DepartmentIn : String) : String;
@@ -1978,6 +1978,8 @@ end;  { DeleteTrips() }
 
 procedure TufrmCertifyExpDataLoader.AddContractorsNotInPaycom(Const BatchTimeIn: TDateTime);
 begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Adding Contractors to PaycomHistory table ' ;
+  Application.ProcessMessages;
 
   qryPurgeWorkingTable.Execute;
 
@@ -2021,6 +2023,9 @@ procedure TufrmCertifyExpDataLoader.Process_NewHire_Contractors(const BatchTimeI
 begin
   gloNewHireDummyQuoteNum := 818181;     // a random but distinctive number for new Contractors
 
+  StatusBar1.Panels[1].Text := 'Current Task:  Processing New Hire Contractors' ;
+  Application.ProcessMessages;
+
   tblPaycomHistory.Open;
 
   (*
@@ -2051,6 +2056,9 @@ end;  { ProcessNewHireContractors }
 
 procedure TufrmCertifyExpDataLoader.Process_NewHire_Employees_FlightCrew(const BatchTimeIn: TDateTime);
 begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Processing New Hire Employees' ;
+  Application.ProcessMessages;
+
   gloNewHireDummyQuoteNum := 828282;
 
   qryGetFlightCrewNewHire.Close;    // contains definition of Flight Crew; refactor to pull that definition up & store in one place  ???JL  13 Jun 2019
@@ -2090,10 +2098,10 @@ begin
 
   tblPaycomHistory.Insert;
   tblPaycomHistory.FieldByName('employee_code').AsString           := 'contractor';     // should we use parameter to signify Contractor New Hire  ???JL
-  tblPaycomHistory.FieldByName('employee_name').AsString           := CalcPilotName;
+  tblPaycomHistory.FieldByName('employee_name').AsString           := CalcPilotName(SourceQry);
   tblPaycomHistory.FieldByName('work_email').AsString              := SourceQry.FieldByName('EMail').AsString;
   tblPaycomHistory.FieldByName('position').AsString                := SourceQry.FieldByName('JobTitle').AsString;
-  tblPaycomHistory.FieldByName('department_descrip').AsString      := CalcDeptDescrip ;
+  tblPaycomHistory.FieldByName('department_descrip').AsString      := 'Designated-' + SourceQry.FieldByName('AssignedAC').AsString ;  //CalcDeptDescrip ;
   tblPaycomHistory.FieldByName('job_code_descrip').AsString        := 'Pilot-Designated' ;
   tblPaycomHistory.FieldByName('supervisor_primary_code').AsString := '';
   tblPaycomHistory.FieldByName('certify_gp_vendornum').AsInteger   := SourceQry.FieldByName('VendorNumber').AsInteger;
@@ -2135,9 +2143,10 @@ begin
 end;
 
 
-function TufrmCertifyExpDataLoader.CalcPilotName: String;
+function TufrmCertifyExpDataLoader.CalcPilotName(SourceQueryIn: TUniQuery): String;
 begin
-  Result := qryGetPilotDetails.FieldByName('LastName').AsString + ',' + qryGetPilotDetails.FieldByName('FirstName').AsString
+  Result := SourceQueryIn.FieldByName('LastName').AsString + ',' + SourceQueryIn.FieldByName('FirstName').AsString  ;
+//  Result := qryGetPilotDetails.FieldByName('LastName').AsString + ',' + qryGetPilotDetails.FieldByName('FirstName').AsString
 
 end;
 
@@ -2354,6 +2363,9 @@ var
   i : Integer;
 
 begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Loading CharterVisa into StartBucket ' ;
+  Application.ProcessMessages;
+
   stlCharterVisaUsers           := TStringList.Create;
   stlCharterVisaUsers.CommaText := edCharterVisaUsers.Text;       // comma-seperated string of Vendor Numbers for CharterVisa Group
   try
@@ -2485,8 +2497,8 @@ begin
   qryFindLeadPilotEmail.Open;
   LeadPilotEMail := qryFindLeadPilotEMail.FieldByName('EMail').AsString;
 
-  if (qryFindLeadPilotEmail.RecordCount > 0) and (LeadPilotEMail <> '' ) then begin            // If LeadPilot not found
-    if Not EmployeeTerminated(LeadPilotEMail, BatchTimeIn) then                                //   If LeadPilot is terminated
+  if (qryFindLeadPilotEmail.RecordCount > 0) and (LeadPilotEMail <> '' ) then begin            // If LeadPilot found
+    if Not EmployeeTerminated(LeadPilotEMail, BatchTimeIn) then                                //   If LeadPilot is not terminated
       Result := LeadPilotEMail
     else begin
       FlagRecordAsError('warning', 'Lead Pilot: ' + LeadPilotEMail + ' terminated');
@@ -2501,8 +2513,11 @@ end;  { FindLeadPilot }
 
 function TufrmCertifyExpDataLoader.EmployeeTerminated(const EMailIn: String; ImportDateIn: TDateTime): Boolean;
 begin
-
   Result := False;
+
+  If LowerCase(EmailIn) = 'flightcrewcc@claylacy.com' then begin      // Special case logic for this email address, skip the employee-terminated test & return False
+    Exit;
+  end;
 
   qryGetTerminationDate.Close;
   qryGetTerminationDate.ParamByName('parmEMail').AsString        := EMailIn;
