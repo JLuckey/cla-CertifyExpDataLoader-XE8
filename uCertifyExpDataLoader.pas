@@ -347,18 +347,36 @@ implementation
 {$R *.dfm}
 
 procedure TufrmCertifyExpDataLoader.FormCreate(Sender: TObject);
+var
+  iniFileName : String;
+
 begin
-  myIni := TIniFile.Create( ExtractFilePath(ParamStr(0)) + 'CertifyExpDataLoader.ini' );
+  iniFileName := ExtractFilePath(ParamStr(0)) + 'CertifyExpDataLoader.ini';
+
+  if not FileExists(iniFileName) then Begin
+    LogIt('Error from FormCreate(): .ini file (' + iniFileName + ') not found!!');
+    MessageDlg( 'Ini File is missing! ' + #13 + 'Cannot find: ' + #13 + iniFileName, mtError, [mbOK], 0);
+    Exit;
+  End;
+
+  myIni := TIniFile.Create( iniFileName );
 
   ConnectToDB;
 
+  // Initialize form fields from ini
   edPayComInputFile.Text  := myIni.ReadString('Startup', 'PaycomFileName',   '') ;
   edOutputFileName.Text   := myIni.ReadString('Startup', 'CertifyEmployeeFileName', '') ;
   edOutputDirectory.Text  := myIni.ReadString('Startup', 'OutputDirectory', '') ;
   edSpecialUsersFile.Text := myIni.ReadString('Startup', 'SpecialUsersFileName', '') ;
+  edCharterVisaUsers.Text := myIni.ReadString('Startup', 'CharterVisaVendorNumbers', '') ;
+
+  edDaysBack.Text           := myIni.ReadString('Startup', 'EmployeeFlightCrewDaysBack', '') ;
+  edContractorDaysBack.Text := myIni.ReadString('Startup', 'ContractFlightCrewDaysBack', '') ;
+  edLastNTrips.Text         := myIni.ReadString('Startup', 'MostRecentTripCount', '') ;
+  edTerminatedDaysBack.Text := myIni.ReadString('Startup', 'TerminatedEmployeeGracePeriodDays', '') ;
+
 
   //  ShowMessage(ParamStr(1));
-//  if ParamStr(1) = '-autorun' then begin
   if ParamStr(1) = '-hourly' then begin
     StatusBar1.Panels[2].Text := '*AutoRun: Hourly, Active';
     Self.Show;
@@ -385,6 +403,8 @@ var
 
 begin
   BatchTime := GetTimeFromDBServer;
+
+  PruneHistoryTables('CertifyExp_PaycomHistory');
 
   LoadData(BatchTime);
 
@@ -418,9 +438,9 @@ begin
   LoadData(BatchTime);                         // loads data into StartBucket & PaycomHistory tables
 
   gloPusher := TfrmPushToCertify.Create(self);
-  gloPusher.theBaseURL := 'https://api.certify.com/v1/exprptglds';
-  gloPusher.APIKey     := 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv' ;
-  gloPusher.APISecret  := '4843793A-6326-4F92-86EB-D34070C34CDC' ;
+  gloPusher.theBaseURL := myIni.ReadString('CertifyAPI', 'BaseURL', '');    // 'https://api.certify.com/v1/exprptglds';
+  gloPusher.APIKey     := myIni.ReadString('CertifyAPI', 'APIKey', '');     // 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv' ;
+  gloPusher.APISecret  := myIni.ReadString('CertifyAPI', 'APISecret', '');  // '4843793A-6326-4F92-86EB-D34070C34CDC' ;
 
   // crew_tail
   PruneHistoryTables('CrewTail');
@@ -482,7 +502,6 @@ begin
     Load_IFS_IntoStartBucket(BatchTimeIn);
 
   FilterTripsByCount;                           // removes selected recs from StartBucket
-
 
 end;  { LoadData() }
 
@@ -582,12 +601,10 @@ begin
                 E.ClassName + '; ' +
                 E.Message ;
 
-//    LogIt(errorMsg);
-    MessageDlg(errorMsg, mtError, [mbOK], 0);
+    LogIt(errorMsg);
     StatusBar1.Panels[0].Text :=  'DB: Error!' ;
-
-    Raise;
-  end;
+//   Raise;
+    end;
   end;
 
   StatusBar1.Panels[0].Text :=  'DB: ' + UniConnection1.Database;
@@ -612,7 +629,7 @@ begin
 
   BuildTailTripLogFile;
 
-  BuildTripAccountantFile(TargetDirectory + 'trip_accountant.csv');
+//  BuildTripAccountantFile(TargetDirectory + 'trip_accountant.csv');
 
   // Build Trip/Stop records
   scrLoadTripStopData.Execute;    // puts recs into working table CertifyExp_TripStop_Step1
@@ -989,6 +1006,7 @@ begin
   Reset(FileIn);
   tblPayComHistory.open;
 
+  Readln(FileIn, s);            // skip the first line of the file which is the field names header, not data
   while not Eof(FileIn) do begin
     Readln(FileIn, s);
     sl.CommaText := s;
@@ -1560,17 +1578,9 @@ procedure TufrmCertifyExpDataLoader.BuildCrewTailFile(Const CurrBatchTimeIn: TDa
 Var
   RowOut : String;
   WorkFile : TextFile;
-//  CurrentBatchDateTime : TDateTime;
 
 begin
-//  qryBuildValFile.Close;
-//  qryBuildValFile.SQL.Clear;
-//  qryBuildValFile.SQL.Add('select TailNumber, CrewMemberVendorNum ');
-//  qryBuildValFile.SQL.Add('from CertifyExp_CrewTail_History ');
-//  qryBuildValFile.SQL.Add('where CrewMemberVendorNum is not null and TailNumber is not null ');
-//  qryBuildValFile.SQL.Add('  and CrewMemberVendorNum > 0 and CreatedOn =  ' + QuotedStr(DateTimeToStr(CurrentBatchDateTime))) ;
-//  qryBuildValFile.Open ;
-
+  StatusBar1.Panels[1].Text := 'Current Task:  Writing crew_tail.csv'  ;
 
   qryBuildValFile.Close;
   qryBuildValFile.SQL.Clear;
@@ -1946,11 +1956,6 @@ end;  { FindPilotsNotInPaycom }
 procedure TufrmCertifyExpDataLoader.DeleteTrip(const LogSheetIn, QuoteNumIn: Integer; CrewMemberIDIn : String);
 begin
 
-//  LogIt('LogSheet: '  + IntToStr(LogSheetIn) + '; ' +
-//        'TripNum: '   + IntToStr(QuoteNumIn) + '; ' +
-//        'VendorNum: ' + qryGetStartBucketSorted.FieldByName('CrewMemberVendorNum').AsString + '; ' +
-//        'TailNum: '   + qryGetStartBucketSorted.FieldByName('TailNum').AsString );
-
   qryDeleteTrips.Close;
   qryDeleteTrips.ParamByName('parmLogSheetIn').AsInteger     := LogSheetIn;
   qryDeleteTrips.ParamByName('parmCrewMemberIDIn').AsString  := CrewMemberIDIn;
@@ -2174,7 +2179,7 @@ begin
   myMessage.Subject      := 'CLA Certify Data Loader Status Report';
   myMessage.From.Address := 'CertifyDataLoader@claylacy.com';
   myMessage.Body.Text    := 'See attached files for Employee processing errors and uploaded data files:' ;
-  myMessage.Recipients.EMailAddresses := myIni.ReadString('OutputFiles', 'EMailRecipientList', '');   //jeff@dcsit.com,jluckey@pacbell.net';   //,thomasfduffy@gmail.com';
+  myMessage.Recipients.EMailAddresses := myIni.ReadString('OutputFiles', 'EMailRecipientList', '');
 
   //  Load Attachments
   OutPutFileDir  := edOutputDirectory.Text;          // myIni.ReadString('OutputFiles', 'OutputFileDir', '');
@@ -2191,16 +2196,16 @@ begin
     TIDAttachmentFile.Create(myMessage.MessageParts, gloPaycomErrorFile );
 
   mySMTP := TIdSMTP.Create(nil);
-  mySMTP.Host     := '192.168.1.73';
-  mySMTP.Username := 'tkvassay@claylacy.com';
-  mySMTP.Password := '';
+  mySMTP.Host     := myIni.ReadString('Startup', 'EmailServer', '192.168.1.73') ;
+  mySMTP.Username := myIni.ReadString('Startup', 'EmailServerLogin', 'tkvassay@claylacy.com') ;
+  mySMTP.Password := myIni.ReadString('Startup', 'EmailServerLoginPW', '') ;
 
   Try
     mySMTP.Connect;
     mySMTP.Send(myMessage);
 //    mySMTP.Disconnect();
   Except on E:Exception Do
-    //ShowMessage( 'Email Error: ' + E.Message);   need to log this
+    LogIt('Email Error: ' + E.Message);
   End;
 
   mySMTP.free;
@@ -2367,6 +2372,8 @@ begin
   Application.ProcessMessages;
 
   stlCharterVisaUsers           := TStringList.Create;
+
+  // this field initialized in "Initialize form fields from ini" section of FormCreate()
   stlCharterVisaUsers.CommaText := edCharterVisaUsers.Text;       // comma-seperated string of Vendor Numbers for CharterVisa Group
   try
     for i := 0 to stlCharterVisaUsers.Count - 1 do Begin
@@ -2515,9 +2522,12 @@ function TufrmCertifyExpDataLoader.EmployeeTerminated(const EMailIn: String; Imp
 begin
   Result := False;
 
-  If LowerCase(EmailIn) = 'flightcrewcc@claylacy.com' then begin      // Special case logic for this email address, skip the employee-terminated test & return False
+  // Special case logic for this email address; skip the employee-terminated test & return False
+  if Pos(LowerCase(EMailIn), 'flightcrew@claylacy.com|flightcrewcc@claylacy.com') > 0 then begin
+    LogIt('EmployeeTerminated() Skipped Email: ' + EMailIn);
     Exit;
   end;
+
 
   qryGetTerminationDate.Close;
   qryGetTerminationDate.ParamByName('parmEMail').AsString        := EMailIn;
@@ -2810,14 +2820,26 @@ Var
   strTableName : String;
 
 begin
-  strTableName := 'CertifyExp_' + TableNameIn + '_History' ;    // must match table name exactly
-  strDaysBack  := '3';                                       // for performance reasons, keep only the last 3 days of data (and for T/S purposes)
-                                                             //   (the more records in these tables the slower the 'NOT IN' queries run)
-  qryPruneHistoryTables.SQL.Clear;
-  qryPruneHistoryTables.SQL.Add( ' delete from ' + strTableName );
-  qryPruneHistoryTables.SQL.Add( ' where CreatedOn < CAST(CURRENT_TIMESTAMP - ' + strDaysBack + ' AS DATE) ' );
-  qryPruneHistoryTables.Execute;
 
+  if TableNameIn = 'CertifyExp_PaycomHistory' then Begin
+    strDaysBack := myIni.ReadString('Startup', 'RetainPaycomHistoryDays',  '') ;
+
+    qryPruneHistoryTables.SQL.Clear;
+    qryPruneHistoryTables.SQL.Add( ' delete from CertifyExp_PaycomHistory ' );
+    qryPruneHistoryTables.SQL.Add( ' where imported_on < CAST(CURRENT_TIMESTAMP - ' + strDaysBack + ' AS DATE) ' );
+    qryPruneHistoryTables.Execute;
+
+  End Else Begin
+
+    strTableName := 'CertifyExp_' + TableNameIn + '_History' ;    // must match table name exactly
+    strDaysBack  := '3';                                          // for performance reasons, keep only the last 3 days of data (and for T/S purposes)
+                                                                  //   (the more records in these tables the slower the 'NOT IN' queries run)
+    qryPruneHistoryTables.SQL.Clear;
+    qryPruneHistoryTables.SQL.Add( ' delete from ' + strTableName );
+    qryPruneHistoryTables.SQL.Add( ' where CreatedOn < CAST(CURRENT_TIMESTAMP - ' + strDaysBack + ' AS DATE) ' );
+    qryPruneHistoryTables.Execute;
+
+  End;
 end;  { PruneHistoryTables }
 
 
@@ -2835,45 +2857,12 @@ begin
   myLog.WriteString(YearMonth, FormatDateTime('yyyy-mm-dd hh:nn:ss', Now()), ErrorMsgIn) ;
 
   // prune log file - purge log entries older than 180 days
-  TargetDate := Now() - 60;
+  TargetDate := Now() - 180;
   TargetYearMonth := IntToStr(YearOf(TargetDate)) + '-' + IntToStr(MonthOf(TargetDate));
   if myLog.SectionExists(TargetYearMonth) Then
     myLog.EraseSection(TargetYearMonth);
 
 end;  { LogIt }
-
-
-(*
-Old/Obsolete code
-
-procedure TufrmCertifyExpDataLoader.CalcSQLForQryGetPilotDetails(const QryKind: String);
-begin
-  qryGetPilotDetails.SQL.Clear;
-  qryGetPilotDetails.SQL.Add('select PilotID,LastName,FirstName,VendorNumber,UpdatedInQuoteSys,UpdatedBy,Base,ArchiveFlag,JobTitle,EmployeeStatus,Status,EMail,AssignedAC ');
-  qryGetPilotDetails.SQL.Add('from QuoteSys_PilotMaster ');
-
-  if QryKind = 'FlownRecent' then
-    qryGetPilotDetails.SQL.Add('where PilotID in (select PilotID from CertifyExp_Contractors45) ')
-
-  else if QryKind = 'NewHireContractor' then begin       // Refactor!! we have definition of contractor here & in qryContractorsNotInPaycom should only be 1 place   ???JL
-    qryGetPilotDetails.SQL.Add('where EmployedOn > (CURRENT_TIMESTAMP - 45) ') ;  // param for days back?   ???JL
-    qryGetPilotDetails.SQL.Add('  and Status         in ( ' + QuotedStr('Agent of CLA') + ',' + QuotedStr('Cabin Server') + ',' + QuotedStr('Parttime - CLA') + ' ) ') ;  // Definition of "Contractor"
-    qryGetPilotDetails.SQL.Add('  and EmployeeStatus in ( ' + QuotedStr('Part 91') + ',' + QuotedStr('Part 135') + ',' + QuotedStr('Cabin Serv') + ') ' );       // Definition of "Contractor"
-
-  end else
-    ShowMessage('CalcSQLForQryGetPilotDetails(): Unknown Value for param QryKind: ' + QryKind);
-
-//  ShowMessage(QryKind + #13 + qryGetPilotDetails.SQL.Text);        // debugging code
-
-end;  { CalcSQLForQryGetPilotDetails }
-
-
-
-
-
-*)
-
-
 
 
 

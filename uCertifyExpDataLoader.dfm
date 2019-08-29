@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'Certify Data Loader - Phase(SOW) 3, ver 1.8'
+  Caption = 'Certify Data Loader - ver 2.0'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -187,7 +187,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Top = 304
     Width = 99
     Height = 25
-    Caption = 'btnMain'
+    Caption = 'Run Nightly'
     TabOrder = 3
     OnClick = btnMainClick
   end
@@ -250,7 +250,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Top = 304
     Width = 88
     Height = 25
-    Caption = 'btnGoHourly'
+    Caption = 'Run Hourly'
     TabOrder = 10
     OnClick = btnGoHourlyClick
   end
@@ -261,7 +261,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Height = 21
     Alignment = taRightJustify
     TabOrder = 11
-    Text = '12779,14220'
+    Text = '11930,12779,14220'
   end
   object edTailLeadPilotFile: TEdit
     Left = 257
@@ -301,15 +301,13 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 152
     Height = 21
     TabOrder = 15
-    Text = 'edNewDate'
   end
   object edPreviousDate: TEdit
-    Left = 356
+    Left = 361
     Top = 429
     Width = 158
     Height = 21
     TabOrder = 16
-    Text = 'edPreviousDate'
   end
   object btnFixer: TButton
     Left = 633
@@ -1043,26 +1041,11 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'where ( (departure < CURRENT_TIMESTAMP)        and (arrival > CU' +
         'RRENT_TIMESTAMP) )   -- in-progress'
       
-        '   OR ( (departure > (CURRENT_TIMESTAMP - 30)) and (arrival < CU' +
-        'RRENT_TIMESTAMP) )   -- ended within the past 10 days'
-      ''
-      '/*'
-      
-        'select distinct L.logsheet, '#39'CharterVisa'#39', T.QUOTENO, L.acregno,' +
-        ' null, :parmCrewMemberVendorNum, null'
-      
-        'from QuoteSys_TripLeg L LEFT OUTER JOIN QuoteSys_Trip T ON L.ACR' +
-        'EGNO = T.ACREGNO AND L.LOGSHEET = T.LOGSHEET'
-      
-        'where ( (departure < '#39'2019-03-25 22:15:00'#39')        and (arrival ' +
-        '> '#39'2019-03-25 22:15:00'#39') )   -- in-progress'
-      
-        '   OR ( (departure > ('#39'2019-03-13 22:14:00'#39')) and (arrival < '#39'20' +
-        '19-03-25 22:15:00'#39') )   -- ended within the past 10 days'
-      ''
-      '*/')
+        '   OR ( (departure > (CURRENT_TIMESTAMP - 90)) and (arrival < CU' +
+        'RRENT_TIMESTAMP) )   -- ended within the past 90 days'
+      '')
     Left = 120
-    Top = 242
+    Top = 241
     ParamData = <
       item
         DataType = ftUnknown
