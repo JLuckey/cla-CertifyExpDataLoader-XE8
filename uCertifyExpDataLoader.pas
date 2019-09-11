@@ -235,6 +235,7 @@ type
 
     Procedure ConnectToDB();
     Procedure SendStatusEmail;
+    Procedure SendErrorViaEmail(Const ErrorMsgIn: String);
     Procedure CreateEmployeeErrorReport(Const BatchTimeIn : TDateTime) ;
 
     Procedure AppendSpecialUsers(Const FileToAppend: TextFile);
@@ -355,6 +356,7 @@ begin
 
   if not FileExists(iniFileName) then Begin
     LogIt('Error from FormCreate(): .ini file (' + iniFileName + ') not found!!');
+    SendErrorViaEmail('Cannot Find ini file: ' + iniFileName);
     MessageDlg( 'Ini File is missing! ' + #13 + 'Cannot find: ' + #13 + iniFileName, mtError, [mbOK], 0);
     Exit;
   End;
@@ -2212,6 +2214,38 @@ begin
   myMessage.Free;
 
 end;  { SendStatusEmail }
+
+
+procedure TufrmCertifyExpDataLoader.SendErrorViaEmail(const ErrorMsgIn: String);
+Var
+  mySMTP    : TIdSMTP;
+  myMessage : TIDMessage;
+
+begin
+  myMessage := TIdMessage.Create(nil);
+  myMessage.Subject      := 'CLA Certify Data Loader - Error!!';
+  myMessage.From.Address := 'CertifyDataLoader@claylacy.com';
+  myMessage.Body.Text    := ErrorMsgIn ;
+  myMessage.Recipients.EMailAddresses := 'Jeff@dcsit.com,TKallo@claylacy.com,LTaylor@ClayLacy.com,DLittlefield@ClayLacy.com' ;
+
+  //  Hard-coding params because the error being trapped is 'cannot find .ini file' which contains these params
+  mySMTP := TIdSMTP.Create(nil);
+  mySMTP.Host     :=  '192.168.1.73' ;
+  mySMTP.Username :=  'tkvassay@claylacy.com' ;
+  mySMTP.Password :=  '' ;
+
+  Try
+    mySMTP.Connect;
+    mySMTP.Send(myMessage);
+  Except on E:Exception Do
+    LogIt('Email Error: ' + E.Message);
+  End;
+
+  mySMTP.free;
+  myMessage.Free;
+
+end;  { SendErrorViaEmail }
+
 
 
 procedure TufrmCertifyExpDataLoader.CreateEmployeeErrorReport(Const BatchTimeIn : TDateTime);
