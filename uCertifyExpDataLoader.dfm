@@ -374,8 +374,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '    AND imported_on = :parmImportDateIn'
       ''
       '')
-    Left = 214
-    Top = 183
+    Left = 215
+    Top = 161
     ParamData = <
       item
         DataType = ftUnknown
@@ -634,8 +634,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'where QuoteNum is not null'
       '  and CrewMemberVendorNum is not null'
       '  and FarPart is not null')
-    Left = 201
-    Top = 226
+    Left = 206
+    Top = 216
   end
   object scrLoadTripStopData: TUniScript
     SQL.Strings = (
