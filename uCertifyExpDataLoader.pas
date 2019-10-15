@@ -175,18 +175,15 @@ type
     DataSource1: TDataSource;
     DBGrid1: TDBGrid;
     qryGetCrewTailRecs: TUniQuery;
-    qryUpdateRecStatus_CrewTail: TUniQuery;
     edNewDate: TEdit;
     edPreviousDate: TEdit;
     Label18: TLabel;
     Label19: TLabel;
-    qryUpdateRecStatus_CrewTrip: TUniQuery;
     qryGetCrewTripRecs: TUniQuery;
     qryInsertCrewTripHist: TUniQuery;
     qryGetCrewTripBatchDates: TUniQuery;
     qryInsertCrewLogHist: TUniQuery;
     qryGetCrewLogBatchDates: TUniQuery;
-    qryUpdateRecStatus_CrewLog: TUniQuery;
     qryGetCrewLogRecs: TUniQuery;
     btnFixer: TButton;
     qryPruneHistoryTables: TUniQuery;
@@ -195,6 +192,12 @@ type
     qryGetNewHireRecs: TUniQuery;
     qryGetFlightCrewNewHire: TUniQuery;
     qryGetNewContractors: TUniQuery;
+    qryUpdtStatus_CrewTrip_1: TUniQuery;
+    qryUpdtStatus_CrewTrip_2: TUniQuery;
+    qryUpdtStatus_CrewTail_1: TUniQuery;
+    qryUpdtStatus_CrewTail_2: TUniQuery;
+    qryUpdtStatus_CrewLog_1: TUniQuery;
+    qryUpdtStatus_CrewLog_2: TUniQuery;
 
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -270,7 +273,6 @@ type
     Procedure GetBatchDates_CrewTrip(Var PreviousBatchDateOut, NewBatchDateOut : TDateTime);
     Procedure GetBatchDates_CrewLog( Var PreviousBatchDateOut, NewBatchDateOut : TDateTime);
 
-    Procedure UpdateRecordStatus_CrewTail(Const RecStatusIn: String; Const NewBatchDateIn, PreviousBatchDateIn: TDateTime);
 
     Procedure LogIt(ErrorMsgIn: String);
 
@@ -278,8 +280,9 @@ type
     Procedure Do_CrewTrip_API(Const BatchTimeIn, PreviousBatchDateIn, NewBatchDateIn : TDateTime);
     Procedure Do_CrewLog_API(Const BatchTimeIn, PreviousBatchDateIn, NewBatchDateIn : TDateTime);
 
-    Procedure UpdateRecordStatus_CrewTrip(const RecStatusIn: String; const NewBatchDateIn, PreviousBatchDateIn: TDateTime);
-    Procedure UpdateRecordStatus_CrewLog(const RecStatusIn: String; const NewBatchDateIn, PreviousBatchDateIn: TDateTime);
+    Procedure UpdateRecordStatus_CrewTail(Const RecStatusIn: String; Const A_BatchDateIn, B_BatchDateIn: TDateTime);
+    Procedure UpdateRecordStatus_CrewTrip(const RecStatusIn: String; const A_BatchDateIn, B_BatchDateIn: TDateTime);
+    Procedure UpdateRecordStatus_CrewLog(const  RecStatusIn: String; const A_BatchDateIn, B_BatchDateIn: TDateTime);
 
     Procedure Load_CrewTail_HistoryTable(Const BatchTimeIn: TDateTime);
     Procedure Load_CrewTrip_HistoryTable(Const BatchTimeIn: TDateTime);
@@ -297,7 +300,7 @@ type
     // 10 Jul 2019
     Procedure WriteToStartBucket(DataSetIn: TUniQuery; FieldNameIn: String);
 
-
+    Procedure PurgeTable(Const TableNameIn: String);
 
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
@@ -509,7 +512,20 @@ end;  { LoadData() }
 
 
 procedure TufrmCertifyExpDataLoader.btnFixerClick(Sender: TObject);
+var
+  PreviousBatchDate, NewBatchDate : TDateTime;
+
 begin
+
+//  NewBatchDate      := StrToDateTime('10/10/2019 08:37:33.820');
+//  PreviousBatchDate := StrToDateTime('10/09/2019 15:58:32.200');
+
+//  PurgeTable('CertifyExp_CrewWork1');
+//  GetBatchDates_CrewLog(PreviousBatchDate, NewBatchDate);
+//  UpdateRecordStatus_CrewLog('added',   PreviousBatchDate, NewBatchDate );
+//  UpdateRecordStatus_CrewLog('deleted', NewBatchDate, PreviousBatchDate );
+
+
 
 {
   gloPusher := TfrmPushToCertify.Create(self);
@@ -1988,7 +2004,7 @@ begin
   StatusBar1.Panels[1].Text := 'Current Task:  Adding Contractors to PaycomHistory table ' ;
   Application.ProcessMessages;
 
-  qryPurgeWorkingTable.Execute;
+  PurgeTable('CertifyExp_Contractors45');
 
   // get Flight Crew that have flown in past X days but are not in Paycom
   qryContractorsNotInPaycom_Step1.ParamByName('parmImportDateIn').AsDateTime := BatchTimeIn;
@@ -2701,10 +2717,10 @@ begin
 
 
   //  Get Deleted recs from this new batch
-  StatusBar1.Panels[1].Text := 'Current Task:  Retrieving deleted CrewTrip_History recs'  ;
+  StatusBar1.Panels[1].Text := 'Current Task:  Retrieving deleted CrewLog_History recs'  ;
   Application.ProcessMessages;
 
-  UpdateRecordStatus_CrewTrip('deleted', NewBatchDateIn, PreviousBatchDateIn);
+  UpdateRecordStatus_CrewLog('deleted', NewBatchDateIn, PreviousBatchDateIn);
   qryGetCrewLogRecs.Close;
   qryGetCrewLogRecs.ParamByName('parmCreatedOnIn').AsDateTime := PreviousBatchDateIn;
   qryGetCrewLogRecs.ParamByName('parmRecStatusIn').AsString   := 'deleted';
@@ -2724,7 +2740,6 @@ end;  {Do_CrewLog_API}
 
 procedure TufrmCertifyExpDataLoader.SendToCertify(Const WorkingQueryIn: TUniQuery; Const BatchTimeIn : TDateTime; DataSetNameIn: String);
 begin
-
   StatusBar1.Panels[1].Text := 'Current Task:  Sending recs to Certify'  ;
   Application.ProcessMessages;
 
@@ -2754,35 +2769,50 @@ begin
 end;  { SendToCertify() }
 
 
-procedure TufrmCertifyExpDataLoader.UpdateRecordStatus_CrewTail(const RecStatusIn: String; const NewBatchDateIn, PreviousBatchDateIn: TDateTime);
+procedure TufrmCertifyExpDataLoader.UpdateRecordStatus_CrewTail(const RecStatusIn: String; const A_BatchDateIn, B_BatchDateIn: TDateTime);
 begin
-  qryUpdateRecStatus_CrewTail.close;
-  qryUpdateRecStatus_CrewTail.ParamByName('parmRecStatus').AsString   := RecStatusIn;
-  qryUpdateRecStatus_CrewTail.ParamByName('parmOlderDate').AsDateTime := PreviousBatchDateIn;
-  qryUpdateRecStatus_CrewTail.ParamByName('parmNewerDate').AsDateTime := NewBatchDateIn;
-  qryUpdateRecStatus_CrewTail.Execute;
+  PurgeTable('CertifyExp_CrewWork1');
+
+  qryUpdtStatus_CrewTail_1.Close;
+  qryUpdtStatus_CrewTail_1.ParamByName('parmCreateDate').AsDateTime := A_BatchDateIn;       // PreviousBatchDateIn;
+  qryUpdtStatus_CrewTail_1.Execute;   // puts data into working table CertifyExp_CrewWork1
+
+  qryUpdtStatus_CrewTail_2.Close;
+  qryUpdtStatus_CrewTail_2.ParamByName('parmCreateDate').AsDateTime := B_BatchDateIn;
+  qryUpdtStatus_CrewTail_2.ParamByName('parmNewStatus').AsString    := RecStatusIn;
+  qryUpdtStatus_CrewTail_2.Execute;   // uses working table created above
 
 end;
 
 
-procedure TufrmCertifyExpDataLoader.UpdateRecordStatus_CrewTrip(const RecStatusIn: String; const NewBatchDateIn, PreviousBatchDateIn: TDateTime);
+procedure TufrmCertifyExpDataLoader.UpdateRecordStatus_CrewTrip(const RecStatusIn: String; const A_BatchDateIn, B_BatchDateIn: TDateTime);
 begin
-  qryUpdateRecStatus_CrewTrip.close;
-  qryUpdateRecStatus_CrewTrip.ParamByName('parmRecStatus').AsString   := RecStatusIn;
-  qryUpdateRecStatus_CrewTrip.ParamByName('parmOlderDate').AsDateTime := PreviousBatchDateIn;
-  qryUpdateRecStatus_CrewTrip.ParamByName('parmNewerDate').AsDateTime := NewBatchDateIn;
-  qryUpdateRecStatus_CrewTrip.Execute;
+  PurgeTable('CertifyExp_CrewWork1');
 
-end;
+  qryUpdtStatus_CrewTrip_1.Close;
+  qryUpdtStatus_CrewTrip_1.ParamByName('parmCreateDate').AsDateTime := A_BatchDateIn;       // PreviousBatchDateIn;
+  qryUpdtStatus_CrewTrip_1.Execute;   // puts data into working table CertifyExp_CrewWork1
+
+  qryUpdtStatus_CrewTrip_2.Close;
+  qryUpdtStatus_CrewTrip_2.ParamByName('parmCreateDate').AsDateTime := B_BatchDateIn;
+  qryUpdtStatus_CrewTrip_2.ParamByName('parmNewStatus').AsString    := RecStatusIn;
+  qryUpdtStatus_CrewTrip_2.Execute;   // uses working table created above
+
+end;  { UpdateRecordStatus_CrewTrip }
 
 
-procedure TufrmCertifyExpDataLoader.UpdateRecordStatus_CrewLog(const RecStatusIn: String; const NewBatchDateIn, PreviousBatchDateIn: TDateTime);
+procedure TufrmCertifyExpDataLoader.UpdateRecordStatus_CrewLog(const RecStatusIn: String; const A_BatchDateIn, B_BatchDateIn: TDateTime);
 begin
-  qryUpdateRecStatus_CrewLog.close;
-  qryUpdateRecStatus_CrewLog.ParamByName('parmRecStatus').AsString   := RecStatusIn;
-  qryUpdateRecStatus_CrewLog.ParamByName('parmOlderDate').AsDateTime := PreviousBatchDateIn;
-  qryUpdateRecStatus_CrewLog.ParamByName('parmNewerDate').AsDateTime := NewBatchDateIn;
-  qryUpdateRecStatus_CrewLog.Execute;
+  PurgeTable('CertifyExp_CrewWork1');
+
+  qryUpdtStatus_CrewLog_1.Close;
+  qryUpdtStatus_CrewLog_1.ParamByName('parmCreateDate').AsDateTime := A_BatchDateIn;       // PreviousBatchDateIn;
+  qryUpdtStatus_CrewLog_1.Execute;   // puts data into working table CertifyExp_CrewWork1
+
+  qryUpdtStatus_CrewLog_2.Close;
+  qryUpdtStatus_CrewLog_2.ParamByName('parmCreateDate').AsDateTime := B_BatchDateIn;
+  qryUpdtStatus_CrewLog_2.ParamByName('parmNewStatus').AsString    := RecStatusIn;
+  qryUpdtStatus_CrewLog_2.Execute;   // uses working table created above
 
 end;
 
@@ -2866,7 +2896,8 @@ begin
   End Else Begin
 
     strTableName := 'CertifyExp_' + TableNameIn + '_History' ;    // must match table name exactly
-    strDaysBack  := '3';                                          // for performance reasons, keep only the last 3 days of data (and for T/S purposes)
+    strDaysBack  := myIni.ReadString('Startup', 'RetainHourlyDeltaTablesHistoryDays',  '') ;
+                                                                  // for performance reasons, keep only the last n days of data
                                                                   //   (the more records in these tables the slower the 'NOT IN' queries run)
     qryPruneHistoryTables.SQL.Clear;
     qryPruneHistoryTables.SQL.Add( ' delete from ' + strTableName );
@@ -2875,6 +2906,16 @@ begin
 
   End;
 end;  { PruneHistoryTables }
+
+
+procedure TufrmCertifyExpDataLoader.PurgeTable(const TableNameIn: String);
+begin
+
+  qryPurgeWorkingTable.Close;
+  qryPurgeWorkingTable.SQL.Text := 'delete from ' + TableNameIn;
+  qryPurgeWorkingTable.Execute;
+
+end;
 
 
 
