@@ -255,6 +255,9 @@ type
     Procedure InsertCrewTail(Const TailNumIn:String; VendorNumIn: Integer; DataSourceIn: String);
 
     Procedure LoadTailLeadPilot;
+    Procedure LoadTailLeadPilot2;
+
+
     Procedure InsertTailLeadPilot(Const TailNumIn, EMailIn: String);
     Procedure FlagRecordAsError(Const ErrorType, ErrorMsgIn : String);
 
@@ -1159,7 +1162,27 @@ begin
   CloseFile(FileIn);
   sl.Free;
 
-end;  { LoadTailLeadPilot }
+end; { LoadTailLeadPilot }
+
+
+
+{
+  1. query OnBase to get latest Tail/LeadPilot data
+  2. if results valid then insert into CertifyExp_Tail_LeadPilot
+  3. write tail_leadpilot.csv to output directory
+  4.  * don't forget to update Status Report Email attachment list w/ this file
+}
+procedure TufrmCertifyExpDataLoader.LoadTailLeadPilot2;
+begin
+
+
+
+
+
+
+end; { LoadTailLeadPilot2 }
+
+
 
 
 procedure TufrmCertifyExpDataLoader.InsertTailLeadPilot(const TailNumIn, EMailIn: String);
