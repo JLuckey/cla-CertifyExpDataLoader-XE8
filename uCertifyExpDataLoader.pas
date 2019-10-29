@@ -198,6 +198,8 @@ type
     qryUpdtStatus_CrewTail_2: TUniQuery;
     qryUpdtStatus_CrewLog_1: TUniQuery;
     qryUpdtStatus_CrewLog_2: TUniQuery;
+    connOnBase: TUniConnection;
+    qryGetNewTailLeadPilotRecs: TUniQuery;
 
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -238,12 +240,13 @@ type
 
     Procedure ConnectToDB();
     Procedure SendStatusEmail;
-    Procedure SendErrorViaEmail(Const ErrorMsgIn: String);
+    Procedure Send_NoIni_ErrorViaEmail(Const ErrorMsgIn: String);
+    Procedure SendWarningViaEmail(Const ErrorMsgIn: String);
     Procedure CreateEmployeeErrorReport(Const BatchTimeIn : TDateTime) ;
 
     Procedure AppendSpecialUsers(Const FileToAppend: TextFile);
 
-    Procedure UpdateCCField(Const BatchTimeIn: TDateTime);    // rename CC to CreditCard here & query  - ???JL
+    Procedure UpdateCCField(Const BatchTimeIn: TDateTime);
 
     Procedure LoadCertFileFields(Const BatchTime: TDateTime);
 
@@ -305,6 +308,10 @@ type
 
     Procedure PurgeTable(Const TableNameIn: String);
 
+    Procedure LoadNewTailLeadPilotRecs();
+    Procedure WriteTailLeadPilotToFile;
+
+
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
     Function  GetTimeFromDBServer(): TDateTime;
@@ -362,7 +369,7 @@ begin
 
   if not FileExists(iniFileName) then Begin
     LogIt('Error from FormCreate(): .ini file (' + iniFileName + ') not found!!');
-    SendErrorViaEmail('Cannot Find ini file: ' + iniFileName);
+    Send_NoIni_ErrorViaEmail('Cannot Find ini file: ' + iniFileName);
     MessageDlg( 'Ini File is missing! ' + #13 + 'Cannot find: ' + #13 + iniFileName, mtError, [mbOK], 0);
     Exit;
   End;
@@ -412,6 +419,8 @@ var
 begin
   BatchTime := GetTimeFromDBServer;
 
+  LoadTailLeadPilot2;
+
   PruneHistoryTables('CertifyExp_PaycomHistory');
 
   LoadData(BatchTime);
@@ -426,7 +435,6 @@ begin
 
   StatusBar1.Panels[1].Text := 'Current Task:  All Done!';
   Application.ProcessMessages;
-
 
 end;  { Main }
 
@@ -471,13 +479,6 @@ begin
   gloPusher.free ;
   StatusBar1.Panels[1].Text := 'Current Task:  All done!'  ;
 
-//  //  Get Failed Recs from previous Pushes                     ???JL unnecessary, remove
-//  qryGetFailedRecs_CrewTail.Close;
-//  qryGetFailedRecs_CrewTail.ParamByName('parmNewBatchDateIn').AsDateTime := NewBatchDate;
-//  qryGetFailedRecs_CrewTail.Open;
-//  SendToCertify(qryGetFailedRecs_CrewTail, BatchTime);
-//  qryGetFailedRecs_CrewTail.Close;
-
 end;  { HourlyPushMain }
 
 
@@ -520,50 +521,8 @@ var
 
 begin
 
-//  NewBatchDate      := StrToDateTime('10/10/2019 08:37:33.820');
-//  PreviousBatchDate := StrToDateTime('10/09/2019 15:58:32.200');
+  LoadTailLeadPilot2;
 
-//  PurgeTable('CertifyExp_CrewWork1');
-//  GetBatchDates_CrewLog(PreviousBatchDate, NewBatchDate);
-//  UpdateRecordStatus_CrewLog('added',   PreviousBatchDate, NewBatchDate );
-//  UpdateRecordStatus_CrewLog('deleted', NewBatchDate, PreviousBatchDate );
-
-
-
-{
-  gloPusher := TfrmPushToCertify.Create(self);
-  gloPusher.theBaseURL := 'https://api.certify.com/v1/exprptglds';
-  gloPusher.APIKey     := 'qQjBp9xVQ36b7KPRVmkAf7kXqrDXte4k6PxrFQSv' ;
-  gloPusher.APISecret  := '4843793A-6326-4F92-86EB-D34070C34CDC' ;
-
-  (*
-  qryGetCrewTripRecs.Close;
-  qryGetCrewTripRecs.ParamByName('parmCreatedOnIn').AsString := '2019-04-05 07:42:00.823';
-//  qryGetCrewTripRecs.ParamByName('parmRecStatusIn').AsString := 'added';
-  qryGetCrewTripRecs.Open;
-
-  DataSource1.DataSet := qryGetCrewTripRecs;          // Update data grid in UI for test/dev purposes
-  Application.ProcessMessages;
-  Sleep(5000);                                        // wait so user can see data in grid
-
-  SendToCertify(qryGetCrewTripRecs, Now(), 'crew_trip');
-  qryGetCrewTripRecs.Close;
-*)
-
-  qryGetCrewLogRecs.Close;
-  qryGetCrewLogRecs.ParamByName('parmCreatedOnIn').AsString := '2019-04-05 07:42:00.823';
-//  qryGetCrewTripRecs.ParamByName('parmRecStatusIn').AsString := 'added';
-  qryGetCrewLogRecs.Open;
-
-  DataSource1.DataSet := qryGetCrewLogRecs;          // Update data grid in UI for test/dev purposes
-  Application.ProcessMessages;
-  Sleep(5000);                                        // wait so user can see data in grid
-
-  SendToCertify(qryGetCrewLogRecs, Now(), 'crew_log');
-  qryGetCrewLogRecs.Close;
-
-  gloPusher.free;
-}
 
 end;
 
@@ -623,12 +582,32 @@ begin
                 E.Message ;
 
     LogIt(errorMsg);
-    StatusBar1.Panels[0].Text :=  'DB: Error!' ;
+    StatusBar1.Panels[0].Text :=  'DB: Error! - ' + dbName ;
 //   Raise;
     end;
   end;
 
-  StatusBar1.Panels[0].Text :=  'DB: ' + UniConnection1.Database;
+  // Connect to the OnBase (SQL Server) database
+  try
+    connOnBase.Connected := false;
+    connOnBase.Server    := myIni.ReadString('DBConfig_OnBase', 'Server', '') ;
+    connOnBase.Database  := myIni.ReadString('DBConfig_OnBase', 'DatabaseName', '') ;
+    dbName := connOnBase.Database;
+    connOnBase.Username  := myIni.ReadString('DBConfig_OnBase', 'UserName', '') ;
+    connOnBase.Password  := myIni.ReadString('DBConfig_OnBase', 'Password', '') ;
+    connOnBase.Connected := true;
+  except on E: Exception do begin
+    errorMsg := 'Error! from ConnectToDBs();  ' +
+                'Problem connecting to database: ' + dbName + '; ' +
+                E.ClassName + '; ' +
+                E.Message ;
+
+    LogIt(errorMsg);
+    StatusBar1.Panels[0].Text :=  'DB: Error! - ' + dbName ;
+    end;
+  end;
+
+  StatusBar1.Panels[0].Text :=  'Main DB: ' + UniConnection1.Database;
 
 end;
 
@@ -645,8 +624,8 @@ begin
   BuildCrewLogFile;
 
   BuildTripLogFile;
-  BuildTailTripFile;
-  BuildTailLogFile;
+//  BuildTailTripFile;               depricated 24 Oct 2019
+//  BuildTailLogFile;                          "
 
   BuildTailTripLogFile;
 
@@ -1165,24 +1144,89 @@ begin
 end; { LoadTailLeadPilot }
 
 
+{  This new procedure gets Tail/LeadPilot data from OnBase/Workbench instead of from a manually-imported .csv file
+  1. open local tail_leadpilot table
+  2. query OnBase to get latest Tail/LeadPilot data
+  3. if record counts within tolerance then empty CertifyExp_Tail_LeadPilot & add new recs
+  4. write tail_leadpilot.csv to output directory
 
-{
-  1. query OnBase to get latest Tail/LeadPilot data
-  2. if results valid then insert into CertifyExp_Tail_LeadPilot
-  3. write tail_leadpilot.csv to output directory
-  4.  * don't forget to update Status Report Email attachment list w/ this file
+  * don't forget to update Status Report Email attachment list w/ this file  -- done!
 }
 procedure TufrmCertifyExpDataLoader.LoadTailLeadPilot2;
+var
+  CurrentCount, NewCount : Integer;
+  TolerancePercent : Real;
+
 begin
+  tblTailLeadPilot.Open;               // This is the local (Warehouse) table
+  CurrentCount := tblTailLeadPilot.RecordCount;
 
+  qryGetNewTailLeadPilotRecs.Close;    // This is the external (OnBase) table
+  qryGetNewTailLeadPilotRecs.Open;
+  NewCount := qryGetNewTailLeadPilotRecs.RecordCount;
 
+  TolerancePercent := myIni.ReadInteger('Startup','TailLeadPilotCountTolerance', 20) / 100;
 
+  // If change in record count is within Tolerance
+  if Abs(CurrentCount - NewCount) < Round((CurrentCount * TolerancePercent)) then begin
+    LoadNewTailLeadPilotRecs();
+  end else begin
+    SendWarningViaEmail('WARNING - Large delta in Tail_LeadPilot record count!' + #13#13 +
+                      'Existing count: ' + IntToStr(CurrentCount) + ', New count: ' + IntToStr(NewCount) + #13#13 +
+                      'If this is OK and you want to import this data, then increase the ' + QuotedStr('TailLeadPilotCountTolerance') + ' parameter in the .ini file.' + #13 +
+                      'The changed value will be used on the next Nightly or Morning run. ' + #13#13 +
+                      '(The Upload process ran using the existing data and did not import the new data.)');
+  end;
 
+  WriteTailLeadPilotToFile;
 
+  tblTailLeadPilot.Close;
+  qryGetNewTailLeadPilotRecs.Close;
 
 end; { LoadTailLeadPilot2 }
 
 
+procedure TufrmCertifyExpDataLoader.LoadNewTailLeadPilotRecs;
+begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Loading New Tail/LeadPilot recs from OnBase' ;
+
+  tblTailLeadPilot.EmptyTable;
+  qryGetNewTailLeadPilotRecs.First;
+  while not qryGetNewTailLeadPilotRecs.eof do begin
+    tblTailLeadPilot.Append;
+    tblTailLeadPilot.FieldByName('Tail').AsString  := qryGetNewTailLeadPilotRecs.FieldByName('tail_number').AsString;
+    tblTailLeadPilot.FieldByName('Email').AsString := qryGetNewTailLeadPilotRecs.FieldByName('lead_pilot_email').AsString;
+    tblTailLeadPilot.Post;
+    qryGetNewTailLeadPilotRecs.Next;
+  end;
+
+end;  { LoadNewTailLeadPilotRecs }
+
+
+procedure TufrmCertifyExpDataLoader.WriteTailLeadPilotToFile;
+var
+  WorkFile: TextFile;
+  RowOut : string;
+
+begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Writing tail_leadpilot.csv'  ;
+  Application.ProcessMessages;
+
+  AssignFile(WorkFile, edOutputDirectory.Text + 'tail_leadpilot.csv');
+  Rewrite(WorkFile);
+
+  RowOut := 'Tail,EMail';      // write header record
+  WriteLn(WorkFile, RowOut) ;
+  tblTailLeadPilot.First;
+  while not tblTailLeadPilot.eof do begin
+    RowOut := Trim(tblTailLeadPilot.FieldByName('Tail').AsString) + ',' + tblTailLeadPilot.FieldByName('EMail').AsString ;
+    WriteLn(WorkFile, RowOut) ;
+    tblTailLeadPilot.Next;
+  end;
+
+  CloseFile(WorkFile);
+
+end;  { WriteTailLeadPilotToFile }
 
 
 procedure TufrmCertifyExpDataLoader.InsertTailLeadPilot(const TailNumIn, EMailIn: String);
@@ -1194,8 +1238,6 @@ begin
   tblTailLeadPilot.Post;
 
 end;  { InsertTailLeadPilot }
-
-
 
 
 procedure TufrmCertifyExpDataLoader.LoadTripsIntoStartBucket(Const BatchTimeIn : TDateTime);
@@ -2255,7 +2297,7 @@ begin
 end;  { SendStatusEmail }
 
 
-procedure TufrmCertifyExpDataLoader.SendErrorViaEmail(const ErrorMsgIn: String);
+procedure TufrmCertifyExpDataLoader.Send_NoIni_ErrorViaEmail(const ErrorMsgIn: String);
 Var
   mySMTP    : TIdSMTP;
   myMessage : TIDMessage;
@@ -2265,9 +2307,9 @@ begin
   myMessage.Subject      := 'CLA Certify Data Loader - Error!!';
   myMessage.From.Address := 'CertifyDataLoader@claylacy.com';
   myMessage.Body.Text    := ErrorMsgIn ;
-  myMessage.Recipients.EMailAddresses := 'Jeff@dcsit.com,TKallo@claylacy.com,LTaylor@ClayLacy.com,DLittlefield@ClayLacy.com' ;
 
   //  Hard-coding params because the error being trapped is 'cannot find .ini file' which contains these params
+  myMessage.Recipients.EMailAddresses := 'Jeff@dcsit.com,TKallo@claylacy.com,LTaylor@ClayLacy.com,DLittlefield@ClayLacy.com' ;
   mySMTP := TIdSMTP.Create(nil);
   mySMTP.Host     :=  '192.168.1.73' ;
   mySMTP.Username :=  'tkvassay@claylacy.com' ;
@@ -2285,6 +2327,35 @@ begin
 
 end;  { SendErrorViaEmail }
 
+
+procedure TufrmCertifyExpDataLoader.SendWarningViaEmail(const ErrorMsgIn: String);
+Var
+  mySMTP    : TIdSMTP;
+  myMessage : TIDMessage;
+
+begin
+  myMessage := TIdMessage.Create(nil);
+  myMessage.Subject      := 'CLA Certify Data Loader - Warning!';
+  myMessage.From.Address := 'CertifyDataLoader@claylacy.com';
+  myMessage.Body.Text    := ErrorMsgIn ;
+  myMessage.Recipients.EMailAddresses := myIni.ReadString('OutputFiles', 'EMailRecipientList', '');
+
+  mySMTP := TIdSMTP.Create(nil);
+  mySMTP.Host     := myIni.ReadString('Startup', 'EmailServer', '192.168.1.73') ;
+  mySMTP.Username := myIni.ReadString('Startup', 'EmailServerLogin', 'tkvassay@claylacy.com') ;
+  mySMTP.Password := myIni.ReadString('Startup', 'EmailServerLoginPW', '') ;
+
+  Try
+    mySMTP.Connect;
+    mySMTP.Send(myMessage);
+  Except on E:Exception Do
+    LogIt('Email Error: ' + E.Message);
+  End;
+
+  mySMTP.free;
+  myMessage.Free;
+
+end;  { SendWarningViaEmail }
 
 
 procedure TufrmCertifyExpDataLoader.CreateEmployeeErrorReport(Const BatchTimeIn : TDateTime);
@@ -2661,6 +2732,10 @@ begin
   qryGetCrewTailRecs.Close;
 
   //  Get Deleted recs from this new batch
+
+(*  Depricating this process. Not necessary to deal with Deleted recs on an hourly basis.
+    The nightly full-file-refresh handles records that would be Deleted by this process -  28 oct 2019  JL
+
   StatusBar1.Panels[1].Text := 'Current Task:  Retrieving deleted CrewTail_History recs'  ;
   Application.ProcessMessages;
   UpdateRecordStatus_CrewTail('deleted', NewBatchDateIn, PreviousBatchDateIn);
@@ -2674,6 +2749,7 @@ begin
 
   SendToCertify(qryGetCrewTailRecs, BatchTimeIn, 'crew_tail');
   qryGetCrewTailRecs.Close;
+*)
 
 end;  { DoCrewTailAPI }
 
@@ -2698,6 +2774,10 @@ begin
   qryGetCrewTripRecs.Close;
 
   //  Get Deleted recs from this new batch
+
+  (*  Depricating this process. Not necessary to deal with Deleted recs on an hourly basis.
+    The nightly full-file-refresh handles records that would be Deleted by this process -  28 oct 2019  JL
+
   StatusBar1.Panels[1].Text := 'Current Task:  Retrieving deleted CrewTrip_History recs'  ;
   Application.ProcessMessages;
 
@@ -2713,6 +2793,7 @@ begin
 
   SendToCertify(qryGetCrewTripRecs, BatchTimeIn, 'crew_trip');
   qryGetCrewTripRecs.Close;
+*)
 
 end;  { Do_CrewTrip_API }
 
@@ -2740,6 +2821,10 @@ begin
 
 
   //  Get Deleted recs from this new batch
+
+ (*  Depricating this process. Not necessary to deal with Deleted recs on an hourly basis.
+    The nightly full-file-refresh handles records that would be Deleted by this process -  28 oct 2019  JL
+
   StatusBar1.Panels[1].Text := 'Current Task:  Retrieving deleted CrewLog_History recs'  ;
   Application.ProcessMessages;
 
@@ -2756,6 +2841,7 @@ begin
 
   SendToCertify(qryGetCrewLogRecs, BatchTimeIn, 'crew_log');
   qryGetCrewLogRecs.Close;
+ *)
 
 end;  {Do_CrewLog_API}
 
@@ -2776,7 +2862,7 @@ begin
 
     gloPusher.DataAction          := WorkingQueryIn.FieldByName('RecordStatus').AsString;
     gloPusher.CrewMemberVendorNum := WorkingQueryIn.FieldByName('CrewMemberVendorNum').AsString;
-    gloPusher.Push;    // ???JL
+    gloPusher.Push;
 
     WorkingQueryIn.Edit;
     WorkingQueryIn.FieldByName('HTTPResultCode').AsString      := IntToStr(gloPusher.HTTPReturnCode);

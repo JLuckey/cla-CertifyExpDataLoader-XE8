@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'Certify Data Loader - ver 2.1'
+  Caption = 'Certify Data Loader - ver 2.2'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -130,9 +130,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object Label17: TLabel
     Left = 257
     Top = 192
-    Width = 88
+    Width = 238
     Height = 13
-    Caption = 'Tail_LeadPilot File:'
+    Caption = 'Tail_LeadPilot File (used for loading file manually):'
   end
   object Label18: TLabel
     Left = 238
@@ -315,18 +315,18 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 75
     Height = 25
     Caption = 'Fixer'
-    Enabled = False
     TabOrder = 17
     OnClick = btnFixerClick
   end
   object UniConnection1: TUniConnection
     ProviderName = 'SQL Server'
-    Database = 'WarehouseDEV'
+    Database = 'Warehouse'
     Username = 'sa'
     Server = '192.168.1.122'
+    Connected = True
     LoginPrompt = False
-    Left = 142
-    Top = 65530
+    Left = 42
+    Top = 65528
     EncryptedPassword = '9CFF93FF9EFF8CFF8EFF93FF8CFF8DFF89FFCDFFCFFFCEFFC9FF'
   end
   object qryGetEmployees: TUniQuery
@@ -724,8 +724,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       'delete from CertifyExp_PilotsNotInPaycom')
-    Left = 593
-    Top = 260
+    Left = 581
+    Top = 280
   end
   object qryDeleteTrips: TUniQuery
     Connection = UniConnection1
@@ -1072,8 +1072,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object tblTailLeadPilot: TUniTable
     TableName = 'CertifyExp_Tail_LeadPilot'
     Connection = UniConnection1
-    Left = 587
-    Top = 300
+    Active = True
+    Left = 27
+    Top = 529
   end
   object qryFindLeadPilotEmail: TUniQuery
     Connection = UniConnection1
@@ -1147,7 +1148,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       end>
   end
   object DataSource1: TDataSource
-    DataSet = qryGetImportedRecs
+    DataSet = tblTailLeadPilot
     Left = 191
     Top = 534
   end
@@ -1164,8 +1165,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'where CrewMemberVendorNum is not null '
       '  and TailNum is not null '
       '  and CrewMemberVendorNum > 0')
-    Left = 47
-    Top = 448
+    Left = 90
+    Top = 439
     ParamData = <
       item
         DataType = ftString
@@ -1180,13 +1181,13 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from CertifyExp_CrewTail_History'
       'where RecordStatus = '#39'imported'#39'        '
       'order by CreatedOn desc')
-    Left = 42
-    Top = 496
+    Left = 159
+    Top = 492
   end
   object qryGetFailedRecs_CrewTail: TUniQuery
     Connection = UniConnection1
-    Left = 62
-    Top = 545
+    Left = 131
+    Top = 546
   end
   object qryGetDeletedRecs_CrewTail: TUniQuery
     Connection = UniConnection1
@@ -1233,8 +1234,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'where RecordStatus = :parmRecStatusIn'
       '  and CreatedOn    = :parmCreatedOnIn'
       '')
-    Left = 115
-    Top = 437
+    Left = 171
+    Top = 442
     ParamData = <
       item
         DataType = ftUnknown
@@ -1314,8 +1315,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from CertifyExp_Trips_StartBucket '
       'where CrewMemberVendorNum is not null '
       '  and LogSheet is not null and CrewMemberVendorNum > 0')
-    Left = 283
-    Top = 457
+    Left = 322
+    Top = 455
     ParamData = <
       item
         DataType = ftString
@@ -1531,8 +1532,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       ''
       '   ')
-    Left = 208
-    Top = 424
+    Left = 257
+    Top = 425
     ParamData = <
       item
         DataType = ftUnknown
@@ -1554,8 +1555,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '  not in (select VendorNum_TailTripLog from CertifyExp_CrewWork1' +
         ') ;'
       '')
-    Left = 206
-    Top = 470
+    Left = 250
+    Top = 473
     ParamData = <
       item
         DataType = ftUnknown
@@ -1583,8 +1584,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       ''
       '   ')
-    Left = 382
-    Top = 427
+    Left = 407
+    Top = 428
     ParamData = <
       item
         DataType = ftUnknown
@@ -1619,5 +1620,25 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Name = 'parmCreatedate'
         Value = nil
       end>
+  end
+  object connOnBase: TUniConnection
+    ProviderName = 'SQL Server'
+    Database = 'CLAOnBase'
+    Username = 'sa'
+    Server = '192.168.1.122'
+    LoginPrompt = False
+    Left = 22
+    Top = 426
+    EncryptedPassword = '9CFF93FF9EFF8CFF8EFF93FF8CFF8DFF89FFCDFFCFFFCEFFC9FF'
+  end
+  object qryGetNewTailLeadPilotRecs: TUniQuery
+    Connection = connOnBase
+    SQL.Strings = (
+      'select attr1131 as tail_number, attr1192 as lead_pilot_email'
+      'FROM [CLAOnBase].[hsi].[rmObjectInstance1014]'
+      'where attr1192 is not null'
+      'order by attr1131')
+    Left = 52
+    Top = 484
   end
 end
