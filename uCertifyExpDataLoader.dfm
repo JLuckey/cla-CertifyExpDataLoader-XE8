@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'Certify Data Loader - ver 2.2'
+  Caption = 'Certify Data Loader - ver 2.3'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -147,6 +147,13 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 41
     Height = 13
     Caption = 'Previous'
+  end
+  object Label20: TLabel
+    Left = 14
+    Top = 261
+    Width = 176
+    Height = 13
+    Caption = 'Inflight Services (IFS) Pseudo Users:'
   end
   object edPayComInputFile: TEdit
     Left = 257
@@ -318,15 +325,23 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     TabOrder = 17
     OnClick = btnFixerClick
   end
+  object edIFSPseudoUsers: TEdit
+    Left = 14
+    Top = 277
+    Width = 172
+    Height = 21
+    Alignment = taRightJustify
+    TabOrder = 18
+    Text = '15718'
+  end
   object UniConnection1: TUniConnection
     ProviderName = 'SQL Server'
     Database = 'Warehouse'
     Username = 'sa'
     Server = '192.168.1.122'
-    Connected = True
     LoginPrompt = False
-    Left = 42
-    Top = 65528
+    Left = 43
+    Top = 65529
     EncryptedPassword = '9CFF93FF9EFF8CFF8EFF93FF8CFF8DFF89FFCDFFCFFFCEFFC9FF'
   end
   object qryGetEmployees: TUniQuery
@@ -1072,7 +1087,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object tblTailLeadPilot: TUniTable
     TableName = 'CertifyExp_Tail_LeadPilot'
     Connection = UniConnection1
-    Active = True
     Left = 27
     Top = 529
   end

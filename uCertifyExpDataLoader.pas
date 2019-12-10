@@ -200,6 +200,8 @@ type
     qryUpdtStatus_CrewLog_2: TUniQuery;
     connOnBase: TUniConnection;
     qryGetNewTailLeadPilotRecs: TUniQuery;
+    edIFSPseudoUsers: TEdit;
+    Label20: TLabel;
 
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -384,6 +386,7 @@ begin
   edOutputDirectory.Text  := myIni.ReadString('Startup', 'OutputDirectory', '') ;
   edSpecialUsersFile.Text := myIni.ReadString('Startup', 'SpecialUsersFileName', '') ;
   edCharterVisaUsers.Text := myIni.ReadString('Startup', 'CharterVisaVendorNumbers', '') ;
+  edIFSPseudoUsers.Text   := myIni.ReadString('Startup', 'IFSPseudoUsers', '') ;
 
   edDaysBack.Text           := myIni.ReadString('Startup', 'EmployeeFlightCrewDaysBack', '') ;
   edContractorDaysBack.Text := myIni.ReadString('Startup', 'ContractFlightCrewDaysBack', '') ;
@@ -523,10 +526,7 @@ begin
 
   LoadTailLeadPilot2;
 
-
 end;
-
-
 
 
 procedure TufrmCertifyExpDataLoader.btnGoHourlyClick(Sender: TObject);
@@ -2570,7 +2570,7 @@ begin
   Finally
     stlACList.Free;
   End;  { Try/finally }
-  
+
 end;  { LoadDOMsIntoStartBucket }
 
 
@@ -2582,14 +2582,11 @@ end;  { LoadDOMsIntoStartBucket }
 //
 // **********************************************
 procedure TufrmCertifyExpDataLoader.Load_IFS_IntoStartBucket(BatchTime: TDateTime);
-begin
-(*
-select certify_gp_vendornum
-from CertifyExp_PayComHistory
-where Upper(certfile_group) = 'IFS'
-  and imported_on = :parmImportedOn      /* '2019-01-13 13:45:30.227' */
-*)
+var
+  stlAdditionalIFSUsers : TStringList;
+  i : Integer;
 
+begin
 
   qryGetIFS.Close;
   qryGetIFS.ParamByName('parmImportedOn').AsDateTime := BatchTime;
@@ -2602,10 +2599,22 @@ where Upper(certfile_group) = 'IFS'
     qryGetIFS.Next;
   end;
 
+  // TE-43  Adding Pseudo-users for IFS group,   9 Dec 2019
+  stlAdditionalIFSUsers := TStringList.Create;
+  Try
+    stlAdditionalIFSUsers.CommaText := edIFSPseudoUsers.Text;
+    for i := 0 to stlAdditionalIFSUsers.Count - 1 do begin
+      qryInsertIFS.Close;
+      qryInsertIFS.ParamByName('parmCrewMemberVendorNum').AsString := stlAdditionalIFSUsers[i];
+      qryInsertIFS.Execute;
+    end;
+  Finally
+    stlAdditionalIFSUsers.Free;
+  End;
+
   qryGetIFS.Close;
 
 end;  { LoadIFSIntoStartBucket }
-
 
 
 procedure TufrmCertifyExpDataLoader.InsertCrewTail(const TailNumIn: String; VendorNumIn: Integer; DataSourceIn: String);

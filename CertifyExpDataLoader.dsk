@@ -17,25 +17,25 @@ File_14=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.Forms.pas',0,1,936,1
 
 [Modules]
 Module0=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-Module1=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
+Module1=Main_Page
 Module2=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj
-Module3=Main_Page
+Module3=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
 Count=4
 EditWindowCount=1
 
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas]
 ModuleType=TSourceModule
 FormState=1
-FormOnTop=0
+FormOnTop=1
 
-[F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini]
-ModuleType=TSourceModule
+[Main_Page]
+ModuleType=TURLModule
 
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj]
 ModuleType=TBaseProject
 
-[Main_Page]
-ModuleType=TURLModule
+[F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini]
+ModuleType=TSourceModule
 
 [EditWindow0]
 ViewCount=4
@@ -60,9 +60,9 @@ ClientHeight=9135
 DockedToMainForm=1
 BorlandEditorCodeExplorer=BorlandEditorCodeExplorer@EditWindow0
 TopPanelSize=0
-LeftPanelSize=1523
+LeftPanelSize=2403
 LeftPanelClients=PropertyInspector,DockSite3
-LeftPanelData=000008000101000000004B0F00000000000001F3050000000000000100000000590E000009000000446F636B53697465330100000000741E00001100000050726F7065727479496E73706563746F72FFFFFFFF
+LeftPanelData=000008000101000000004B0F0000000000000163090000000000000100000000590E000009000000446F636B53697465330100000000741E00001100000050726F7065727479496E73706563746F72FFFFFFFF
 RightPanelSize=1286
 RightPanelClients=DockSite2,DockSite4
 RightPanelData=000008000101000000004B0F00000000000001060500000000000001000000004812000009000000446F636B53697465320100000000741E000009000000446F636B5369746534FFFFFFFF
@@ -97,7 +97,7 @@ TopLine=2567
 LeftCol=1
 Elisions=
 Bookmarks={1,1167,1}{2,526,1}
-EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
+EditViewName=Borland.FormDesignerView
 
 [View3]
 CustomEditViewType=TEditView
@@ -304,22 +304,22 @@ Docked=1
 State=0
 Left=0
 Top=373
-Width=1523
+Width=2403
 Height=4053
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=1523
+ClientWidth=2403
 ClientHeight=4053
 TBDockHeight=8839
-LRDockWidth=1523
+LRDockWidth=2403
 Dockable=1
 StayOnTop=0
-SplitPos=90
+SplitPos=162
 
 [PropInspDesignerSelection]
 ArrangeBy=Name
-SelectedItem=Name,
-ExpandedItems="LiveBindings Designer=0"
+SelectedItem=Connected,
+ExpandedItems="LiveBindings Designer=0",Options=0
 
 [frmDesignPreview]
 PercentageSizes=1
@@ -346,8 +346,8 @@ Create=1
 Visible=0
 Docked=1
 State=0
-Left=-1654
-Top=-106
+Left=0
+Top=0
 Width=2845
 Height=6210
 MaxLeft=-1
@@ -598,11 +598,11 @@ Docked=1
 State=0
 Left=0
 Top=0
-Width=1523
+Width=2403
 Height=3242
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=1523
+ClientWidth=2403
 ClientHeight=3242
 TBDockHeight=3680
 LRDockWidth=1897
@@ -770,14 +770,14 @@ Docked=1
 State=0
 Left=0
 Top=23
-Width=1523
+Width=2403
 Height=3538
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=1523
+ClientWidth=2403
 ClientHeight=3538
 TBDockHeight=8839
-LRDockWidth=1523
+LRDockWidth=2403
 Dockable=1
 StayOnTop=0
 TabPosition=1
