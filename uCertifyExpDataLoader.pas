@@ -2268,11 +2268,22 @@ begin
   OutPutFileDir  := edOutputDirectory.Text;          // myIni.ReadString('OutputFiles', 'OutputFileDir', '');
   stlOutputFiles := TStringList.Create();
   stlOutputFiles.CommaText := myIni.ReadString('OutputFiles', 'EmailAttachFileList', '');
+
+  // Add main attachments
   for i := 0 to stlOutputFiles.Count - 1 do begin
    if FileExists( OutPutFileDir + stlOutputFiles[i] ) then
      TIDAttachmentFile.Create(myMessage.MessageParts, OutPutFileDir + stlOutputFiles[i] );
-
   end ; { for }
+
+
+  // Add the Paycom Data file to attachemnt list
+  stlOutputFiles.Clear;
+  stlOutputFiles.CommaText := myIni.ReadString('OutputFiles', 'EmailAttachFileList_Additional', '');
+  for i := 0 to stlOutputFiles.Count - 1 do begin
+   if FileExists( stlOutputFiles[i] ) then
+     TIDAttachmentFile.Create(myMessage.MessageParts, stlOutputFiles[i] );
+  end ; { for }
+
 
   // Add the Paycom Error file to attachemnt list
   if FileExists( gloPaycomErrorFile ) then
@@ -2286,13 +2297,14 @@ begin
   Try
     mySMTP.Connect;
     mySMTP.Send(myMessage);
-//    mySMTP.Disconnect();
+   //  mySMTP.Disconnect();
   Except on E:Exception Do
     LogIt('Email Error: ' + E.Message);
   End;
 
   mySMTP.free;
   myMessage.Free;
+  stlOutputFiles.Free;
 
 end;  { SendStatusEmail }
 
