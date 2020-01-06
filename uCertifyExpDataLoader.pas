@@ -313,6 +313,10 @@ type
     Procedure LoadNewTailLeadPilotRecs();
     Procedure WriteTailLeadPilotToFile;
 
+    // 17 Dec 2019
+    Procedure ImportSpecialUsers(Const BatchTimeIn: TDateTime);
+    Procedure InsertSUIntoHistoryTable(Const stlSU_RecIn: TStringList; BatchTimeIn: TDateTime);
+
 
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
@@ -338,8 +342,9 @@ type
     // 7 Jun 2019
     Function FindVendorNumInStartBucket(Const VendorNumIn: Integer): Boolean;
 
-
     Function CalcInClause(Const GroupStrIn: String): String;
+
+    Function ScrubVendorNum(Const strVendorNumIn: String; Var ErrorTxtOut: String): Integer;
 
   public
     { Public declarations }
@@ -509,7 +514,10 @@ begin
 
   ValidateRecords(BatchTimeIn);                 // rec status: OK
 
+
   LoadCertFileFields(BatchTimeIn);
+                                    // swap these ???JL
+  ImportSpecialUsers(BatchTimeIn);
 
     Load_IFS_IntoStartBucket(BatchTimeIn);
 
@@ -522,9 +530,15 @@ procedure TufrmCertifyExpDataLoader.btnFixerClick(Sender: TObject);
 var
   PreviousBatchDate, NewBatchDate : TDateTime;
 
+  strOut : String;
+  intOut : Integer;
 begin
 
-  LoadTailLeadPilot2;
+//  LoadTailLeadPilot2;
+
+  IntOut := ScrubVendorNum('9|', strOut);
+
+  ShowMessage('Vendor:' + IntToStr(intOut) + #13 + 'ErrorMsg:' + strOut);
 
 end;
 
@@ -801,22 +815,7 @@ begin
       qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString  := strAccountantEmail;
 
 
-
-(*  4Feb2019 -JL
-    Note 13: This logic is now handled by Certify "Workflows" within the Certify system
-      //  Assign Approver1 Email
-      qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := strAccountantEmail;
-
-      //  Assign Approver2 Email
-      if qryGetImportedRecs.FieldByName('employee_code').AsString = 'contractor'  then
-        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail
-      else
-        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
-*)
-
-
     end else if GroupIsIn(strCertifyGroup, 'CharterVisa') then begin
-
 
       // Assign Accountant Email
       qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := 'FlightCrewCC@ClayLacy.com';
@@ -935,7 +934,7 @@ begin
   slOutRec.free;                     // put in Try Finallys   ???JL
   CloseFile(CertifyEmployeeFile);
 
-  AppendSpecialUsers(CertifyEmployeeFile);
+//  AppendSpecialUsers(CertifyEmployeeFile);     moved to LoadData()
 
 end;  { BuildEmployeeFile }
 
@@ -2475,6 +2474,14 @@ end;  { CalcCrewTailFileName }
 
 
 
+(*
+  1. read Special User (SU) file line
+  2. convert to record data structure
+  3. If SU.VendorNum in current PaycomHistory batch then
+        Invalidate existing PaycomHistory rec
+  4. Add SU rec to current PaycomHistory batch
+*)
+
 procedure TufrmCertifyExpDataLoader.AppendSpecialUsers(Const FileToAppend: TextFile);
 var
   ExtraEmployeeFile : TextFile;
@@ -2495,6 +2502,153 @@ begin
   CloseFile(ExtraEmployeeFile);
 
 end;  { AppendSpecialUsers }
+
+
+procedure TufrmCertifyExpDataLoader.ImportSpecialUsers(const BatchTimeIn: TDateTime);
+var
+  SpecialUsersFile : TextFile;
+  strSU_Rec : String;
+  stlSU_Rec : TStringList;
+
+begin
+  stlSU_Rec := TStringList.Create;
+  try
+    AssignFile(SpecialUsersFile, edSpecialUsersFile.Text);
+    Reset(SpecialUsersFile);
+    ReadLn(SpecialUsersFile, strSU_Rec);  // Read first row which contains field names & ignore it
+
+    while not Eof(SpecialUsersFile) do begin
+      Readln(SpecialUsersFile, strSU_Rec);
+      stlSU_Rec.CommaText := strSU_Rec;
+      InsertSUIntoHistoryTable(stlSU_Rec, BatchTimeIn);
+
+      //  if SUVendorNum Exists in current batch then
+      //    Invalidate existing record;
+    end;
+
+  finally
+    stlSU_Rec.Free;
+  end;
+
+end;  {ImportSpecialUsers}
+
+
+(*
+special_users file columns:
+
+0   work_email,           [certfile_work_email]
+1   first_name,           [certfile_first_name]
+2   last_name,            [certfile_last_name]
+3   employee_id,          [certfile_employee_id]
+4   employee_type,        [certfile_employee_type]
+5   group,                [certfile_group]
+6   department_name,      [certfile_department_name]
+7   approver_email - 1,   [certfile_approver1_email]
+8   approver_email - 2,   [certfile_approver2_email]
+9   accountant_email      [certfile_accountant_email]
+
+
+PaycomHistory Table Field Names:
+
+0   ,[certfile_work_email]
+1   ,[certfile_first_name]
+2   ,[certfile_last_name]
+3   ,[certfile_employee_id]
+4   ,[certfile_employee_type]
+5   ,[certfile_group]
+6   ,[certfile_department_name]
+7   ,[certfile_approver1_email]
+8   ,[certfile_approver2_email]
+9   ,[certfile_accountant_email]
+
+*)
+procedure TufrmCertifyExpDataLoader.InsertSUIntoHistoryTable(const stlSU_RecIn: TStringList; BatchTimeIn: TDateTime);
+var
+  strRecStatus : String;
+  strErrorTextOut : String;
+  i : integer;
+  VendorNum: Integer;
+
+begin
+  // Scrub data a little to eliminate leading & trialing spaces
+  for i := 0 to stlSU_RecIn.Count - 1 do begin
+    stlSU_RecIn[i] := Trim(stlSU_RecIn[i]);
+  end;
+
+  try
+    tblPayComHistory.Insert;
+    tblPaycomHistory.FieldByName('data_source').AsString        := 'special_users_file';
+    tblPaycomHistory.FieldByName('status_timestamp').AsDateTime := BatchTimeIn;
+    tblPaycomHistory.FieldByName('imported_on').AsDateTime      := BatchTimeIn;
+
+    strRecStatus := 'OK';    // set to OK so no other subsequent validation happens to these recs
+
+    tblPaycomHistory.FieldByName('certfile_work_email').AsString       := stlSU_RecIn[0];
+    tblPaycomHistory.FieldByName('certfile_first_name').AsString       := stlSU_RecIn[1];
+    tblPaycomHistory.FieldByName('certfile_last_name').AsString        := stlSU_RecIn[2];
+
+    tblPaycomHistory.FieldByName('certfile_employee_type').AsString    := stlSU_RecIn[4];
+
+    tblPaycomHistory.FieldByName('certfile_group').AsString            := stlSU_RecIn[5];
+    tblPaycomHistory.FieldByName('certfile_department_name').AsString  := stlSU_RecIn[6];
+
+    tblPaycomHistory.FieldByName('certfile_approver1_email').AsString  := stlSU_RecIn[7];
+    tblPaycomHistory.FieldByName('certfile_approver2_email').AsString  := stlSU_RecIn[8];
+    tblPaycomHistory.FieldByName('certfile_accountant_email').AsString := stlSU_RecIn[9];
+
+    VendorNum := ScrubVendorNum(stlSU_RecIn[3], strErrorTextOut);
+    if VendorNum = 0 then begin
+      tblPaycomHistory.FieldByName('error_text').AsString := tblPaycomHistory.FieldByName('error_text').AsString + '; ' + strErrorTextOut;
+      strRecStatus := 'error';
+    end;
+    tblPaycomHistory.FieldByName('certfile_employee_id').AsInteger := VendorNum;
+    tblPaycomHistory.FieldByName('record_status').AsString         := strRecStatus ;
+    tblPaycomHistory.post;
+
+  except on E: Exception do begin
+    tblPaycomHistory.Edit;
+    tblPaycomHistory.FieldByName('record_status').AsString := 'error';
+    tblPaycomHistory.FieldByName('error_text').AsString    := tblPaycomHistory.FieldByName('error_text').AsString + '; ' + E.Message;
+    tblPaycomHistory.post;
+  end;
+
+  end;  { Try/Except }
+
+end;  {InsertSUIntoHistoryTable}
+
+
+function TufrmCertifyExpDataLoader.ScrubVendorNum(const strVendorNumIn: String; Var ErrorTxtOut: String): Integer;
+Var
+  intVendorNum : Integer;
+  strVendorNum : String;
+
+begin
+  ErrorTxtOut  := '';
+  Result       := 0;
+  strVendorNum := strVendorNumIn;
+
+  if strVendorNum <> '' then begin
+
+    // Strip-off trailing '|' if exists
+    if Pos('|', strVendorNum) = Length(strVendorNum) then
+      strVendorNum := Copy(strVendorNum, 1, Length(strVendorNum) - 1);
+
+    try
+      intVendorNum := StrToInt(strVendorNum);
+      Result       := intVendorNum ;
+
+    except on E1: Exception do begin
+      Result      := 0;
+      ErrorTxtOut := ' Field: employee_id - ' + E1.Message;  // employee_id in special_users file is Vendor Number
+    end;
+
+    end;
+  end else begin
+    Result := 0;
+    ErrorTxtOut := 'employee_id is blank';
+  end;
+
+end;  {ScrubAndValidateVendorNum}
 
 
 function TufrmCertifyExpDataLoader.ScrubCertifyDept(const DepartmentIn: String): String;
