@@ -202,6 +202,7 @@ type
     qryGetNewTailLeadPilotRecs: TUniQuery;
     edIFSPseudoUsers: TEdit;
     Label20: TLabel;
+    qrySpecialUserOverride: TUniQuery;
 
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -218,7 +219,7 @@ type
     Procedure WriteToCertifyEmployeeFile(Const BatchTimeIn: TDateTime)   ;
     Procedure SplitEmployeeName( Const FullNameIn: String; Var LastNameOut, FirstNameOut : String );
     Procedure IdentifyNonCertifyRecs( Const BatchTimeIn : TDateTime );
-    Procedure ValidateRecords(Const BatchTimeIn: Tdatetime);
+    Procedure ValidateEmployeeRecords(Const BatchTimeIn: Tdatetime);
     Procedure UpdateDupeEmailRecs( Const EMailIn: String; BatchTimeIn: TDateTime);
     Procedure BuildCrewLogFile();
     Procedure BuildCrewTailFile(Const CurrBatchTimeIn: TDatetime);
@@ -315,8 +316,9 @@ type
 
     // 17 Dec 2019
     Procedure ImportSpecialUsers(Const BatchTimeIn: TDateTime);
-    Procedure InsertSUIntoHistoryTable(Const stlSU_RecIn: TStringList; BatchTimeIn: TDateTime);
+    Procedure InsertSUIntoHistoryTable(Var stlSU_RecIn: TStringList; BatchTimeIn: TDateTime);
 
+    Procedure OverrideWithSpecialUsers(Const BatchTimeIn: TDateTime);
 
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
@@ -431,7 +433,7 @@ begin
 
   PruneHistoryTables('CertifyExp_PaycomHistory');
 
-  LoadData(BatchTime);
+  LoadData(BatchTime);      // Loads PaycomHistory & StartBucket tables; also imports SpecialUsers file
 
   BuildEmployeeFile(BatchTime);
 
@@ -469,7 +471,7 @@ begin
   // crew_tail
   PruneHistoryTables('CrewTail');
   Load_CrewTail_HistoryTable(BatchTime);                       // puts latest batch into CrewTailHistory table
-  GetBatchDates_CrewTail(PreviousBatchDate, NewBatchDate);     // identifies "added" & "deleted" recs; (those params are output)
+  GetBatchDates_CrewTail(PreviousBatchDate, NewBatchDate);     // identifies "added" & "deleted" recs;
   Do_CrewTail_API(Now(), PreviousBatchDate, NewBatchDate);     // sends data to Certify via API
 
   // crew_trip
@@ -493,15 +495,11 @@ end;  { HourlyPushMain }
 procedure TufrmCertifyExpDataLoader.LoadData(Const BatchTimeIn: TDateTime);
 begin
 
-//  FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', BatchTimeIn)
-
-  ImportPaycomData(BatchTimeIn);               // rec status: imported or error
+  ImportPaycomData(BatchTimeIn);               // rec status: imported or error  6 Jan 2020
 
   LoadTripsIntoStartBucket(BatchTimeIn);
 
     Load_CharterVisa_IntoStartBucket;
-
-(*    Load_DOM_IntoStartBucket(BatchTimeIn); *) // disabled per Phase 3 Tasks & Estimates item # 14;   14 May 2019  Jeff@dcsit.com
 
   AddContractorsNotInPaycom(BatchTimeIn);       // writes Contractors to PaycomHistory table
 
@@ -512,14 +510,14 @@ begin
 
   IdentifyNonCertifyRecs(BatchTimeIn);          // rec status: non-certify;     non-certify records flagged in record_status field
 
-  ValidateRecords(BatchTimeIn);                 // rec status: OK
+  ValidateEmployeeRecords(BatchTimeIn);         // rec status: OK
 
 
   LoadCertFileFields(BatchTimeIn);
-                                    // swap these ???JL
-  ImportSpecialUsers(BatchTimeIn);
 
-    Load_IFS_IntoStartBucket(BatchTimeIn);
+    ImportSpecialUsers(BatchTimeIn);       //  <---- new 6 Jan 2020  ???JL
+
+  Load_IFS_IntoStartBucket(BatchTimeIn);
 
   FilterTripsByCount;                           // removes selected recs from StartBucket
 
@@ -534,12 +532,18 @@ var
   intOut : Integer;
 begin
 
-//  LoadTailLeadPilot2;
+//  tblPaycomHistory.Open;
+//  ImportSpecialUsers( StrToDateTime('01/07/2020 09:45:01.667') );
+//  tblPaycomHistory.Close;
 
+  OverrideWithSpecialUsers( StrToDateTime('01/07/2020 09:45:01.667') );
+
+
+(*
   IntOut := ScrubVendorNum('9|', strOut);
 
   ShowMessage('Vendor:' + IntToStr(intOut) + #13 + 'ErrorMsg:' + strOut);
-
+*)
 end;
 
 
@@ -1463,7 +1467,7 @@ begin
 end;  { SplitEmployeeName }
 
 
-procedure TufrmCertifyExpDataLoader.ValidateRecords(const BatchTimeIn: Tdatetime);
+procedure TufrmCertifyExpDataLoader.ValidateEmployeeRecords(const BatchTimeIn: Tdatetime);
 var
   Time_Stamp :  TDateTime;
 
@@ -1617,7 +1621,7 @@ end;  { BuildCrewLogFile }
 procedure TufrmCertifyExpDataLoader.Load_CrewTail_HistoryTable(Const BatchTimeIn: TDateTime);
 Var
   RowOut : String;
-  WorkFile : TextFile;                // ??? superfluous?
+  WorkFile : TextFile;                // ???JL superfluous?
   CurrentBatchDateTime : TDateTime;
   CrewTailFileName: String;
 
@@ -2511,7 +2515,11 @@ var
   stlSU_Rec : TStringList;
 
 begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Importing Special Users file' ;
+
   stlSU_Rec := TStringList.Create;
+  stlSU_Rec.StrictDelimiter := true;      { tell stringList to not use space as delimeter }
+  tblPaycomHistory.Open;
   try
     AssignFile(SpecialUsersFile, edSpecialUsersFile.Text);
     Reset(SpecialUsersFile);
@@ -2521,16 +2529,29 @@ begin
       Readln(SpecialUsersFile, strSU_Rec);
       stlSU_Rec.CommaText := strSU_Rec;
       InsertSUIntoHistoryTable(stlSU_Rec, BatchTimeIn);
-
-      //  if SUVendorNum Exists in current batch then
-      //    Invalidate existing record;
     end;
 
   finally
     stlSU_Rec.Free;
+    tblPaycomHistory.Close;
   end;
 
+  OverrideWithSpecialUsers(BatchTimeIn);
+
+
 end;  {ImportSpecialUsers}
+
+
+procedure TufrmCertifyExpDataLoader.OverrideWithSpecialUsers(const BatchTimeIn: TDateTime);
+begin
+
+  qrySpecialUserOverride.Close;
+  qrySpecialUserOverride.ParamByName('parmImportedOn').AsDateTime := BatchTimeIn;
+  qrySpecialUserOverride.Execute;
+
+end;
+
+
 
 
 (*
@@ -2562,7 +2583,7 @@ PaycomHistory Table Field Names:
 9   ,[certfile_accountant_email]
 
 *)
-procedure TufrmCertifyExpDataLoader.InsertSUIntoHistoryTable(const stlSU_RecIn: TStringList; BatchTimeIn: TDateTime);
+procedure TufrmCertifyExpDataLoader.InsertSUIntoHistoryTable(var stlSU_RecIn: TStringList; BatchTimeIn: TDateTime);
 var
   strRecStatus : String;
   strErrorTextOut : String;

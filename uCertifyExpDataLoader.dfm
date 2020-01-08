@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'Certify Data Loader - ver 2.4'
+  Caption = 'Certify Data Loader - ver 2.5 (beta)'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -1654,5 +1654,33 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'order by attr1131')
     Left = 52
     Top = 484
+  end
+  object qrySpecialUserOverride: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      ''
+      'update CertifyExp_PaycomHistory'
+      'set record_status    = '#39'SpecialUserOverride'#39','
+      '    status_timestamp = CURRENT_TIMESTAMP,'
+      '    error_text       = '#39'record_status was: '#39' + record_status'
+      ''
+      'where imported_on   = :parmImportedOn'
+      '  and data_source   = '#39'paycom_file'#39
+      '  and record_status in ( '#39'OK'#39', '#39'terminated'#39' )'#9#9#9#9#9
+      '  and certify_gp_vendornum in'
+      ''
+      '     (select certfile_employee_id'
+      '      from CertifyExp_PaycomHistory'
+      '      where imported_on   = :parmImportedOn'
+      '        and record_status = '#39'OK'#39'     '
+      '        and data_source   = '#39'special_users_file'#39')')
+    Left = 267
+    Top = 353
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmImportedOn'
+        Value = nil
+      end>
   end
 end
