@@ -2516,6 +2516,7 @@ var
 
 begin
   StatusBar1.Panels[1].Text := 'Current Task:  Importing Special Users file' ;
+  Application.ProcessMessages;
 
   stlSU_Rec := TStringList.Create;
   stlSU_Rec.StrictDelimiter := true;      { tell stringList to not use space as delimeter }
@@ -2592,7 +2593,7 @@ var
 
 begin
   // Scrub data a little to eliminate leading & trialing spaces
-  for i := 0 to stlSU_RecIn.Count - 1 do begin
+  for i := 0 to stlSU_RecIn.Count - 1 do begin                          // ???JL test this
     stlSU_RecIn[i] := Trim(stlSU_RecIn[i]);
   end;
 
