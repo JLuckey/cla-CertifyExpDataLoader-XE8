@@ -773,7 +773,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     SQL.Strings = (
       
         '-- Step 1: Insert FlightCrew who have flown in past 45 days but ' +
-        'are not in Paycom '
+        'are not in Paycom, these people are Contractors, by definition  '
       ''
       'insert into CertifyExp_Contractors45 '
       
@@ -782,7 +782,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from CertifyExp_Trips_StartBucket S'
       'where S.TripDepartDate > (CURRENT_TIMESTAMP - :parmDaysBack)'
       '  and CrewMemberVendorNum not in ('
-      '        select distinct certify_gp_vendornum'
+      '        select distinct certify_gp_vendornum   '
       '        from CertifyExp_PayComHistory'
       
         '        where imported_on = :parmImportDateIn     -- '#39'2019-07-30' +
@@ -791,6 +791,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '          and data_source = '#39'paycom_file'#39'         -- this identi' +
         'fies Employees (as opposed to Contractors)'
+      
+        '          and record_status <> '#39'terminated'#39'       -- Get people ' +
+        'who are currently employees'
       '      )'
       ''
       '')
