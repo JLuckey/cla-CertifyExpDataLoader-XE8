@@ -1152,8 +1152,6 @@ end; { LoadTailLeadPilot }
   2. query OnBase to get latest Tail/LeadPilot data
   3. if record counts within tolerance then empty CertifyExp_Tail_LeadPilot & add new recs
   4. write tail_leadpilot.csv to output directory
-
-  * don't forget to update Status Report Email attachment list w/ this file  -- done!
 }
 procedure TufrmCertifyExpDataLoader.LoadTailLeadPilot2;
 var
