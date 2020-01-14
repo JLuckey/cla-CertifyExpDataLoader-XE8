@@ -772,7 +772,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       
-        '-- Step 1: Insert FlightCrew who have flown in past 45 days but ' +
+        '-- Step 1: Insert FlightCrew who have flown in past 60 days but ' +
         'are not in Paycom, these people are Contractors, by definition  '
       ''
       'insert into CertifyExp_Contractors45 '
@@ -782,8 +782,13 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from CertifyExp_Trips_StartBucket S'
       'where S.TripDepartDate > (CURRENT_TIMESTAMP - :parmDaysBack)'
       '  and CrewMemberVendorNum not in ('
-      '        select distinct certify_gp_vendornum   '
-      '        from CertifyExp_PayComHistory'
+      
+        '        select distinct certify_gp_vendornum      -- This result' +
+        ' set is an "exclusion list" of regular employees who are current' +
+        'ly employed'
+      
+        '        from CertifyExp_PayComHistory             --    - If you' +
+        ' are NOT a member of this set then you are a Contractor'
       
         '        where imported_on = :parmImportDateIn     -- '#39'2019-07-30' +
         ' 08:30:00.387'#39'  -- identify the batch of records'
@@ -792,8 +797,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '          and data_source = '#39'paycom_file'#39'         -- this identi' +
         'fies Employees (as opposed to Contractors)'
       
-        '          and record_status <> '#39'terminated'#39'       -- Get people ' +
-        'who are currently employees'
+        '          and record_status <> '#39'terminated'#39'       -- get only pe' +
+        'ople who are currently employees'
       '      )'
       ''
       '')
@@ -877,7 +882,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       '')
     Left = 657
-    Top = 72
+    Top = 76
   end
   object qryGetEmployeeErrors: TUniQuery
     Connection = UniConnection1
@@ -1667,9 +1672,12 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '    status_timestamp = CURRENT_TIMESTAMP,'
       '    error_text       = '#39'record_status was: '#39' + record_status'
       ''
-      'where imported_on   = :parmImportedOn'
-      '  and data_source   = '#39'paycom_file'#39
-      '  and record_status in ( '#39'OK'#39', '#39'terminated'#39' )'#9#9#9#9#9
+      'where imported_on = :parmImportedOn'
+      
+        '  and data_source in ('#39'paycom_file'#39', '#39'PilotMaster'#39', '#39'PilotMaster' +
+        '-NewHire'#39')'
+      ''
+      '  and record_status in ( '#39'OK'#39', '#39'terminated'#39' )'#9
       '  and certify_gp_vendornum in'
       ''
       '     (select certfile_employee_id'
@@ -1677,7 +1685,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '      where imported_on   = :parmImportedOn'
       '        and record_status = '#39'OK'#39'     '
       '        and data_source   = '#39'special_users_file'#39')')
-    Left = 267
+    Left = 266
     Top = 353
     ParamData = <
       item

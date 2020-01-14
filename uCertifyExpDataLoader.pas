@@ -320,6 +320,9 @@ type
 
     Procedure OverrideWithSpecialUsers(Const BatchTimeIn: TDateTime);
 
+    Procedure FlagTerminatedEmployees(Const BatchTimeIn: TDateTime);
+
+
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
     Function  GetTimeFromDBServer(): TDateTime;
@@ -497,6 +500,8 @@ begin
 
   ImportPaycomData(BatchTimeIn);               // rec status: imported or error  6 Jan 2020
 
+    FlagTerminatedEmployees(BatchTimeIn);      // checks Termination Date & updates record_status field in PaycomHistory
+
   LoadTripsIntoStartBucket(BatchTimeIn);
 
     Load_CharterVisa_IntoStartBucket;
@@ -515,7 +520,7 @@ begin
 
   LoadCertFileFields(BatchTimeIn);
 
-    ImportSpecialUsers(BatchTimeIn);       //  <---- new 6 Jan 2020  ???JL
+    ImportSpecialUsers(BatchTimeIn);            //  <---- new 6 Jan 2020  ???JL
 
   Load_IFS_IntoStartBucket(BatchTimeIn);
 
@@ -531,19 +536,14 @@ var
   strOut : String;
   intOut : Integer;
 begin
+  AddContractorsNotInPaycom( StrToDateTime('01/10/2020 11:39:22.057' ));
 
 //  tblPaycomHistory.Open;
 //  ImportSpecialUsers( StrToDateTime('01/07/2020 09:45:01.667') );
 //  tblPaycomHistory.Close;
 
-  OverrideWithSpecialUsers( StrToDateTime('01/07/2020 09:45:01.667') );
+//  OverrideWithSpecialUsers( StrToDateTime('01/07/2020 09:45:01.667') );
 
-
-(*
-  IntOut := ScrubVendorNum('9|', strOut);
-
-  ShowMessage('Vendor:' + IntToStr(intOut) + #13 + 'ErrorMsg:' + strOut);
-*)
 end;
 
 
@@ -559,7 +559,7 @@ procedure TufrmCertifyExpDataLoader.FormClose(Sender: TObject; var Action: TClos
 begin
 
   try
-    UniConnection1.Close;              //  ???JL  this still may be cause the program to hang on exist under some unknown conditions  14 may 2019
+    UniConnection1.Close;              //  ???JL  this still may be cause the program to hang on exit under some unknown conditions  14 may 2019
 
   except
 
@@ -909,7 +909,6 @@ var
 
 begin
 (*  Get newly-imported records
-
     work thru records with validation & write to output file
 *)
   StatusBar1.Panels[1].Text := 'Current Task:  Writing ' + edOutputFileName.Text ;
@@ -1475,12 +1474,13 @@ begin
 
   Time_Stamp := GetTimeFromDBServer();
 
-  // Set status = 'terminated' for employees terminated more than edTerminatedDaysBack.Text days ago so that they don't get procesed
+(*  // Set status = 'terminated' for employees terminated more than edTerminatedDaysBack.Text days ago so that they don't get procesed
   //   Test for Terminated employee first because if Terminated then other validation is moot.
   qryFlagTerminatedEmployees.Close;
   qryFlagTerminatedEmployees.ParamByName('parmDaysBackTerminated').AsInteger := StrToInt(edTerminatedDaysBack.Text);
   qryFlagTerminatedEmployees.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
   qryFlagTerminatedEmployees.Execute;   // Sets RecordStatus = 'terminated'
+*)
 
   // check for valid Certify recs
   qryGetEmployees.Close;
@@ -1570,7 +1570,7 @@ begin
     result := 'error'
   end;
 
-end;
+end;   {UpdateDupeEmailRecs}
 
 
 
@@ -1619,7 +1619,6 @@ end;  { BuildCrewLogFile }
 procedure TufrmCertifyExpDataLoader.Load_CrewTail_HistoryTable(Const BatchTimeIn: TDateTime);
 Var
   RowOut : String;
-  WorkFile : TextFile;                // ???JL superfluous?
   CurrentBatchDateTime : TDateTime;
   CrewTailFileName: String;
 
@@ -2063,8 +2062,6 @@ begin
 end;  { DeleteTrips() }
 
 
-
-
 procedure TufrmCertifyExpDataLoader.AddContractorsNotInPaycom(Const BatchTimeIn: TDateTime);
 begin
   StatusBar1.Panels[1].Text := 'Current Task:  Adding Contractors to PaycomHistory table ' ;
@@ -2072,13 +2069,13 @@ begin
 
   PurgeTable('CertifyExp_Contractors45');
 
-  // get Flight Crew that have flown in past X days but are not in Paycom
+  // get Flight Crew that have flown in past X days but are not in Paycom & puts results into Contractors45 table
   qryContractorsNotInPaycom_Step1.ParamByName('parmImportDateIn').AsDateTime := BatchTimeIn;
   qryContractorsNotInPaycom_Step1.ParamByName('parmDaysBack').AsInteger      := StrToInt(edContractorDaysBack.text);
   qryContractorsNotInPaycom_Step1.Execute;
 
   // Remove Flight Crew that are terminated or have recently been terminated
-  qryContractorsNotInPaycom_Step2.Execute;
+//  qryContractorsNotInPaycom_Step2.Execute;      ???JL  Remove this query from form   10 Jan 2020
 
   tblPaycomHistory.Open;
 
@@ -2535,8 +2532,7 @@ begin
     tblPaycomHistory.Close;
   end;
 
-  OverrideWithSpecialUsers(BatchTimeIn);
-
+  OverrideWithSpecialUsers(BatchTimeIn);          // ???JL should this query override Contractor records in addition to Paycom records
 
 end;  {ImportSpecialUsers}
 
@@ -3139,12 +3135,8 @@ begin
   PreviousBatchDateOut := qryGetCrewTailBatchDates.FieldByName('CreatedOn').AsDateTime;
   qryGetCrewTailBatchDates.Close;
 
-  //  Test/Debug Code   ???JL
   edPreviousDate.Text := DateTimeToStr( PreviousBatchDateOut);
   edNewDate.Text      := DateTimeToStr( NewBatchDateOut);
-
-//  ShowMessage('NewBatchDate: '      + DateTimeToStr(NewBatchDateOut) + #13 +
-//              'PreviousBatchDate: ' + DateTimeToStr(PreviousBatchDateOut) );
 
 end;
 
@@ -3158,7 +3150,6 @@ begin
   PreviousBatchDateOut := qryGetCrewTripBatchDates.FieldByName('CreatedOn').AsDateTime;
   qryGetCrewTripBatchDates.Close;
 
-  //  Test/Debug Code   ???JL
   edPreviousDate.Text := DateTimeToStr( PreviousBatchDateOut );
   edNewDate.Text      := DateTimeToStr( NewBatchDateOut );
 
@@ -3174,7 +3165,6 @@ begin
   PreviousBatchDateOut := qryGetCrewLogBatchDates.FieldByName('CreatedOn').AsDateTime;
   qryGetCrewLogBatchDates.Close;
 
-  //  Test/Debug Code   ???JL
   edPreviousDate.Text := DateTimeToStr( PreviousBatchDateOut );
   edNewDate.Text      := DateTimeToStr( NewBatchDateOut );
 
@@ -3221,6 +3211,18 @@ begin
 
 end;
 
+
+procedure TufrmCertifyExpDataLoader.FlagTerminatedEmployees(const BatchTimeIn: TDateTime);
+begin
+
+  // Set status = 'terminated' for employees terminated more than edTerminatedDaysBack.Text days ago so that they don't get procesed
+  //   Test for Terminated employee after import because if Terminated then other validation is moot.
+  qryFlagTerminatedEmployees.Close;
+  qryFlagTerminatedEmployees.ParamByName('parmDaysBackTerminated').AsInteger := StrToInt(edTerminatedDaysBack.Text);
+  qryFlagTerminatedEmployees.ParamByName('parmImportDate').AsDateTime        := BatchTimeIn;
+  qryFlagTerminatedEmployees.Execute;   // Sets RecordStatus = 'terminated'
+
+end;  { FlagTerminatedEmployees() }
 
 
 procedure TufrmCertifyExpDataLoader.LogIt(ErrorMsgIn: String);
