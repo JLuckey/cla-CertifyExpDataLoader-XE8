@@ -500,7 +500,7 @@ begin
 
   ImportPaycomData(BatchTimeIn);               // rec status: imported or error  6 Jan 2020
 
-    FlagTerminatedEmployees(BatchTimeIn);      // checks Termination Date & updates record_status field in PaycomHistory
+    FlagTerminatedEmployees(BatchTimeIn);      // checks Termination Date & updates record_status in PaycomHistory, was part of ValidateEmployeeRecord
 
   LoadTripsIntoStartBucket(BatchTimeIn);
 
@@ -2532,7 +2532,7 @@ begin
     tblPaycomHistory.Close;
   end;
 
-  OverrideWithSpecialUsers(BatchTimeIn);          // ???JL should this query override Contractor records in addition to Paycom records
+  OverrideWithSpecialUsers(BatchTimeIn);
 
 end;  {ImportSpecialUsers}
 
