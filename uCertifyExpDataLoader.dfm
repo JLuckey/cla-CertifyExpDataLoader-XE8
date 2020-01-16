@@ -1674,9 +1674,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       'where imported_on = :parmImportedOn'
       
-        '  and data_source in ('#39'paycom_file'#39')         -- , '#39'PilotMaster'#39',' +
-        ' '#39'PilotMaster-NewHire'#39')'
-      ''
+        '  and data_source in ('#39'paycom_file'#39', '#39'PilotMaster'#39', '#39'PilotMaster' +
+        '-NewHire'#39')'
       '  and record_status in ( '#39'OK'#39', '#39'terminated'#39' )'#9
       '  and certify_gp_vendornum in'
       ''

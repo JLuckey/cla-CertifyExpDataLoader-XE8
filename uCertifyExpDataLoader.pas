@@ -536,7 +536,10 @@ var
   strOut : String;
   intOut : Integer;
 begin
-  AddContractorsNotInPaycom( StrToDateTime('01/10/2020 11:39:22.057' ));
+
+  LoadData(StrToDateTime('01/16/2020 10:45:00'));
+
+//  AddContractorsNotInPaycom( StrToDateTime('01/10/2020 11:39:22.057' ));
 
 //  tblPaycomHistory.Open;
 //  ImportSpecialUsers( StrToDateTime('01/07/2020 09:45:01.667') );
