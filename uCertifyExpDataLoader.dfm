@@ -1685,11 +1685,39 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '        and record_status = '#39'OK'#39'     '
       '        and data_source   = '#39'special_users_file'#39')')
     Left = 265
-    Top = 352
+    Top = 351
     ParamData = <
       item
         DataType = ftUnknown
         Name = 'parmImportedOn'
+        Value = nil
+      end>
+  end
+  object qryLoadCertifyEmployeesTable: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      ''
+      'insert into CertifyExp_Certify_Employees'
+      'SELECT certfile_work_email'
+      '      ,certfile_first_name'
+      '      ,certfile_last_name'
+      '      ,certfile_employee_id'
+      '      ,certfile_employee_type'
+      '      ,certfile_group'
+      '      ,certfile_department_name'
+      '      ,certfile_approver1_email'
+      '      ,certfile_approver2_email'
+      '      ,certfile_accountant_email'
+      '      ,imported_on'
+      '  FROM CertifyExp_PayComHistory'
+      '  where imported_on = :parmBatchDateIn'
+      '    and record_status = '#39'exported'#39)
+    Left = 153
+    Top = 351
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmBatchDateIn'
         Value = nil
       end>
   end

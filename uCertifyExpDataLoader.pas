@@ -203,6 +203,7 @@ type
     edIFSPseudoUsers: TEdit;
     Label20: TLabel;
     qrySpecialUserOverride: TUniQuery;
+    qryLoadCertifyEmployeesTable: TUniQuery;
 
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -322,6 +323,7 @@ type
 
     Procedure FlagTerminatedEmployees(Const BatchTimeIn: TDateTime);
 
+    Procedure  LoadCertifyEmployeesTable(Const BatchTimeIn: TDateTime);
 
     Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
     Function  CalcDepartmentName(Const GroupValIn: String): String;
@@ -940,7 +942,7 @@ begin
   slOutRec.free;                     // put in Try Finallys   ???JL
   CloseFile(CertifyEmployeeFile);
 
-//  AppendSpecialUsers(CertifyEmployeeFile);     moved to LoadData()
+  LoadCertifyEmployeesTable(BatchTimeIn);
 
 end;  { BuildEmployeeFile }
 
@@ -3226,6 +3228,18 @@ begin
   qryFlagTerminatedEmployees.Execute;   // Sets RecordStatus = 'terminated'
 
 end;  { FlagTerminatedEmployees() }
+
+
+
+procedure TufrmCertifyExpDataLoader.LoadCertifyEmployeesTable(const BatchTimeIn: TDateTime);
+begin
+
+  PurgeTable('CertifyExp_Certify_Employees');
+  qryLoadCertifyEmployeesTable.ParamByName('parmBatchDateIn').AsDateTime := BatchTimeIn;
+  qryLoadCertifyEmployeesTable.Execute;
+
+end;
+
 
 
 procedure TufrmCertifyExpDataLoader.LogIt(ErrorMsgIn: String);
