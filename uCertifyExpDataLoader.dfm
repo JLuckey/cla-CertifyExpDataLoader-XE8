@@ -1687,7 +1687,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  ,[attr1206] as approver_email_1'
       '  ,[attr1207] as approver_email_2'
       '  ,[attr1208] as accountant_email'
-      'FROM [CLAOnBase].[hsi].[rmObjectInstance1023]')
+      'FROM [CLAOnBase].[hsi].[rmObjectInstance1023]'
+      'WHERE activestatus = 0')
     Left = 643
     Top = 505
   end
