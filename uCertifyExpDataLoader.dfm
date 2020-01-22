@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'Certify Data Loader - ver 2.6b (beta)'
+  Caption = 'Certify Data Loader - ver 2.7'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -543,8 +543,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     SQL.Strings = (
       'select distinct LogSheet, CrewMemberID'
       'from CertifyExp_Trips_StartBucket')
-    Left = 37
-    Top = 265
+    Left = 34
+    Top = 281
   end
   object qryGetAirCrewVendorNum: TUniQuery
     Connection = UniConnection1
@@ -619,38 +619,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Name = 'parmRecStatusIn2'
         Value = nil
       end>
-  end
-  object qryGetApproverEmail: TUniQuery
-    Connection = UniConnection1
-    SQL.Strings = (
-      'select work_email'
-      'from CertifyExp_PayComHistory'
-      'where employee_code = :parmEmpCode'
-      '  and imported_on   = :parmBatchTimeIn')
-    Left = 559
-    Top = 162
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'parmEmpCode'
-        Value = nil
-      end
-      item
-        DataType = ftUnknown
-        Name = 'parmBatchTimeIn'
-        Value = nil
-      end>
-  end
-  object qryGetTripAccountantRec: TUniQuery
-    Connection = UniConnection1
-    SQL.Strings = (
-      'select distinct QuoteNum, FarPart'
-      'from CertifyExp_Trips_StartBucket'
-      'where QuoteNum is not null'
-      '  and CrewMemberVendorNum is not null'
-      '  and FarPart is not null')
-    Left = 206
-    Top = 216
   end
   object scrLoadTripStopData: TUniScript
     SQL.Strings = (
@@ -1067,28 +1035,12 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '   OR ( (departure > (CURRENT_TIMESTAMP - 90)) and (arrival < CU' +
         'RRENT_TIMESTAMP) )   -- ended within the past 90 days'
       '')
-    Left = 120
-    Top = 241
+    Left = 217
+    Top = 208
     ParamData = <
       item
         DataType = ftUnknown
         Name = 'parmCrewMemberVendorNum'
-        Value = nil
-      end>
-  end
-  object qryGetDOMEmployees: TUniQuery
-    Connection = UniConnection1
-    SQL.Strings = (
-      'select certify_gp_vendornum, paycom_assigned_ac'
-      'from CertifyExp_PayComHistory'
-      'where imported_on = :parmImportDate'
-      '  and certify_department = '#39'DOM'#39)
-    Left = 48
-    Top = 368
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'parmImportDate'
         Value = nil
       end>
   end
@@ -1306,8 +1258,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from CertifyExp_Trips_StartBucket '
       'where CrewMemberVendorNum is not null '
       '  and QuoteNum is not null and CrewMemberVendorNum > 0')
-    Left = 636
-    Top = 486
+    Left = 659
+    Top = 455
     ParamData = <
       item
         DataType = ftString
@@ -1720,5 +1672,23 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Name = 'parmBatchDateIn'
         Value = nil
       end>
+  end
+  object qryGetSpecialUsers: TUniQuery
+    Connection = connOnBase
+    SQL.Strings = (
+      'SELECT'
+      '   [attr1199] as work_email'
+      '  ,[attr1200] as first_name'
+      '  ,[attr1201] as last_name'
+      '  ,[attr1202] as employee_id'
+      '  ,[attr1203] as employee_type'
+      '  ,[attr1204] as "group"'
+      '  ,[attr1205] as department_name'
+      '  ,[attr1206] as approver_email_1'
+      '  ,[attr1207] as approver_email_2'
+      '  ,[attr1208] as accountant_email'
+      'FROM [CLAOnBase].[hsi].[rmObjectInstance1023]')
+    Left = 643
+    Top = 505
   end
 end

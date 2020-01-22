@@ -98,7 +98,6 @@ type
     procedure SetAPIKey(const Value: String);
     procedure SetAPISecret(const Value: String);
 
-    Procedure Main;
     procedure SetDataSetName(const Value: String);
     procedure SetCertifyDimension(const Value: Integer);
     procedure SetTheBaseURL(const Value: String);
@@ -201,10 +200,6 @@ end;
 
 
 procedure TfrmPushToCertify.Button1Click(Sender: TObject);
-var
-  x : Integer;
-  foo, strbody : string;
-
 begin
 
   //  Setting properties that will be set in calling program
@@ -222,14 +217,6 @@ begin
   theBaseURL          := 'https://api.certify.com/v1/exprptglds';
 
   Push;
-
-end;
-
-
-
-procedure TfrmPushToCertify.Main;
-begin
-
 
 end;
 

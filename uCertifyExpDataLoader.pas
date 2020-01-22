@@ -119,8 +119,6 @@ type
     edOutputDirectory: TEdit;
     Label4: TLabel;
     qryGetImportedRecs: TUniQuery;
-    qryGetApproverEmail: TUniQuery;
-    qryGetTripAccountantRec: TUniQuery;
     scrLoadTripStopData: TUniScript;
     qryGetTripStopRecs: TUniQuery;
     qryGetStartBucketSorted: TUniQuery;
@@ -159,7 +157,6 @@ type
     btnGoHourly: TButton;
     edCharterVisaUsers: TEdit;
     Label16: TLabel;
-    qryGetDOMEmployees: TUniQuery;
     edTailLeadPilotFile: TEdit;
     Label17: TLabel;
     tblTailLeadPilot: TUniTable;
@@ -204,6 +201,7 @@ type
     Label20: TLabel;
     qrySpecialUserOverride: TUniQuery;
     qryLoadCertifyEmployeesTable: TUniQuery;
+    qryGetSpecialUsers: TUniQuery;
 
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -226,14 +224,11 @@ type
     Procedure BuildCrewTailFile(Const CurrBatchTimeIn: TDatetime);
     Procedure BuildCrewTripFile();
     Procedure BuildTripLogFile();
-    Procedure BuildTailTripFile();
-    Procedure BuildTailLogFile();
 
     Procedure BuildGenericValidationFile(const TargetFileName, SQLIn: String) ;
     Procedure BuildGenericValidationFile2(const TargetFileName, SQLIn: String) ;
     Procedure LoadTripsIntoStartBucket(Const BatchTimeIn : TDateTime);
     Procedure BuildValidationFiles(Const BatchTimeIn : TDateTime);
-    Procedure BuildTripAccountantFile(Const FileNameIn: String);
     Procedure CalculateApproverEmail(Const BatchTimeIn: TDateTime) ;
     Procedure FilterTripsByCount;
     Procedure FindPilotsNotInPaycom(Const BatchTimeIn : TDateTime);               // de-cruft, appears not to be called  ???JL  3 dec 2018
@@ -248,8 +243,6 @@ type
     Procedure SendWarningViaEmail(Const ErrorMsgIn: String);
     Procedure CreateEmployeeErrorReport(Const BatchTimeIn : TDateTime) ;
 
-    Procedure AppendSpecialUsers(Const FileToAppend: TextFile);
-
     Procedure UpdateCCField(Const BatchTimeIn: TDateTime);
 
     Procedure LoadCertFileFields(Const BatchTime: TDateTime);
@@ -258,7 +251,6 @@ type
 
 
     Procedure Load_CharterVisa_IntoStartBucket;
-    Procedure Load_DOM_IntoStartBucket(Const BatchTimeIn: TDatetime);
     Procedure InsertCrewTail(Const TailNumIn:String; VendorNumIn: Integer; DataSourceIn: String);
 
     Procedure LoadTailLeadPilot;
@@ -317,7 +309,7 @@ type
 
     // 17 Dec 2019
     Procedure ImportSpecialUsers(Const BatchTimeIn: TDateTime);
-    Procedure InsertSUIntoHistoryTable(Var stlSU_RecIn: TStringList; BatchTimeIn: TDateTime);
+    Procedure InsertSUIntoHistoryTable(BatchTimeIn: TDateTime);
 
     Procedure OverrideWithSpecialUsers(Const BatchTimeIn: TDateTime);
 
@@ -325,13 +317,10 @@ type
 
     Procedure  LoadCertifyEmployeesTable(Const BatchTimeIn: TDateTime);
 
-    Function  GetApproverEmail(Const SupervisorCode: String; BatchTimeIn: TDateTime): String;
-    Function  CalcDepartmentName(Const GroupValIn: String): String;
     Function  GetTimeFromDBServer(): TDateTime;
     Function  RecIsValid(Const TimeStampIn:TDateTime): Boolean ;
 
     Function  CalcPilotName(SourceQueryIn: TUniQuery): String;
-    Function  CalcDeptDescrip: String;
     Function  ScrubFARPart(Const FarPartIn: String): String;
     Function  ScrubCertifyDept(Const DepartmentIn : String) : String;
     Function  CalcPaycomErrorFileName(Const BatchTimeIn: TDateTime): String;
@@ -461,7 +450,6 @@ end;  { Main }
 procedure TufrmCertifyExpDataLoader.HourlyPushMain;
 var
   BatchTime : TDateTime;
-  stlNewCrewTail : TStringList;
   PreviousBatchDate, NewBatchDate : TDateTime;
 
 begin
@@ -535,17 +523,12 @@ procedure TufrmCertifyExpDataLoader.btnFixerClick(Sender: TObject);
 var
   PreviousBatchDate, NewBatchDate : TDateTime;
 
-  strOut : String;
-  intOut : Integer;
 begin
+  ImportSpecialUsers(StrToDateTime('01/21/2020 16:04:00'));
 
-  LoadData(StrToDateTime('01/16/2020 10:45:00'));
+//  LoadData(StrToDateTime('01/16/2020 10:45:00'));
 
 //  AddContractorsNotInPaycom( StrToDateTime('01/10/2020 11:39:22.057' ));
-
-//  tblPaycomHistory.Open;
-//  ImportSpecialUsers( StrToDateTime('01/07/2020 09:45:01.667') );
-//  tblPaycomHistory.Close;
 
 //  OverrideWithSpecialUsers( StrToDateTime('01/07/2020 09:45:01.667') );
 
@@ -856,7 +839,6 @@ var
   stlGroupSet : TStringList;
 
 begin
-
   Result := False;
 
   stlGroupSet := TStringList.Create;
@@ -1547,38 +1529,6 @@ begin
 end;  { UpdateDupeEmailRecs }
 
 
-function TufrmCertifyExpDataLoader.GetApproverEmail(const SupervisorCode: String; BatchTimeIn: TDateTime): String;
-//var
-//  SC : String;
-
-begin
-
-  // hard-coded special case, per specs - disabled, per revised specs dated 31Aug
-//  if Pos('N113CS', qryGetImportedRecs.FieldByName('department_descrip').AsString) > 0 then begin
-//    Result := 'rdragoo@claylacy.com';
-//    Exit;
-//  end;
-
-//  SC := SupervisorCode;
-//  If Length(SC) = 3 then
-//    SC := '0' + SupervisorCode;
-
-  // use different technique to avoid repeated execution of qryGetApproverEmail;  ???JL
-  qryGetApproverEmail.Close;
-  qryGetApproverEmail.ParamByName('parmEmpCode').AsString       := SupervisorCode ;
-  qryGetApproverEmail.ParamByName('parmBatchTimeIn').AsDateTime := BatchTimeIn ;
-  qryGetApproverEmail.Open;
-
-  if  qryGetApproverEmail.FieldByName('work_email').AsString <> '' then
-    result := qryGetApproverEmail.FieldByName('work_email').AsString
-  else begin
-    result := 'error'
-  end;
-
-end;   {UpdateDupeEmailRecs}
-
-
-
 function TufrmCertifyExpDataLoader.GetTimeFromDBServer: TDateTime;
 begin
   qryGetDBServerTime.Close;
@@ -1622,11 +1572,6 @@ end;  { BuildCrewLogFile }
 
 
 procedure TufrmCertifyExpDataLoader.Load_CrewTail_HistoryTable(Const BatchTimeIn: TDateTime);
-Var
-  RowOut : String;
-  CurrentBatchDateTime : TDateTime;
-  CrewTailFileName: String;
-
 begin
   StatusBar1.Panels[1].Text := 'Current Task:  Loading data into CrewTail_History table'  ;
   Application.ProcessMessages;
@@ -1770,37 +1715,6 @@ begin
 end;   { BuildTripLogFile }
 
 
-
-procedure TufrmCertifyExpDataLoader.BuildTailTripFile;
-Var
-  RowOut : String;
-  WorkFile : TextFile;
-
-begin
-  StatusBar1.Panels[1].Text := 'Current Task:  Writing trip_tail.csv'  ;
-  Application.ProcessMessages;
-
-  AssignFile(WorkFile, edOutputDirectory.Text + 'trip_tail.csv');
-  Rewrite(WorkFile);
-
-  qryBuildValFile.Close;
-  qryBuildValFile.SQL.Text := 'select distinct TailNum as TailNumber, QuoteNum as TripNumber from CertifyExp_Trips_StartBucket where QuoteNum is not null and TailNum is not null' ;
-  qryBuildValFile.Open ;
-
-  RowOut := 'TailNumber,TripNumber';
-  WriteLn(WorkFile, RowOut) ;
-  while not qryBuildValFile.eof do begin
-    RowOut := Trim(qryBuildValFile.FieldByName('TailNumber').AsString) + ',' + qryBuildValFile.FieldByName('TripNumber').AsString ;
-    WriteLn(WorkFile, RowOut) ;
-    qryBuildValFile.Next;
-  end;
-
-  CloseFile(WorkFile);
-  qryBuildValFile.Close;
-
-end;  { BuildTailTripFile }
-
-
 procedure TufrmCertifyExpDataLoader.BuildTailTripLogFile;
 Var
   RowOut : String;
@@ -1911,111 +1825,6 @@ begin
   end;
 
 end;
-
-
-function TufrmCertifyExpDataLoader.CalcDepartmentName(const GroupValIn: String): String;
-var
-  slGroupDefault_Index : TStringList;
-  slGroupDefault_Value : TStringList;
-  index : Integer;
-
-begin
-
-  slGroupDefault_Index := TStringList.Create();
-  slGroupDefault_Value := TStringList.Create();
-  slGroupDefault_Index.CaseSensitive := false;
-  slGroupDefault_Value.CaseSensitive := false;
-  try
-    slGroupDefault_Index.CommaText := '"Corporate","Flight Crew",        "Charter - KVNY", "Charter - KOXC", "Hybrid",             "All" ' ;
-    slGroupDefault_Value.CommaText := '"Corporate","Flight Crew - Trip", "Charter - KVNY", "Charter - KOXC", "Flight Crew - Trip", "Corporate" ' ;
-
-    index := slGroupDefault_Index.IndexOf(GroupValIn);
-
-    If index > -1 Then
-      Result := slGroupDefault_Value[index]
-    else
-      Result := 'error';
-
-  finally
-    slGroupDefault_Index.Free;
-    slGroupDefault_Value.Free;
-  end;
-
-end;
-
-
-procedure TufrmCertifyExpDataLoader.BuildTripAccountantFile(Const FileNameIn: String);
-Var
-  RowOut : String;
-  WorkFile : TextFile;
-  AccountantEmail : String;
-
-begin
-  StatusBar1.Panels[1].Text := 'Current Task:  Writing ' + ExtractFileName(FileNameIn) ;
-  Application.ProcessMessages;
-
-
-  AssignFile(WorkFile, FileNameIn);
-  Rewrite(WorkFile);
-
-  qryGetTripAccountantRec.Close;
-  qryGetTripAccountantRec.Open ;
-
-  RowOut := 'TripNumber,Accountant';
-  WriteLn(WorkFile, RowOut) ;
-  while not qryGetTripAccountantRec.eof do begin
-    if Trim(qryGetTripAccountantRec.Fields[1].AsString) = '91' then
-      AccountantEmail := 'QA-91@ClayLacy.com'
-    else
-      AccountantEmail := 'QA-135@ClayLacy.com';
-
-    RowOut := Trim(qryGetTripAccountantRec.Fields[0].AsString) + ',' + AccountantEmail ;
-
-    WriteLn(WorkFile, RowOut) ;
-    qryGetTripAccountantRec.Next;
-  end;
-
-  CloseFile(WorkFile);
-  qryGetTripAccountantRec.Close;
-
-end;  { BuildTripAccountantFile }
-
-
-procedure TufrmCertifyExpDataLoader.BuildTailLogFile;
-Var
-  RowOut : String;
-  WorkFile : TextFile;
-
-
-begin
-  StatusBar1.Panels[1].Text := 'Current Task:  Writing tail_log.csv'  ;
-  Application.ProcessMessages;
-
-  AssignFile(WorkFile, edOutputDirectory.Text + 'tail_log.csv');
-  Rewrite(WorkFile);
-
-  qryBuildValFile.Close;
-  qryBuildValFile.SQL.Clear;
-  qryBuildValFile.SQL.Add( ' select distinct TailNum, LogSheet ' );
-  qryBuildValFile.SQL.Add( ' from CertifyExp_Trips_StartBucket '  );
-  qryBuildValFile.SQL.Add( ' where TailNum is not null '  );
-  qryBuildValFile.SQL.Add( '   and LogSheet is not null '  );
-  qryBuildValFile.SQL.Add( ' order by TailNum ' );
-  qryBuildValFile.Open ;
-
-  RowOut := 'TailNumber,LogSheet';
-  WriteLn(WorkFile, RowOut) ;
-  while not qryBuildValFile.eof do begin
-    RowOut := Trim(qryBuildValFile.FieldByName('TailNum').AsString) + ',' + qryBuildValFile.FieldByName('LogSheet').AsString ;
-    WriteLn(WorkFile, RowOut) ;
-    qryBuildValFile.Next;
-  end;
-
-  CloseFile(WorkFile);
-  qryBuildValFile.Close;
-
-end;  { BuildTailLogFile }
-
 
 
 procedure TufrmCertifyExpDataLoader.FindPilotsNotInPaycom(Const BatchTimeIn : TDateTime);
@@ -2237,18 +2046,8 @@ end;
 function TufrmCertifyExpDataLoader.CalcPilotName(SourceQueryIn: TUniQuery): String;
 begin
   Result := SourceQueryIn.FieldByName('LastName').AsString + ',' + SourceQueryIn.FieldByName('FirstName').AsString  ;
-//  Result := qryGetPilotDetails.FieldByName('LastName').AsString + ',' + qryGetPilotDetails.FieldByName('FirstName').AsString
 
 end;
-
-
-function TufrmCertifyExpDataLoader.CalcDeptDescrip: String;
-begin
-  Result :=  'Designated-' + qryGetPilotDetails.FieldByName('AssignedAC').AsString    ;
-
-//  Result := 'Designated-N1234X';
-end;
-
 
 
 procedure TufrmCertifyExpDataLoader.SendStatusEmail;
@@ -2447,7 +2246,6 @@ function TufrmCertifyExpDataLoader.CalcCrewTailFileName(const BatchTimeIn: TDate
 var
   myMonth, myDay, myYear: word;
   strMonth, strDay: String;
-  FileDest : String;
 
 begin
   DecodeDate(Trunc(BatchTimeIn), myYear, myMonth, myDay);
@@ -2463,83 +2261,33 @@ begin
 
   Result := myIni.ReadString('OutputFiles', 'CrewTailDestination', ''); // + '.csv'  ;
 
-(*
-  FileDest := myIni.ReadString('OutputFiles', 'CrewTailDestination', '');
-
-  ShowMessage(FileDest + #13 +  Copy(FileDest, Length(FileDest), 1) );
-
-  if Copy(FileDest, Length(FileDest), 1) = '_' then        // If file destination string ends with an underbar, "_"
-    Result := myIni.ReadString('OutputFiles', 'CrewTailDestination', '') + IntToStr(myYear) + strMonth + strDay + '.csv'
-  else
-
-  //  add feature: if last char of CrewTailDestination is "_" then append time stamp         ???JL
-*)
 end;  { CalcCrewTailFileName }
 
 
-
-(*
-  1. read Special User (SU) file line
-  2. convert to record data structure
-  3. If SU.VendorNum in current PaycomHistory batch then
-        Invalidate existing PaycomHistory rec
-  4. Add SU rec to current PaycomHistory batch
-*)
-
-procedure TufrmCertifyExpDataLoader.AppendSpecialUsers(Const FileToAppend: TextFile);
-var
-  ExtraEmployeeFile : TextFile;
-  EmpRec : String;
-
-begin
-  AssignFile(ExtraEmployeeFile, edSpecialUsersFile.Text );
-  Reset(ExtraEmployeeFile);
-  ReadLn(ExtraEmployeeFile, EmpRec);  // Read first row which contains file header & ignore it
-  Append(FileToAppend);
-
-  while not eof(ExtraEmployeeFile) do begin
-    ReadLn(ExtraEmployeeFile, EmpRec);
-    Writeln(FileToAppend, EmpRec);
-  end;
-
-  CloseFile(FileToAppend);
-  CloseFile(ExtraEmployeeFile);
-
-end;  { AppendSpecialUsers }
-
-
 procedure TufrmCertifyExpDataLoader.ImportSpecialUsers(const BatchTimeIn: TDateTime);
-var
-  SpecialUsersFile : TextFile;
-  strSU_Rec : String;
-  stlSU_Rec : TStringList;
-
 begin
   StatusBar1.Panels[1].Text := 'Current Task:  Importing Special Users file' ;
   Application.ProcessMessages;
 
-  stlSU_Rec := TStringList.Create;
-  stlSU_Rec.StrictDelimiter := true;      { tell stringList to not use space as delimeter }
   tblPaycomHistory.Open;
   try
-    AssignFile(SpecialUsersFile, edSpecialUsersFile.Text);
-    Reset(SpecialUsersFile);
-    ReadLn(SpecialUsersFile, strSU_Rec);  // Read first row which contains field names & ignore it
+    qryGetSpecialUsers.Close;
+    qryGetSpecialUsers.Open;
 
-    while not Eof(SpecialUsersFile) do begin
-      Readln(SpecialUsersFile, strSU_Rec);
-      stlSU_Rec.CommaText := strSU_Rec;
-      InsertSUIntoHistoryTable(stlSU_Rec, BatchTimeIn);
+    while not qryGetSpecialUsers.eof do begin
+      InsertSUIntoHistoryTable(BatchTimeIn);
+      qryGetSpecialUsers.Next;
     end;
 
   finally
-    stlSU_Rec.Free;
     tblPaycomHistory.Close;
-  end;
+    qryGetSpecialUsers.Close;
 
+  end;
   OverrideWithSpecialUsers(BatchTimeIn);
 
 end;  {ImportSpecialUsers}
+
 
 
 procedure TufrmCertifyExpDataLoader.OverrideWithSpecialUsers(const BatchTimeIn: TDateTime);
@@ -2583,41 +2331,33 @@ PaycomHistory Table Field Names:
 9   ,[certfile_accountant_email]
 
 *)
-procedure TufrmCertifyExpDataLoader.InsertSUIntoHistoryTable(var stlSU_RecIn: TStringList; BatchTimeIn: TDateTime);
+
+procedure TufrmCertifyExpDataLoader.InsertSUIntoHistoryTable(BatchTimeIn: TDateTime);
 var
   strRecStatus : String;
   strErrorTextOut : String;
-  i : integer;
   VendorNum: Integer;
 
 begin
-  // Scrub data a little to eliminate leading & trialing spaces
-  for i := 0 to stlSU_RecIn.Count - 1 do begin                          // ???JL test this
-    stlSU_RecIn[i] := Trim(stlSU_RecIn[i]);
-  end;
-
   try
     tblPayComHistory.Insert;
-    tblPaycomHistory.FieldByName('data_source').AsString        := 'special_users_file';
+    tblPaycomHistory.FieldByName('data_source').AsString        := 'special_users_OnBase';
     tblPaycomHistory.FieldByName('status_timestamp').AsDateTime := BatchTimeIn;
     tblPaycomHistory.FieldByName('imported_on').AsDateTime      := BatchTimeIn;
 
     strRecStatus := 'OK';    // set to OK so no other subsequent validation happens to these recs
 
-    tblPaycomHistory.FieldByName('certfile_work_email').AsString       := stlSU_RecIn[0];
-    tblPaycomHistory.FieldByName('certfile_first_name').AsString       := stlSU_RecIn[1];
-    tblPaycomHistory.FieldByName('certfile_last_name').AsString        := stlSU_RecIn[2];
+    tblPaycomHistory.FieldByName('certfile_work_email').AsString       := qryGetSpecialUsers.FieldByName('work_email').AsString;
+    tblPaycomHistory.FieldByName('certfile_first_name').AsString       := qryGetSpecialUsers.FieldByName('first_name').AsString;
+    tblPaycomHistory.FieldByName('certfile_last_name').AsString        := qryGetSpecialUsers.FieldByName('last_name').AsString;
+    tblPaycomHistory.FieldByName('certfile_employee_type').AsString    := qryGetSpecialUsers.FieldByName('employee_type').AsString;
+    tblPaycomHistory.FieldByName('certfile_group').AsString            := qryGetSpecialUsers.FieldByName('group').AsString;
+    tblPaycomHistory.FieldByName('certfile_department_name').AsString  := qryGetSpecialUsers.FieldByName('department_name').AsString;
+    tblPaycomHistory.FieldByName('certfile_approver1_email').AsString  := qryGetSpecialUsers.FieldByName('approver_email_1').AsString;
+    tblPaycomHistory.FieldByName('certfile_approver2_email').AsString  := qryGetSpecialUsers.FieldByName('approver_email_2').AsString;
+    tblPaycomHistory.FieldByName('certfile_accountant_email').AsString := qryGetSpecialUsers.FieldByName('accountant_email').AsString;
 
-    tblPaycomHistory.FieldByName('certfile_employee_type').AsString    := stlSU_RecIn[4];
-
-    tblPaycomHistory.FieldByName('certfile_group').AsString            := stlSU_RecIn[5];
-    tblPaycomHistory.FieldByName('certfile_department_name').AsString  := stlSU_RecIn[6];
-
-    tblPaycomHistory.FieldByName('certfile_approver1_email').AsString  := stlSU_RecIn[7];
-    tblPaycomHistory.FieldByName('certfile_approver2_email').AsString  := stlSU_RecIn[8];
-    tblPaycomHistory.FieldByName('certfile_accountant_email').AsString := stlSU_RecIn[9];
-
-    VendorNum := ScrubVendorNum(stlSU_RecIn[3], strErrorTextOut);
+    VendorNum := ScrubVendorNum(qryGetSpecialUsers.FieldByName('employee_id').AsString, strErrorTextOut);
     if VendorNum = 0 then begin
       tblPaycomHistory.FieldByName('error_text').AsString := tblPaycomHistory.FieldByName('error_text').AsString + '; ' + strErrorTextOut;
       strRecStatus := 'error';
@@ -2718,48 +2458,6 @@ begin
   end;
 
 end;  { LoadCharterVisaTripsIntoStartBucket }
-
-
-
-
-(*
-must handle the case where multiple aircraft could be listed in the paycom_assigned_ac field, separated by a forward slash '/'
-  for example:  N225MC/N8241W  or  N225MC/N8241W/N550WT
-
-However most of the time there is only one aircraft listed              
-*)
-procedure TufrmCertifyExpDataLoader.Load_DOM_IntoStartBucket(Const BatchTimeIn: TDatetime);
-var
-  stlACList : TStringList;
-  i : Integer;
-
-begin
-  stlACList := TStringList.Create;
-  stlACList.Delimiter := '/';
-  Try
-    tblStartBucket.Open;
-
-    qryGetDOMEmployees.Close;
-    qryGetDOMEmployees.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
-    qryGetDOMEmployees.Open;
-
-    while not qryGetDOMEmployees.eof do begin
-      stlACList.DelimitedText := qryGetDOMEmployees.FieldByName('paycom_assigned_ac').AsString;
-      for i := 0 to stlACList.Count - 1 do begin
-        InsertCrewTail(Trim(stlACList[i]), qryGetDOMEmployees.FieldByName('certify_gp_vendornum').AsInteger, 'DOM_processing');
-      end;  {for}
-      qryGetDOMEmployees.Next;
-    end;  { while }
-
-    qryGetDOMEmployees.Close;
-    tblStartBucket.CLose;
-
-  Finally
-    stlACList.Free;
-  End;  { Try/finally }
-
-end;  { LoadDOMsIntoStartBucket }
-
 
 
 // **********************************************
@@ -3244,9 +2942,9 @@ end;
 
 procedure TufrmCertifyExpDataLoader.LogIt(ErrorMsgIn: String);
 var
-  YearMonth       : ShortString;
+  YearMonth       : String;
   TargetDate      : TDateTime;
-  TargetYearMonth : ShortString;
+  TargetYearMonth : String;
 
 begin
   Sleep(1000);      // keeps Identifier strings for ini file entries unique. Klunky, but it works  -JL
