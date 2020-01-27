@@ -1635,7 +1635,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '      from CertifyExp_PaycomHistory'
       '      where imported_on   = :parmImportedOn'
       '        and record_status = '#39'OK'#39'     '
-      '        and data_source   = '#39'special_users_file'#39')')
+      '        and data_source   = '#39'special_users'#39')')
     Left = 265
     Top = 351
     ParamData = <

@@ -2341,7 +2341,7 @@ var
 begin
   try
     tblPayComHistory.Insert;
-    tblPaycomHistory.FieldByName('data_source').AsString        := 'special_users_OnBase';
+    tblPaycomHistory.FieldByName('data_source').AsString        := 'special_users';
     tblPaycomHistory.FieldByName('status_timestamp').AsDateTime := BatchTimeIn;
     tblPaycomHistory.FieldByName('imported_on').AsDateTime      := BatchTimeIn;
 
