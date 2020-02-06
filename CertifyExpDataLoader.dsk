@@ -15,12 +15,15 @@ File_12=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\d
 File_13=TSourceModule,'F:\XDrive\DCS\CLA\DataWarehouse\DataLoader\TripLoader_hourly\DelphiSourceXE8\uQuoteLoader.pas',0,1,620,1,647,0,0,,
 
 [Modules]
-Module0=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-Module1=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj
-Module2=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
+Module0=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
+Module1=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
+Module2=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj
 Module3=Main_Page
 Count=4
 EditWindowCount=1
+
+[F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini]
+ModuleType=TSourceModule
 
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas]
 ModuleType=TSourceModule
@@ -30,15 +33,12 @@ FormOnTop=0
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj]
 ModuleType=TBaseProject
 
-[F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini]
-ModuleType=TSourceModule
-
 [Main_Page]
 ModuleType=TURLModule
 
 [EditWindow0]
 ViewCount=4
-CurrentEditView=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
+CurrentEditView=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
 View0=0
 View1=1
 View2=2
@@ -90,9 +90,9 @@ EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpD
 [View2]
 CustomEditViewType=TEditView
 Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-CursorX=1
-CursorY=2344
-TopLine=2315
+CursorX=72
+CursorY=2886
+TopLine=2859
 LeftCol=1
 Elisions=
 Bookmarks=
@@ -317,8 +317,8 @@ SplitPos=90
 
 [PropInspDesignerSelection]
 ArrangeBy=Name
-SelectedItem=Name,
-ExpandedItems="LiveBindings Designer=0"
+SelectedItem=,
+ExpandedItems=
 
 [frmDesignPreview]
 PercentageSizes=1

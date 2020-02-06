@@ -336,7 +336,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object UniConnection1: TUniConnection
     ProviderName = 'SQL Server'
-    Database = 'Warehouse'
+    Database = 'WarehouseDEV'
     Username = 'sa'
     Server = '192.168.1.122'
     LoginPrompt = False
@@ -452,8 +452,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  and (certify_role is null or certify_role = '#39#39')'
       '  and (record_status <> '#39'error'#39')'
       '')
-    Left = 272
-    Top = 254
+    Left = 455
+    Top = 358
     ParamData = <
       item
         DataType = ftUnknown
@@ -1005,7 +1005,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'nated)'
       '  and record_status = '#39'imported'#39)
     Left = 507
-    Top = 322
+    Top = 319
     ParamData = <
       item
         DataType = ftUnknown
@@ -1035,8 +1035,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '   OR ( (departure > (CURRENT_TIMESTAMP - 90)) and (arrival < CU' +
         'RRENT_TIMESTAMP) )   -- ended within the past 90 days'
       '')
-    Left = 217
-    Top = 208
+    Left = 190
+    Top = 211
     ParamData = <
       item
         DataType = ftUnknown
@@ -1094,8 +1094,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'select distinct null, '#39'IFS'#39', null, Tail, null, :parmCrewMemberVe' +
         'ndorNum, null'
       'from CertifyExp_Tail_LeadPilot')
-    Left = 456
-    Top = 377
+    Left = 284
+    Top = 210
     ParamData = <
       item
         DataType = ftInteger
@@ -1109,10 +1109,11 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'select certify_gp_vendornum'
       'from CertifyExp_PayComHistory'
       'where Upper(certfile_group) = '#39'IFS'#39
+      '  and certify_gp_vendornum is not null'
       
         '  and imported_on = :parmImportedOn      /* '#39'2019-01-13 13:45:30' +
         '.227'#39' */')
-    Left = 500
+    Left = 544
     Top = 364
     ParamData = <
       item
@@ -1664,8 +1665,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  FROM CertifyExp_PayComHistory'
       '  where imported_on = :parmBatchDateIn'
       '    and record_status = '#39'exported'#39)
-    Left = 153
-    Top = 351
+    Left = 62
+    Top = 369
     ParamData = <
       item
         DataType = ftUnknown
@@ -1691,5 +1692,42 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'WHERE activestatus = 0')
     Left = 643
     Top = 505
+  end
+  object qryInsertGroup: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'insert into CertifyExp_Trips_StartBucket'
+      
+        'select distinct L.logsheet, :parmGroupNameIn, T.QUOTENO, L.acreg' +
+        'no, null, :parmCrewMemberVendorNumIn, null'
+      
+        'from QuoteSys_TripLeg L LEFT OUTER JOIN QuoteSys_Trip T ON L.ACR' +
+        'EGNO = T.ACREGNO AND L.LOGSHEET = T.LOGSHEET'
+      
+        'where ( (L.departure < CURRENT_TIMESTAMP)                     an' +
+        'd (L.arrival > CURRENT_TIMESTAMP) )   -- in-progress'
+      
+        '   OR ( (L.departure > (CURRENT_TIMESTAMP - :parmDaysBackIn)) an' +
+        'd (L.arrival < CURRENT_TIMESTAMP) )   -- ended within the past n' +
+        ' days'
+      '')
+    Left = 241
+    Top = 256
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmGroupNameIn'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmCrewMemberVendorNumIn'
+        Value = nil
+      end
+      item
+        DataType = ftInteger
+        Name = 'parmDaysBackIn'
+        Value = 60
+      end>
   end
 end

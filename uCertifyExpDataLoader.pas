@@ -202,6 +202,7 @@ type
     qrySpecialUserOverride: TUniQuery;
     qryLoadCertifyEmployeesTable: TUniQuery;
     qryGetSpecialUsers: TUniQuery;
+    qryInsertGroup: TUniQuery;
 
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -524,7 +525,12 @@ var
   PreviousBatchDate, NewBatchDate : TDateTime;
 
 begin
-  ImportSpecialUsers(StrToDateTime('01/21/2020 16:04:00'));
+
+  Load_CharterVisa_IntoStartBucket();
+  Load_IFS_IntoStartBucket(StrToDateTime('01/27/2020 10:13:09.407'));
+
+
+//  ImportSpecialUsers(StrToDateTime('01/21/2020 16:04:00'));
 
 //  LoadData(StrToDateTime('01/16/2020 10:45:00'));
 
@@ -2432,7 +2438,6 @@ begin
 end;  { ScrubFARPart }
 
 
-
 procedure TufrmCertifyExpDataLoader.Load_CharterVisa_IntoStartBucket;
 var
   stlCharterVisaUsers : TStringList;
@@ -2442,15 +2447,22 @@ begin
   StatusBar1.Panels[1].Text := 'Current Task:  Loading CharterVisa into StartBucket ' ;
   Application.ProcessMessages;
 
-  stlCharterVisaUsers           := TStringList.Create;
+  stlCharterVisaUsers := TStringList.Create;
 
-  // this field initialized in "Initialize form fields from ini" section of FormCreate()
+  // the edCharterVisaUsers field initialized in "Initialize form fields from ini" section of FormCreate()
   stlCharterVisaUsers.CommaText := edCharterVisaUsers.Text;       // comma-seperated string of Vendor Numbers for CharterVisa Group
   try
     for i := 0 to stlCharterVisaUsers.Count - 1 do Begin
-      qryInsertCharterVisa.Close;
-      qryInsertCharterVisa.ParamByName('parmCrewMemberVendorNum').AsInteger := StrToInt(stlCharterVisaUsers[i]);
-      qryInsertCharterVisa.Execute;
+//      qryInsertCharterVisa.Close;
+//      qryInsertCharterVisa.ParamByName('parmCrewMemberVendorNum').AsInteger := StrToInt(stlCharterVisaUsers[i]);
+//      qryInsertCharterVisa.Execute;
+
+      qryInsertGroup.Close;
+      qryInsertGroup.ParamByName('parmCrewMemberVendorNumIn').AsInteger := StrToInt(stlCharterVisaUsers[i]);
+      qryInsertGroup.ParamByName('parmGroupNameIn').AsString            := 'CharterVisa';
+      qryInsertGroup.ParamByName('parmDaysBackIn').AsInteger            := strToInt(edDaysBack.Text);
+      qryInsertGroup.Execute;
+
     End;
 
   finally
@@ -2461,7 +2473,6 @@ end;  { LoadCharterVisaTripsIntoStartBucket }
 
 
 // **********************************************
-//
 //   1. Get all IFS recs from PaycomHistory for given batch
 //   2. Add all tails for each IFS employee into StartBucket Crew & Tail
 //
@@ -2472,17 +2483,24 @@ var
   i : Integer;
 
 begin
-
   qryGetIFS.Close;
   qryGetIFS.ParamByName('parmImportedOn').AsDateTime := BatchTime;
   qryGetIFS.Open;
 
   while not qryGetIFS.eof do begin
-    qryInsertIFS.Close;
-    qryInsertIFS.ParamByName('parmCrewMemberVendorNum').AsInteger := qryGetIFS.FieldByName('certify_gp_vendornum').AsInteger;
-    qryInsertIFS.Execute;
+//    qryInsertIFS.Close;
+//    qryInsertIFS.ParamByName('parmCrewMemberVendorNum').AsInteger := qryGetIFS.FieldByName('certify_gp_vendornum').AsInteger;
+//    qryInsertIFS.Execute;
+
+    qryInsertGroup.Close;
+    qryInsertGroup.ParamByName('parmCrewMemberVendorNumIn').AsInteger := qryGetIFS.FieldByName('certify_gp_vendornum').AsInteger;;
+    qryInsertGroup.ParamByName('parmGroupNameIn').AsString            := 'IFS';
+    qryInsertGroup.ParamByName('parmDaysBackIn').AsInteger            := strToInt(edDaysBack.Text);
+    qryInsertGroup.Execute;
+
     qryGetIFS.Next;
   end;
+
 
   // TE-43  Adding Pseudo-users for IFS group,   9 Dec 2019
   stlAdditionalIFSUsers := TStringList.Create;
