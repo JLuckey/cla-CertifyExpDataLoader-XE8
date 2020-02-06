@@ -153,7 +153,6 @@ type
     Label13: TLabel;
     Label14: TLabel;
     Label15: TLabel;
-    qryInsertCharterVisa: TUniQuery;
     btnGoHourly: TButton;
     edCharterVisaUsers: TEdit;
     Label16: TLabel;
@@ -163,7 +162,6 @@ type
     btnLoadTailLeadPilotTable: TButton;
     qryFindLeadPilotEmail: TUniQuery;
     qryGetTerminationDate: TUniQuery;
-    qryInsertIFS: TUniQuery;
     qryGetIFS: TUniQuery;
     qryInsertCrewTailHist: TUniQuery;
     qryGetCrewTailBatchDates: TUniQuery;
@@ -2453,16 +2451,11 @@ begin
   stlCharterVisaUsers.CommaText := edCharterVisaUsers.Text;       // comma-seperated string of Vendor Numbers for CharterVisa Group
   try
     for i := 0 to stlCharterVisaUsers.Count - 1 do Begin
-//      qryInsertCharterVisa.Close;
-//      qryInsertCharterVisa.ParamByName('parmCrewMemberVendorNum').AsInteger := StrToInt(stlCharterVisaUsers[i]);
-//      qryInsertCharterVisa.Execute;
-
       qryInsertGroup.Close;
       qryInsertGroup.ParamByName('parmCrewMemberVendorNumIn').AsInteger := StrToInt(stlCharterVisaUsers[i]);
       qryInsertGroup.ParamByName('parmGroupNameIn').AsString            := 'CharterVisa';
       qryInsertGroup.ParamByName('parmDaysBackIn').AsInteger            := strToInt(edDaysBack.Text);
       qryInsertGroup.Execute;
-
     End;
 
   finally
@@ -2488,16 +2481,11 @@ begin
   qryGetIFS.Open;
 
   while not qryGetIFS.eof do begin
-//    qryInsertIFS.Close;
-//    qryInsertIFS.ParamByName('parmCrewMemberVendorNum').AsInteger := qryGetIFS.FieldByName('certify_gp_vendornum').AsInteger;
-//    qryInsertIFS.Execute;
-
     qryInsertGroup.Close;
-    qryInsertGroup.ParamByName('parmCrewMemberVendorNumIn').AsInteger := qryGetIFS.FieldByName('certify_gp_vendornum').AsInteger;;
+    qryInsertGroup.ParamByName('parmCrewMemberVendorNumIn').AsInteger := qryGetIFS.FieldByName('certify_gp_vendornum').AsInteger;
     qryInsertGroup.ParamByName('parmGroupNameIn').AsString            := 'IFS';
     qryInsertGroup.ParamByName('parmDaysBackIn').AsInteger            := strToInt(edDaysBack.Text);
     qryInsertGroup.Execute;
-
     qryGetIFS.Next;
   end;
 
@@ -2507,9 +2495,11 @@ begin
   Try
     stlAdditionalIFSUsers.CommaText := edIFSPseudoUsers.Text;
     for i := 0 to stlAdditionalIFSUsers.Count - 1 do begin
-      qryInsertIFS.Close;
-      qryInsertIFS.ParamByName('parmCrewMemberVendorNum').AsString := stlAdditionalIFSUsers[i];
-      qryInsertIFS.Execute;
+      qryInsertGroup.Close;
+      qryInsertGroup.ParamByName('parmCrewMemberVendorNumIn').AsInteger := strToInt(stlAdditionalIFSUsers[i]);
+      qryInsertGroup.ParamByName('parmGroupNameIn').AsString            := 'IFS';
+      qryInsertGroup.ParamByName('parmDaysBackIn').AsInteger            := strToInt(edDaysBack.Text);
+      qryInsertGroup.Execute;
     end;
   Finally
     stlAdditionalIFSUsers.Free;

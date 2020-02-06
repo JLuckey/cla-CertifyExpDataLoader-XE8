@@ -1018,32 +1018,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Value = nil
       end>
   end
-  object qryInsertCharterVisa: TUniQuery
-    Connection = UniConnection1
-    SQL.Strings = (
-      'insert into CertifyExp_Trips_StartBucket'
-      
-        'select distinct L.logsheet, '#39'CharterVisa'#39', T.QUOTENO, L.acregno,' +
-        ' null, :parmCrewMemberVendorNum, null'
-      
-        'from QuoteSys_TripLeg L LEFT OUTER JOIN QuoteSys_Trip T ON L.ACR' +
-        'EGNO = T.ACREGNO AND L.LOGSHEET = T.LOGSHEET'
-      
-        'where ( (departure < CURRENT_TIMESTAMP)        and (arrival > CU' +
-        'RRENT_TIMESTAMP) )   -- in-progress'
-      
-        '   OR ( (departure > (CURRENT_TIMESTAMP - 90)) and (arrival < CU' +
-        'RRENT_TIMESTAMP) )   -- ended within the past 90 days'
-      '')
-    Left = 190
-    Top = 211
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'parmCrewMemberVendorNum'
-        Value = nil
-      end>
-  end
   object tblTailLeadPilot: TUniTable
     TableName = 'CertifyExp_Tail_LeadPilot'
     Connection = UniConnection1
@@ -1086,23 +1060,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Value = nil
       end>
   end
-  object qryInsertIFS: TUniQuery
-    Connection = UniConnection1
-    SQL.Strings = (
-      'insert into CertifyExp_Trips_StartBucket'
-      
-        'select distinct null, '#39'IFS'#39', null, Tail, null, :parmCrewMemberVe' +
-        'ndorNum, null'
-      'from CertifyExp_Tail_LeadPilot')
-    Left = 284
-    Top = 210
-    ParamData = <
-      item
-        DataType = ftInteger
-        Name = 'parmCrewMemberVendorNum'
-        Value = 77777
-      end>
-  end
   object qryGetIFS: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
@@ -1113,8 +1070,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '  and imported_on = :parmImportedOn      /* '#39'2019-01-13 13:45:30' +
         '.227'#39' */')
-    Left = 544
-    Top = 364
+    Left = 271
+    Top = 235
     ParamData = <
       item
         DataType = ftUnknown
@@ -1711,8 +1668,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'd (L.arrival < CURRENT_TIMESTAMP) )   -- ended within the past n' +
         ' days'
       '')
-    Left = 241
-    Top = 256
+    Left = 212
+    Top = 215
     ParamData = <
       item
         DataType = ftUnknown
