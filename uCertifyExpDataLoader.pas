@@ -131,8 +131,6 @@ type
     qryPurgeWorkingTable: TUniQuery;
     qryGetPilotDetails: TUniQuery;
     qryGetEmployeeErrors: TUniQuery;
-    edSpecialUsersFile: TEdit;
-    Label5: TLabel;
     qryGetFutureTrips: TUniQuery;
     tblStartBucket: TUniTable;
     qryUpdateHasCCField: TUniQuery;
@@ -156,10 +154,7 @@ type
     btnGoHourly: TButton;
     edCharterVisaUsers: TEdit;
     Label16: TLabel;
-    edTailLeadPilotFile: TEdit;
-    Label17: TLabel;
     tblTailLeadPilot: TUniTable;
-    btnLoadTailLeadPilotTable: TButton;
     qryFindLeadPilotEmail: TUniQuery;
     qryGetTerminationDate: TUniQuery;
     qryGetIFS: TUniQuery;
@@ -206,7 +201,6 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnGoHourlyClick(Sender: TObject);
-    procedure btnLoadTailLeadPilotTableClick(Sender: TObject);
     procedure btnFixerClick(Sender: TObject);
 
   private
@@ -252,11 +246,8 @@ type
     Procedure Load_CharterVisa_IntoStartBucket;
     Procedure InsertCrewTail(Const TailNumIn:String; VendorNumIn: Integer; DataSourceIn: String);
 
-    Procedure LoadTailLeadPilot;
     Procedure LoadTailLeadPilot2;
 
-
-    Procedure InsertTailLeadPilot(Const TailNumIn, EMailIn: String);
     Procedure FlagRecordAsError(Const ErrorType, ErrorMsgIn : String);
 
     Procedure Load_IFS_IntoStartBucket(BatchTime: TDateTime);
@@ -384,7 +375,7 @@ begin
   edPayComInputFile.Text  := myIni.ReadString('Startup', 'PaycomFileName',   '') ;
   edOutputFileName.Text   := myIni.ReadString('Startup', 'CertifyEmployeeFileName', '') ;
   edOutputDirectory.Text  := myIni.ReadString('Startup', 'OutputDirectory', '') ;
-  edSpecialUsersFile.Text := myIni.ReadString('Startup', 'SpecialUsersFileName', '') ;
+//  edSpecialUsersFile.Text := myIni.ReadString('Startup', 'SpecialUsersFileName', '') ;
   edCharterVisaUsers.Text := myIni.ReadString('Startup', 'CharterVisaVendorNumbers', '') ;
   edIFSPseudoUsers.Text   := myIni.ReadString('Startup', 'IFSPseudoUsers', '') ;
 
@@ -1097,46 +1088,6 @@ Paycom file columns:
 end;  { InsertIntoHistoryTable() }
 
 
-
-procedure TufrmCertifyExpDataLoader.btnLoadTailLeadPilotTableClick(Sender: TObject);
-begin
-  LoadTailLeadPilot;
-end;
-
-
-
-procedure TufrmCertifyExpDataLoader.LoadTailLeadPilot;
-var
-  FileIn: TextFile;
-  sl : TStringList;
-  s: string;
-
-begin
-  StatusBar1.Panels[1].Text := 'Current Task:  Importing Tail_LeadPilot Data' ;
-  Application.ProcessMessages;
-
-  sl := TStringList.Create;
-  sl.StrictDelimiter := true;      { tell stringList to not use space as delimeter }
-
-  AssignFile(FileIn, edTailLeadPilotFile.Text) ;
-  Reset(FileIn);
-  tblTailLeadPilot.open;
-  tblTailLeadPilot.EmptyTable;
-
-  Readln(FileIn, s);  // skip first/header row
-  while not Eof(FileIn) do begin
-    Readln(FileIn, s);
-    sl.CommaText := s;
-    InsertTailLeadPilot(sl[0], sl[1]);
-  end;
-
-  tblTailLeadPilot.close;
-  CloseFile(FileIn);
-  sl.Free;
-
-end; { LoadTailLeadPilot }
-
-
 {  This new procedure gets Tail/LeadPilot data from OnBase/Workbench instead of from a manually-imported .csv file
   1. open local tail_leadpilot table
   2. query OnBase to get latest Tail/LeadPilot data
@@ -1219,16 +1170,6 @@ begin
 
 end;  { WriteTailLeadPilotToFile }
 
-
-procedure TufrmCertifyExpDataLoader.InsertTailLeadPilot(const TailNumIn, EMailIn: String);
-begin
-//  ShowMessage( TailNumIn + #13 + EMailIn );
-  tblTailLeadPilot.Insert;
-  tblTailLeadPilot.FieldByName('Tail').AsString  := Trim(TailNumIn);
-  tblTailLeadPilot.FieldByName('Email').AsString := Trim(EmailIn);
-  tblTailLeadPilot.Post;
-
-end;  { InsertTailLeadPilot }
 
 
 procedure TufrmCertifyExpDataLoader.LoadTripsIntoStartBucket(Const BatchTimeIn : TDateTime);

@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'Certify Data Loader - ver 2.7'
+  Caption = 'Certify Data Loader - ver 2.8'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -42,13 +42,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 85
     Height = 13
     Caption = 'Output Directory:'
-  end
-  object Label5: TLabel
-    Left = 257
-    Top = 142
-    Width = 86
-    Height = 13
-    Caption = 'Special Users File:'
   end
   object Label6: TLabel
     Left = 14
@@ -127,30 +120,23 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Height = 13
     Caption = 'CharterVisa Users Vendor Numbers:'
   end
-  object Label17: TLabel
-    Left = 257
-    Top = 192
-    Width = 238
-    Height = 13
-    Caption = 'Tail_LeadPilot File (used for loading file manually):'
-  end
   object Label18: TLabel
-    Left = 238
+    Left = 202
     Top = 413
-    Width = 21
+    Width = 99
     Height = 13
-    Caption = 'New'
+    Caption = 'New Batch DateTime'
   end
   object Label19: TLabel
-    Left = 409
+    Left = 382
     Top = 413
-    Width = 41
+    Width = 119
     Height = 13
-    Caption = 'Previous'
+    Caption = 'Previous Batch DateTime'
   end
   object Label20: TLabel
-    Left = 14
-    Top = 261
+    Left = 257
+    Top = 192
     Width = 176
     Height = 13
     Caption = 'Inflight Services (IFS) Pseudo Users:'
@@ -190,11 +176,11 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Text = 'certify_employees.csv'
   end
   object btnMain: TButton
-    Left = 192
+    Left = 174
     Top = 304
-    Width = 99
+    Width = 117
     Height = 25
-    Caption = 'Run Nightly'
+    Caption = 'Run Nightly Process'
     TabOrder = 3
     OnClick = btnMainClick
   end
@@ -215,23 +201,13 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     TabOrder = 5
     Text = 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\OutputFiles\'
   end
-  object edSpecialUsersFile: TEdit
-    Left = 257
-    Top = 158
-    Width = 451
-    Height = 21
-    TabOrder = 6
-    Text = 
-      'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\InputFiles\certify_' +
-      'special_users.csv'
-  end
   object edLastNTrips: TEdit
     Left = 63
     Top = 106
     Width = 35
     Height = 21
     Alignment = taRightJustify
-    TabOrder = 7
+    TabOrder = 6
     Text = '10'
   end
   object edTerminatedDaysBack: TEdit
@@ -240,7 +216,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 37
     Height = 21
     Alignment = taRightJustify
-    TabOrder = 8
+    TabOrder = 7
     Text = '14'
   end
   object edContractorDaysBack: TEdit
@@ -249,16 +225,16 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 32
     Height = 21
     Alignment = taRightJustify
-    TabOrder = 9
+    TabOrder = 8
     Text = '45'
   end
   object btnGoHourly: TButton
     Left = 431
     Top = 304
-    Width = 88
+    Width = 116
     Height = 25
-    Caption = 'Run Hourly'
-    TabOrder = 10
+    Caption = 'Run Hourly Process'
+    TabOrder = 9
     OnClick = btnGoHourlyClick
   end
   object edCharterVisaUsers: TEdit
@@ -267,27 +243,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 172
     Height = 21
     Alignment = taRightJustify
-    TabOrder = 11
+    TabOrder = 10
     Text = '11930,12779,14220'
-  end
-  object edTailLeadPilotFile: TEdit
-    Left = 257
-    Top = 208
-    Width = 451
-    Height = 21
-    TabOrder = 12
-    Text = 
-      'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\InputFiles\tail_lea' +
-      'dpilot_20190215.csv'
-  end
-  object btnLoadTailLeadPilotTable: TButton
-    Left = 569
-    Top = 235
-    Width = 139
-    Height = 25
-    Caption = 'Load Tail_LeadPilot Table'
-    TabOrder = 13
-    OnClick = btnLoadTailLeadPilotTableClick
   end
   object DBGrid1: TDBGrid
     Left = 8
@@ -295,7 +252,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 690
     Height = 110
     DataSource = DataSource1
-    TabOrder = 14
+    TabOrder = 11
     TitleFont.Charset = DEFAULT_CHARSET
     TitleFont.Color = clWindowText
     TitleFont.Height = -11
@@ -307,14 +264,14 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Top = 429
     Width = 152
     Height = 21
-    TabOrder = 15
+    TabOrder = 12
   end
   object edPreviousDate: TEdit
     Left = 361
     Top = 429
     Width = 158
     Height = 21
-    TabOrder = 16
+    TabOrder = 13
   end
   object btnFixer: TButton
     Left = 633
@@ -322,16 +279,17 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 75
     Height = 25
     Caption = 'Fixer'
-    TabOrder = 17
+    Enabled = False
+    TabOrder = 14
     OnClick = btnFixerClick
   end
   object edIFSPseudoUsers: TEdit
-    Left = 14
-    Top = 277
+    Left = 257
+    Top = 208
     Width = 172
     Height = 21
     Alignment = taRightJustify
-    TabOrder = 18
+    TabOrder = 15
     Text = '15718'
   end
   object UniConnection1: TUniConnection
@@ -389,8 +347,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '    AND imported_on = :parmImportDateIn'
       ''
       '')
-    Left = 215
-    Top = 161
+    Left = 130
+    Top = 232
     ParamData = <
       item
         DataType = ftUnknown
@@ -465,8 +423,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       'select CURRENT_TIMESTAMP as DateTimeOut;')
-    Left = 348
-    Top = 145
+    Left = 318
+    Top = 141
   end
   object qryGetDupeEmails: TUniQuery
     Connection = UniConnection1
@@ -535,8 +493,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       '23 Aug 2018 - Jeff Luckey, Jeff@dcsit.com'
       '*/')
-    Left = 399
-    Top = 188
+    Left = 594
+    Top = 266
   end
   object qryBuildValFile: TUniQuery
     Connection = UniConnection1
@@ -601,8 +559,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '    and (record_status = :parmRecStatusIn OR record_status = :pa' +
         'rmRecStatusIn2)'
       ' ')
-    Left = 471
-    Top = 146
+    Left = 476
+    Top = 140
     ParamData = <
       item
         DataType = ftUnknown
@@ -663,8 +621,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '  WHERE CrewMemberID not in ('#39'CharterVisa'#39', '#39'DOM_processing'#39', '#39'I' +
         'FS'#39')'
       '  ORDER By crewmemberid , TripDepartDate desc ')
-    Left = 467
-    Top = 203
+    Left = 608
+    Top = 207
   end
   object qryPilotsNotInPaycom: TUniQuery
     Connection = UniConnection1
@@ -707,8 +665,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       'delete from CertifyExp_PilotsNotInPaycom')
-    Left = 581
-    Top = 280
+    Left = 512
+    Top = 188
   end
   object qryDeleteTrips: TUniQuery
     Connection = UniConnection1
@@ -1070,8 +1028,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '  and imported_on = :parmImportedOn      /* '#39'2019-01-13 13:45:30' +
         '.227'#39' */')
-    Left = 271
-    Top = 235
+    Left = 273
+    Top = 256
     ParamData = <
       item
         DataType = ftUnknown
@@ -1668,8 +1626,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'd (L.arrival < CURRENT_TIMESTAMP) )   -- ended within the past n' +
         ' days'
       '')
-    Left = 212
-    Top = 215
+    Left = 197
+    Top = 250
     ParamData = <
       item
         DataType = ftUnknown
