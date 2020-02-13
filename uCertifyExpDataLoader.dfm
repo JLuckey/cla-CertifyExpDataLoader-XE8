@@ -347,8 +347,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '    AND imported_on = :parmImportDateIn'
       ''
       '')
-    Left = 130
-    Top = 232
+    Left = 122
+    Top = 235
     ParamData = <
       item
         DataType = ftUnknown
@@ -1018,7 +1018,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Value = nil
       end>
   end
-  object qryGetIFS: TUniQuery
+  object qryGetIFSMembers: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
       'select certify_gp_vendornum'
@@ -1028,8 +1028,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '  and imported_on = :parmImportedOn      /* '#39'2019-01-13 13:45:30' +
         '.227'#39' */')
-    Left = 273
-    Top = 256
+    Left = 290
+    Top = 249
     ParamData = <
       item
         DataType = ftUnknown
@@ -1608,7 +1608,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Left = 643
     Top = 505
   end
-  object qryInsertGroup: TUniQuery
+  object qryInsertTripsForGroup: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
       'insert into CertifyExp_Trips_StartBucket'
@@ -1626,8 +1626,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'd (L.arrival < CURRENT_TIMESTAMP) )   -- ended within the past n' +
         ' days'
       '')
-    Left = 197
-    Top = 250
+    Left = 208
+    Top = 206
     ParamData = <
       item
         DataType = ftUnknown
@@ -1643,6 +1643,24 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         DataType = ftInteger
         Name = 'parmDaysBackIn'
         Value = 60
+      end>
+  end
+  object qryInsertTailsForIFS: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      '  insert into CertifyExp_Trips_StartBucket'
+      
+        '  select distinct null, '#39'IFS'#39', null, Tail, null, :parmCrewMember' +
+        'VendorNumIn, null'
+      '  from CertifyExp_Tail_LeadPilot'
+      '')
+    Left = 192
+    Top = 259
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmCrewMemberVendorNumIn'
+        Value = nil
       end>
   end
 end

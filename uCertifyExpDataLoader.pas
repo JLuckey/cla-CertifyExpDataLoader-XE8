@@ -157,7 +157,7 @@ type
     tblTailLeadPilot: TUniTable;
     qryFindLeadPilotEmail: TUniQuery;
     qryGetTerminationDate: TUniQuery;
-    qryGetIFS: TUniQuery;
+    qryGetIFSMembers: TUniQuery;
     qryInsertCrewTailHist: TUniQuery;
     qryGetCrewTailBatchDates: TUniQuery;
     qryGetFailedRecs_CrewTail: TUniQuery;
@@ -195,7 +195,8 @@ type
     qrySpecialUserOverride: TUniQuery;
     qryLoadCertifyEmployeesTable: TUniQuery;
     qryGetSpecialUsers: TUniQuery;
-    qryInsertGroup: TUniQuery;
+    qryInsertTripsForGroup: TUniQuery;
+    qryInsertTailsForIFS: TUniQuery;
 
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -2392,11 +2393,11 @@ begin
   stlCharterVisaUsers.CommaText := edCharterVisaUsers.Text;       // comma-seperated string of Vendor Numbers for CharterVisa Group
   try
     for i := 0 to stlCharterVisaUsers.Count - 1 do Begin
-      qryInsertGroup.Close;
-      qryInsertGroup.ParamByName('parmCrewMemberVendorNumIn').AsInteger := StrToInt(stlCharterVisaUsers[i]);
-      qryInsertGroup.ParamByName('parmGroupNameIn').AsString            := 'CharterVisa';
-      qryInsertGroup.ParamByName('parmDaysBackIn').AsInteger            := strToInt(edDaysBack.Text);
-      qryInsertGroup.Execute;
+      qryInsertTripsForGroup.Close;
+      qryInsertTripsForGroup.ParamByName('parmCrewMemberVendorNumIn').AsInteger := StrToInt(stlCharterVisaUsers[i]);
+      qryInsertTripsForGroup.ParamByName('parmGroupNameIn').AsString            := 'CharterVisa';
+      qryInsertTripsForGroup.ParamByName('parmDaysBackIn').AsInteger            := strToInt(edDaysBack.Text);
+      qryInsertTripsForGroup.Execute;
     End;
 
   finally
@@ -2417,36 +2418,47 @@ var
   i : Integer;
 
 begin
-  qryGetIFS.Close;
-  qryGetIFS.ParamByName('parmImportedOn').AsDateTime := BatchTime;
-  qryGetIFS.Open;
+  // Get a list of IFS members for this batch
+  qryGetIFSMembers.Close;
+  qryGetIFSMembers.ParamByName('parmImportedOn').AsDateTime := BatchTime;
+  qryGetIFSMembers.Open;
 
-  while not qryGetIFS.eof do begin
-    qryInsertGroup.Close;
-    qryInsertGroup.ParamByName('parmCrewMemberVendorNumIn').AsInteger := qryGetIFS.FieldByName('certify_gp_vendornum').AsInteger;
-    qryInsertGroup.ParamByName('parmGroupNameIn').AsString            := 'IFS';
-    qryInsertGroup.ParamByName('parmDaysBackIn').AsInteger            := strToInt(edDaysBack.Text);
-    qryInsertGroup.Execute;
-    qryGetIFS.Next;
+  // Load all tails for each IFS member ( at this time there are approx 100 tails & 15 IFS members, so we are adding ~1500 recs to StartBucket )
+  while not qryGetIFSMembers.eof do begin
+    qryInsertTailsForIFS.Close;
+    qryInsertTailsForIFS.ParamByName('parmCrewMemberVendorNumIn').AsInteger := qryGetIFSMembers.FieldByName('certify_gp_vendornum').AsInteger;
+    qryInsertTailsForIFS.Execute;
+    qryGetIFSMembers.Next;
   end;
 
+  // Load actual Trips that IFS members flew on
+  qryGetIFSMembers.First;
+  while not qryGetIFSMembers.eof do begin
+    qryInsertTripsForGroup.Close;
+    qryInsertTripsForGroup.ParamByName('parmCrewMemberVendorNumIn').AsInteger := qryGetIFSMembers.FieldByName('certify_gp_vendornum').AsInteger;
+    qryInsertTripsForGroup.ParamByName('parmGroupNameIn').AsString            := 'IFS';
+    qryInsertTripsForGroup.ParamByName('parmDaysBackIn').AsInteger            := strToInt(edDaysBack.Text);
+    qryInsertTripsForGroup.Execute;
+    qryGetIFSMembers.Next;
+  end;
+
+  qryGetIFSMembers.Close;
 
   // TE-43  Adding Pseudo-users for IFS group,   9 Dec 2019
   stlAdditionalIFSUsers := TStringList.Create;
   Try
     stlAdditionalIFSUsers.CommaText := edIFSPseudoUsers.Text;
     for i := 0 to stlAdditionalIFSUsers.Count - 1 do begin
-      qryInsertGroup.Close;
-      qryInsertGroup.ParamByName('parmCrewMemberVendorNumIn').AsInteger := strToInt(stlAdditionalIFSUsers[i]);
-      qryInsertGroup.ParamByName('parmGroupNameIn').AsString            := 'IFS';
-      qryInsertGroup.ParamByName('parmDaysBackIn').AsInteger            := strToInt(edDaysBack.Text);
-      qryInsertGroup.Execute;
+      qryInsertTripsForGroup.Close;
+      qryInsertTripsForGroup.ParamByName('parmCrewMemberVendorNumIn').AsInteger := strToInt(stlAdditionalIFSUsers[i]);
+      qryInsertTripsForGroup.ParamByName('parmGroupNameIn').AsString            := 'IFS';
+      qryInsertTripsForGroup.ParamByName('parmDaysBackIn').AsInteger            := strToInt(edDaysBack.Text);
+      qryInsertTripsForGroup.Execute;
     end;
   Finally
     stlAdditionalIFSUsers.Free;
   End;
 
-  qryGetIFS.Close;
 
 end;  { LoadIFSIntoStartBucket }
 
