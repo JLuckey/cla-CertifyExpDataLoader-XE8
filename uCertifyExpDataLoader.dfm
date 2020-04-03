@@ -279,7 +279,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 75
     Height = 25
     Caption = 'Fixer'
-    Enabled = False
     TabOrder = 14
     OnClick = btnFixerClick
   end
@@ -410,8 +409,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  and (certify_role is null or certify_role = '#39#39')'
       '  and (record_status <> '#39'error'#39')'
       '')
-    Left = 455
-    Top = 358
+    Left = 509
+    Top = 363
     ParamData = <
       item
         DataType = ftUnknown
@@ -485,16 +484,10 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       '/*'
-      'Note:'
-      
-        'This query'#39's BeforeExecute Event is used to set parameters in sc' +
-        'rLoadTripData.SQL'
-      'See code & scrLoadTripDate.dataset for more info;'
       ''
-      '23 Aug 2018 - Jeff Luckey, Jeff@dcsit.com'
       '*/')
     Left = 594
-    Top = 266
+    Top = 264
   end
   object qryBuildValFile: TUniQuery
     Connection = UniConnection1

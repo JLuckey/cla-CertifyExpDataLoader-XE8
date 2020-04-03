@@ -218,6 +218,7 @@ type
     Procedure BuildCrewTailFile(Const CurrBatchTimeIn: TDatetime);
     Procedure BuildCrewTripFile();
     Procedure BuildTripLogFile();
+    Procedure BuildCrewDepartDateAirportFile();
 
     Procedure BuildGenericValidationFile(const TargetFileName, SQLIn: String) ;
     Procedure BuildGenericValidationFile2(const TargetFileName, SQLIn: String) ;
@@ -307,6 +308,8 @@ type
     Procedure FlagTerminatedEmployees(Const BatchTimeIn: TDateTime);
 
     Procedure  LoadCertifyEmployeesTable(Const BatchTimeIn: TDateTime);
+
+
 
     Function  GetTimeFromDBServer(): TDateTime;
     Function  RecIsValid(Const TimeStampIn:TDateTime): Boolean ;
@@ -516,8 +519,12 @@ var
 
 begin
 
-  Load_CharterVisa_IntoStartBucket();
-  Load_IFS_IntoStartBucket(StrToDateTime('01/27/2020 10:13:09.407'));
+  LoadTripsIntoStartBucket(StrToDateTime('04/01/2020 11:50:09.407'));
+  BuildCrewDepartDateAirportFile;
+
+
+//  Load_CharterVisa_IntoStartBucket();
+//  Load_IFS_IntoStartBucket(StrToDateTime('01/27/2020 10:13:09.407'));
 
 
 //  ImportSpecialUsers(StrToDateTime('01/21/2020 16:04:00'));
@@ -1196,7 +1203,7 @@ begin
   // Load PIC data into StartBucket
   qryLoadTripData.SQL.Clear;
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
-  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.PICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, T.TR_DEPART');
+  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.PICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, T.TR_DEPART, L.ARRIVEID');
   qryLoadTripData.SQL.Append('from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
   qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
   qryLoadTripData.SQL.Append('and L.PICPILOTNO > 0');
@@ -1205,7 +1212,7 @@ begin
 
   // Load SIC data into StartBucket
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
-  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.SICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, T.TR_DEPART');
+  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.SICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, T.TR_DEPART, L.ARRIVEID');
   qryLoadTripData.SQL.Append('from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
   qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
   qryLoadTripData.SQL.Append('and L.SICPILOTNO > 0');
@@ -1214,7 +1221,7 @@ begin
 
   // Load TIC data into StartBucket
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
-  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.TICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, T.TR_DEPART');
+  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.TICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, T.TR_DEPART, L.ARRIVEID');
   qryLoadTripData.SQL.Append('from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
   qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
   qryLoadTripData.SQL.Append('and L.TICPILOTNO > 0');
@@ -1223,7 +1230,7 @@ begin
 
   // Load FA (Flight Attendant) data into StartBucket
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
-  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.FANO, T.QUOTENO, L.ACREGNO, FARPART, 0, T.TR_DEPART');
+  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.FANO, T.QUOTENO, L.ACREGNO, FARPART, 0, T.TR_DEPART, L.ARRIVEID');
   qryLoadTripData.SQL.Append('from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
   qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
   qryLoadTripData.SQL.Append('and L.FANO > 0');
@@ -1514,6 +1521,41 @@ begin
   qryBuildValFile.Close;
 
 end;  { BuildCrewLogFile }
+
+
+
+procedure TufrmCertifyExpDataLoader.BuildCrewDepartDateAirportFile;
+Var
+  RowOut : String;
+  WorkFile : TextFile;
+  strDateDest : String;
+
+begin
+  AssignFile(WorkFile, edOutputDirectory.Text + 'crew_departdate_airport.csv');
+  Rewrite(WorkFile);
+
+  qryBuildValFile.Close;
+  qryBuildValFile.SQL.Clear;
+  qryBuildValFile.SQL.Text := 'select distinct TripDepartDate, FirstDestination, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null order by TripDepartDate';
+  qryBuildValFile.Open ;
+
+  RowOut := 'DepartDate_Airport, CrewMemberVendorNum';
+  WriteLn(WorkFile, RowOut) ;
+  while ( not qryBuildValFile.eof ) do begin
+    strDateDest := Trim(qryBuildValFile.FieldByName('TripDepartDate').AsString) + '_' + qryBuildValFile.FieldByName('FirstDestination').AsString;
+    RowOut := strDateDest + ',' +
+              qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + strDateDest;
+
+    WriteLn(WorkFile, RowOut) ;
+    qryBuildValFile.Next;
+  end;
+
+  CloseFile(WorkFile);
+  qryBuildValFile.Close;
+
+end;  { BuildCrewDepartDateAirportFile }
+
+
 
 
 
