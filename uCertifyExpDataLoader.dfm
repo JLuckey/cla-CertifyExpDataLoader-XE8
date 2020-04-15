@@ -891,7 +891,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'select distinct TailNum, QuoteNum, LogSheet'
       'from CertifyExp_Trips_StartBucket'
       'where QuoteNum is not Null'
-      '  and LogSheet is not Null'
+      '  and LogSheet is not Null '
       'order by LogSheet'
       '')
     Left = 358
@@ -1021,8 +1021,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '  and imported_on = :parmImportedOn      /* '#39'2019-01-13 13:45:30' +
         '.227'#39' */')
-    Left = 290
-    Top = 249
+    Left = 284
+    Top = 248
     ParamData = <
       item
         DataType = ftUnknown
@@ -1604,6 +1604,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryInsertTripsForGroup: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
+      '/*'
       'insert into CertifyExp_Trips_StartBucket'
       
         'select distinct L.logsheet, :parmGroupNameIn, T.QUOTENO, L.acreg' +
@@ -1618,9 +1619,28 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '   OR ( (L.departure > (CURRENT_TIMESTAMP - :parmDaysBackIn)) an' +
         'd (L.arrival < CURRENT_TIMESTAMP) )   -- ended within the past n' +
         ' days'
+      '*/'
+      ''
+      'insert into CertifyExp_Trips_StartBucket'
+      
+        'select distinct null, :parmGroupNameIn, T.QUOTENO, L.acregno, nu' +
+        'll, :parmCrewMemberVendorNumIn, L.DEPARTURE, L.ARRIVEID, L.LEGNO'
+      
+        '  from QuoteSys_TripLeg L LEFT OUTER JOIN QuoteSys_Trip T ON L.A' +
+        'CREGNO = T.ACREGNO AND L.LOGSHEET = T.LOGSHEET'
+      
+        '  where ( (L.departure < CURRENT_TIMESTAMP)                     ' +
+        'and (L.arrival > CURRENT_TIMESTAMP) )   -- in-progress'
+      
+        '     OR ( (L.departure > (CURRENT_TIMESTAMP - :parmDaysBackIn)) ' +
+        'and (L.arrival < CURRENT_TIMESTAMP) )   -- ended within the past' +
+        ' n days'
+      '    AND L.LEGNO = 1'
+      'ORDER BY DEPARTURE'
+      ''
       '')
-    Left = 208
-    Top = 206
+    Left = 207
+    Top = 205
     ParamData = <
       item
         DataType = ftUnknown
@@ -1644,16 +1664,30 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  insert into CertifyExp_Trips_StartBucket'
       
         '  select distinct null, '#39'IFS'#39', null, Tail, null, :parmCrewMember' +
-        'VendorNumIn, null'
+        'VendorNumIn, null, null, null'
       '  from CertifyExp_Tail_LeadPilot'
       '')
     Left = 192
-    Top = 259
+    Top = 258
     ParamData = <
       item
         DataType = ftUnknown
         Name = 'parmCrewMemberVendorNumIn'
         Value = nil
       end>
+  end
+  object qryGetTailTripDepartdate: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      
+        'select distinct TailNum, QuoteNum, TripDepartDate, FirstDestinat' +
+        'ion'
+      'from CertifyExp_Trips_StartBucket'
+      'where QuoteNum is not Null'
+      '/*  and LogSheet is not Null  */'
+      'order by QuoteNum'
+      '')
+    Left = 394
+    Top = 129
   end
 end
