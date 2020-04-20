@@ -532,7 +532,6 @@ begin
   BuildTailTripDepartTimeAirport;
 
 
-
 //  Load_CharterVisa_IntoStartBucket();
 //  Load_IFS_IntoStartBucket(StrToDateTime('01/27/2020 10:13:09.407'));
 
@@ -1533,18 +1532,21 @@ Var
   strDateDest : String;
 
 begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Writing crew_departdate_airport.csv'  ;
+  Application.ProcessMessages;
+
   AssignFile(WorkFile, edOutputDirectory.Text + 'crew_departdate_airport.csv');
   Rewrite(WorkFile);
 
   qryBuildValFile.Close;
   qryBuildValFile.SQL.Clear;
-  qryBuildValFile.SQL.Text := 'select distinct TripDepartDate, FirstDestination, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null order by TripDepartDate';
+  qryBuildValFile.SQL.Text := 'select distinct TripDepartDate, FirstDestination, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and TripDepartDate is not null order by TripDepartDate';
   qryBuildValFile.Open ;
 
   RowOut := 'DepartDate_Airport, CrewMemberVendorNum';
   WriteLn(WorkFile, RowOut) ;
   while ( not qryBuildValFile.eof ) do begin
-    strDateDest := Trim(qryBuildValFile.FieldByName('TripDepartDate').AsString) + '_' + qryBuildValFile.FieldByName('FirstDestination').AsString;
+    strDateDest := Trim(FormatDateTime('mm/dd/yy', qryBuildValFile.FieldByName('TripDepartDate').AsDateTime)) + '_' + qryBuildValFile.FieldByName('FirstDestination').AsString;
     RowOut := strDateDest + ',' +
               qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + strDateDest;
 
@@ -1755,7 +1757,9 @@ begin
   while Not qryGetTailTripDepartdate.eof do Begin
     RowOut := Trim(qryGetTailTripDepartdate.FieldByName('TailNum').AsString) + ',' +
                    qryGetTailTripDepartdate.FieldByName('QuoteNum').AsString + ',' +
-                   qryGetTailTripDepartdate.FieldByName('TripDepartDate').AsString + '_' +qryGetTailTripDepartdate.FieldByName('FirstDestination').AsString;
+                   FormatDateTime('dd/mm/yy', qryGetTailTripDepartdate.FieldByName('TripDepartDate').AsDateTime) + '_' +qryGetTailTripDepartdate.FieldByName('FirstDestination').AsString;
+//                   qryGetTailTripDepartdate.FieldByName('TripDepartDate').AsString + '_' +qryGetTailTripDepartdate.FieldByName('FirstDestination').AsString;
+
     WriteLn(WorkFile, RowOut) ;
     qryGetTailTripDepartdate.Next;
   end;
