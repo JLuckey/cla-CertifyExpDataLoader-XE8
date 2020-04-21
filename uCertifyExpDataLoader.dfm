@@ -410,8 +410,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  and (certify_role is null or certify_role = '#39#39')'
       '  and (record_status <> '#39'error'#39')'
       '')
-    Left = 455
-    Top = 358
+    Left = 504
+    Top = 365
     ParamData = <
       item
         DataType = ftUnknown
@@ -935,13 +935,14 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'where imported_on = :parmImportDate'
       
         '  and job_code_descrip in ('#39'Pilot Designated'#39','#39'Pilot-Designated'#39 +
-        ','#39'FA Designated'#39','#39'Pilot Not-Designated'#39','#39'FA Non-Designated'#39')'
+        ','#39'FA Designated'#39','#39'Pilot Not-Designated'#39','#39'FA Non-Designated'#39','#39'Pil' +
+        'ot On Demand'#39','#39'FA On Demand'#39')'
       '  and record_status = '#39'non-certify'#39
       
         '  and ((termination_date is null) or (termination_date > CURRENT' +
         '_TIMESTAMP - 14))')
     Left = 357
-    Top = 321
+    Top = 320
     ParamData = <
       item
         DataType = ftUnknown
