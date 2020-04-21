@@ -279,6 +279,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 75
     Height = 25
     Caption = 'Fixer'
+    Enabled = False
     TabOrder = 14
     OnClick = btnFixerClick
   end
