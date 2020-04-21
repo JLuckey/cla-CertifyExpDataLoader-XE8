@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'Certify Data Loader - ver 2.8'
+  Caption = 'Certify Data Loader - ver 2.9'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -279,7 +279,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 75
     Height = 25
     Caption = 'Fixer'
-    Enabled = False
     TabOrder = 14
     OnClick = btnFixerClick
   end
@@ -411,7 +410,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  and (record_status <> '#39'error'#39')'
       '')
     Left = 504
-    Top = 365
+    Top = 364
     ParamData = <
       item
         DataType = ftUnknown
@@ -942,7 +941,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '  and ((termination_date is null) or (termination_date > CURRENT' +
         '_TIMESTAMP - 14))')
     Left = 357
-    Top = 320
+    Top = 319
     ParamData = <
       item
         DataType = ftUnknown

@@ -512,12 +512,16 @@ end;  { LoadData() }
 
 procedure TufrmCertifyExpDataLoader.btnFixerClick(Sender: TObject);
 var
-  PreviousBatchDate, NewBatchDate : TDateTime;
+  PreviousBatchDate, NewBatchDate, BatchTimeIn : TDateTime;
 
 begin
+  BatchTimeIn := StrToDateTime('04/21/2020 13:40:09.407');
 
-  Load_CharterVisa_IntoStartBucket();
-  Load_IFS_IntoStartBucket(StrToDateTime('01/27/2020 10:13:09.407'));
+  LoadTripsIntoStartBucket(BatchTimeIn);
+
+
+//  Load_CharterVisa_IntoStartBucket();
+//  Load_IFS_IntoStartBucket(StrToDateTime('01/27/2020 10:13:09.407'));
 
 
 //  ImportSpecialUsers(StrToDateTime('01/21/2020 16:04:00'));
