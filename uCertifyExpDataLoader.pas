@@ -806,6 +806,18 @@ begin
 //    end else if GroupIsIn(strCertifyGroup, '|FlightCrew|PoolPilot|PoolFA|FlightCrewCorp|FlightCrewNonPCal|IFS|') then begin
     end else if GroupIsIn(strCertifyGroup, gloFlightCrewGroup) then begin
 
+(* Note 13: This logic is now handled by Certify "Workflows" within the Certify system      4Feb2019 -JL
+      //  Assign Approver1 Email
+      qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := strAccountantEmail;
+
+      //  Assign Approver2 Email
+      if qryGetImportedRecs.FieldByName('employee_code').AsString = 'contractor'  then
+        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail
+      else
+        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
+*)
+
+
       // Assign Accountant Email
       if qryGetImportedRecs.FieldByName('has_credit_card').AsString = 'T' then
         strAccountantEmail := 'FlightCrewCC@ClayLacy.com'
@@ -824,7 +836,7 @@ begin
       // Assign Accountant Email
       qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := 'FlightCrewCC@ClayLacy.com';
 
-(* See Note 13
+(* See Note 13, above
       //  Assign Approver1 Email
       qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := 'CorporateCC@ClayLacy.com';
 
@@ -1757,7 +1769,7 @@ begin
   while Not qryGetTailTripDepartdate.eof do Begin
     RowOut := Trim(qryGetTailTripDepartdate.FieldByName('TailNum').AsString) + ',' +
                    qryGetTailTripDepartdate.FieldByName('QuoteNum').AsString + ',' +
-                   FormatDateTime('dd/mm/yy', qryGetTailTripDepartdate.FieldByName('TripDepartDate').AsDateTime) + '_' +qryGetTailTripDepartdate.FieldByName('FirstDestination').AsString;
+                   FormatDateTime('mm/dd/yy', qryGetTailTripDepartdate.FieldByName('TripDepartDate').AsDateTime) + '_' +qryGetTailTripDepartdate.FieldByName('FirstDestination').AsString;
 //                   qryGetTailTripDepartdate.FieldByName('TripDepartDate').AsString + '_' +qryGetTailTripDepartdate.FieldByName('FirstDestination').AsString;
 
     WriteLn(WorkFile, RowOut) ;
