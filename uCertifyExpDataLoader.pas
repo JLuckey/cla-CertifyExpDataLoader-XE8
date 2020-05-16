@@ -511,6 +511,11 @@ begin
 
   FilterTripsByCount;                           // removes selected recs from StartBucket
 
+
+  // Should this go here?  What is the chronology?
+  GenerateMissingFlightCrewReport(BatchTimeIn);
+
+
 end;  { LoadData() }
 
 
@@ -520,14 +525,17 @@ var
 
 begin
 
-  BatchTime := StrToDateTime('04/13/2020 09:45:02.727');
+  BatchTime := StrToDateTime('04/08/2020 09:48:41.597');
 
-  LoadTripsIntoStartBucket(BatchTime);
-  Load_CharterVisa_IntoStartBucket;
-  Load_IFS_IntoStartBucket(BatchTime);
+  GenerateMissingFlightCrewReport(BatchTime);
 
-  BuildCrewDepartDateAirportFile;
-  BuildTailTripDepartTimeAirport;
+
+//  LoadTripsIntoStartBucket(BatchTime);
+//  Load_CharterVisa_IntoStartBucket;
+//  Load_IFS_IntoStartBucket(BatchTime);
+//
+//  BuildCrewDepartDateAirportFile;
+//  BuildTailTripDepartTimeAirport;
 
 
 //  Load_CharterVisa_IntoStartBucket();
@@ -1856,15 +1864,18 @@ begin
     RowOut := RowOut + SourceQueryIn.Fields[i].FieldName + ',';
   end;
   RowOut := Copy(RowOut, 1, RowOut.Length - 1);   // Remove trailing comma
+  WriteLn(WorkFile, RowOut) ;
+  RowOut := '';
 
   // Write data rows
   while not SourceQueryIn.eof do begin
     for i := 0 to SourceQueryIn.Fields.Count - 1 do Begin
-      RowOut := RowOut + SourceQueryIn.Fields[i].FieldName + ',';
+      RowOut := RowOut + SourceQueryIn.Fields[i].AsString + ',';
     end;
     RowOut := Copy(RowOut, 1, RowOut.Length - 1);   // Remove trailing comma
 
     WriteLn(WorkFile, RowOut) ;
+    RowOut := '';
     SourceQueryIn.Next;
   end;
 
@@ -1952,8 +1963,9 @@ begin
   Application.ProcessMessages;
 
   qryGetMissingFlightCrew.Close;
-  qryGetMissingFlightCrew.ParamByName('parmIMporteDateIn').AsDateTime := BatchTimeIn ;
+  qryGetMissingFlightCrew.ParamByName('parmImportDateIn').AsDateTime := BatchTimeIn ;
   qryGetMissingFlightCrew.ParamByName('parmDaysBack').AsInteger       := StrToInt(edContractorDaysBack.text);
+  ShowMessage(qryGetMissingFlightCrew.SQL.Text);
   qryGetMissingFlightCrew.Open;
 
   WriteQueryResultsToFile(qryGetMissingFlightCrew, 'MissingFlightCrewTest.txt');
@@ -2134,7 +2146,7 @@ begin
   myMessage.Body.Text    := ErrorMsgIn ;
 
   //  Hard-coding params because the error being trapped is 'cannot find .ini file' which contains these params
-  myMessage.Recipients.EMailAddresses := 'Jeff@dcsit.com,TKallo@claylacy.com,LTaylor@ClayLacy.com,DLittlefield@ClayLacy.com' ;
+  myMessage.Recipients.EMailAddresses := 'Jeff@dcsit.com,LTaylor@ClayLacy.com,DLittlefield@ClayLacy.com,thomasfduffy@gmail.com' ;
   mySMTP := TIdSMTP.Create(nil);
   mySMTP.Host     :=  '192.168.1.73' ;
   mySMTP.Username :=  'tkvassay@claylacy.com' ;

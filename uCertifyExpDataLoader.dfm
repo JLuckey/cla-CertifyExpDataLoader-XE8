@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'Certify Data Loader - ver 2.8'
+  Caption = 'Certify Data Loader - ver 2.9'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -1403,7 +1403,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '        and record_status = '#39'OK'#39'     '
       '        and data_source   = '#39'special_users'#39')')
     Left = 265
-    Top = 351
+    Top = 350
     ParamData = <
       item
         DataType = ftUnknown
@@ -1552,10 +1552,10 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     SQL.Strings = (
       
         'select distinct P.LastName, P.FirstName, S.CrewMemberVendorNum, ' +
-        'CrewMemberID, QuoteNum, TripDepartDate, TailNum'
+        'S.CrewMemberID, S.QuoteNum, S.TripDepartDate, S.TailNum'
       
-        'from CertifyExp_Trips_StartBucket S left outer join QuoteSys_Pil' +
-        'otMaster P on S.CrewMemberID = P.PilotID'
+        'from  QuoteSys_PilotMaster P left outer join CertifyExp_Trips_St' +
+        'artBucket S  on S.CrewMemberID = CONVERT(varchar(20), P.PilotID)'
       'where S.TripDepartDate > (CURRENT_TIMESTAMP - :parmDaysBack)'
       '  and CrewMemberVendorNum not in ('
       
@@ -1577,9 +1577,10 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '          and record_status <> '#39'terminated'#39'       -- get only pe' +
         'ople who are currently employees'
       '      )'
-      'order by P.LastName')
+      'order by P.LastName'
+      '')
     Left = 530
-    Top = 19
+    Top = 18
     ParamData = <
       item
         DataType = ftUnknown
