@@ -126,10 +126,7 @@ type
     qryGetPilotsNotInPaycom: TUniQuery;
     qryEmptyPilotsNotInPaycom: TUniQuery;
     qryDeleteTrips: TUniQuery;
-    qryContractorsNotInPaycom_Step1: TUniQuery;
-    qryContractorsNotInPaycom_Step2: TUniQuery;
     qryPurgeWorkingTable: TUniQuery;
-    qryGetPilotDetails: TUniQuery;
     qryGetEmployeeErrors: TUniQuery;
     qryGetFutureTrips: TUniQuery;
     tblStartBucket: TUniTable;
@@ -181,7 +178,6 @@ type
     tblTripStop: TUniTable;
     qryGetNewHireRecs: TUniQuery;
     qryGetFlightCrewNewHire: TUniQuery;
-    qryGetNewContractors: TUniQuery;
     qryUpdtStatus_CrewTrip_1: TUniQuery;
     qryUpdtStatus_CrewTrip_2: TUniQuery;
     qryUpdtStatus_CrewTail_1: TUniQuery;
@@ -198,6 +194,7 @@ type
     qryInsertTripsForGroup: TUniQuery;
     qryInsertTailsForIFS: TUniQuery;
     qryGetTailTripDepartdate: TUniQuery;
+    qryGetMissingFlightCrew: TUniQuery;
 
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -232,7 +229,6 @@ type
     Procedure FindPilotsNotInPaycom(Const BatchTimeIn : TDateTime);               // de-cruft, appears not to be called  ???JL  3 dec 2018
     Procedure DeleteTrip(Const LogSheetIn, QuoteNumIn : Integer; CrewMemberIDIn: String);
 
-    Procedure AddContractorsNotInPaycom(Const BatchTimeIn: TDateTime);
     Procedure WriteContractorsToPaycomTable(Const BatchTimeIn: TDateTime; NewHireFlag: Boolean; SourceQry: TUniQuery );
 
     Procedure ConnectToDB();
@@ -288,8 +284,6 @@ type
     Procedure PruneHistoryTables(Const TableNameIn : String);
 
     // 7 Jun 2019
-    Procedure Process_NewHire_Contractors(Const BatchTimeIn: TDateTime);
-//    Procedure CalcSQLForQryGetPilotDetails(Const QryKind : String);
     Procedure AddDummyTripToStartBucket(Const VendorNumIn: Integer; NewHireKind: String) ;
     Procedure InsertDummyNewHireTripStop(Const QuoteNumIn : Integer);
     Procedure Process_NewHire_Employees_FlightCrew(Const BatchTimeIn: TDateTime);
@@ -338,6 +332,10 @@ type
     Function CalcInClause(Const GroupStrIn: String): String;
 
     Function ScrubVendorNum(Const strVendorNumIn: String; Var ErrorTxtOut: String): Integer;
+
+  // TID:1112 15 May 2020
+    Procedure GenerateMissingFlightCrewReport(Const BatchTimeIn: TDateTime);
+    Procedure WriteQueryResultsToFile(SourceQueryIn: TUniQuery; FileNameOut: String);
 
   public
     { Public declarations }
@@ -493,9 +491,9 @@ begin
 
     Load_CharterVisa_IntoStartBucket;
 
-  AddContractorsNotInPaycom(BatchTimeIn);       // writes Contractors to PaycomHistory table
+//  AddContractorsNotInPaycom(BatchTimeIn);       // writes Contractors to PaycomHistory table
 
-    Process_NewHire_Contractors(BatchTimeIn);     // writes New-Hire contractors to PaycomHistory, if they have not yet flown any trips
+//    Process_NewHire_Contractors(BatchTimeIn);     // writes New-Hire contractors to PaycomHistory, if they have not yet flown any trips
     Process_NewHire_Employees_FlightCrew(BatchTimeIn);
 
   UpdateCCField(BatchTimeIn);                   // Update Credit Card Field
@@ -1842,6 +1840,40 @@ begin
 end;  { BuildGenericValidationFile2 }
 
 
+procedure TufrmCertifyExpDataLoader.WriteQueryResultsToFile(SourceQueryIn: TUniQuery; FileNameOut: String);
+var
+  WorkFile: TextFile;
+  RowOut: String;
+  i: Integer;
+
+begin
+  RowOut := '';
+  AssignFile(WorkFile, FileNameOut);
+  Rewrite(WorkFile);
+
+  // Write column header row
+  for i := 0 to SourceQueryIn.Fields.Count - 1 do Begin
+    RowOut := RowOut + SourceQueryIn.Fields[i].FieldName + ',';
+  end;
+  RowOut := Copy(RowOut, 1, RowOut.Length - 1);   // Remove trailing comma
+
+  // Write data rows
+  while not SourceQueryIn.eof do begin
+    for i := 0 to SourceQueryIn.Fields.Count - 1 do Begin
+      RowOut := RowOut + SourceQueryIn.Fields[i].FieldName + ',';
+    end;
+    RowOut := Copy(RowOut, 1, RowOut.Length - 1);   // Remove trailing comma
+
+    WriteLn(WorkFile, RowOut) ;
+    SourceQueryIn.Next;
+  end;
+
+  CloseFile(WorkFile);
+
+end;  { WriteQueryResultsToFile }
+
+
+
 function TufrmCertifyExpDataLoader.CalcCertfileDepartmentName(const GroupNameIn: String): String;
 var
   slGroupToDropdown : TStringList;
@@ -1914,82 +1946,23 @@ begin
 end;  { DeleteTrips() }
 
 
-procedure TufrmCertifyExpDataLoader.AddContractorsNotInPaycom(Const BatchTimeIn: TDateTime);
+procedure TufrmCertifyExpDataLoader.GenerateMissingFlightCrewReport(Const BatchTimeIn: TDateTime);
 begin
-  StatusBar1.Panels[1].Text := 'Current Task:  Adding Contractors to PaycomHistory table ' ;
+  StatusBar1.Panels[1].Text := 'Current Task:  Generating Missing Flight Crew Report.. ' ;
   Application.ProcessMessages;
 
-  PurgeTable('CertifyExp_Contractors45');
+  qryGetMissingFlightCrew.Close;
+  qryGetMissingFlightCrew.ParamByName('parmIMporteDateIn').AsDateTime := BatchTimeIn ;
+  qryGetMissingFlightCrew.ParamByName('parmDaysBack').AsInteger       := StrToInt(edContractorDaysBack.text);
+  qryGetMissingFlightCrew.Open;
 
-  // get Flight Crew that have flown in past X days but are not in Paycom & puts results into Contractors45 table
-  qryContractorsNotInPaycom_Step1.ParamByName('parmImportDateIn').AsDateTime := BatchTimeIn;
-  qryContractorsNotInPaycom_Step1.ParamByName('parmDaysBack').AsInteger      := StrToInt(edContractorDaysBack.text);
-  qryContractorsNotInPaycom_Step1.Execute;
+  WriteQueryResultsToFile(qryGetMissingFlightCrew, 'MissingFlightCrewTest.txt');
+  qryGetMissingFlightCrew.Close;
 
-  // Remove Flight Crew that are terminated or have recently been terminated
-//  qryContractorsNotInPaycom_Step2.Execute;      ???JL  Remove this query from form   10 Jan 2020
-
-  tblPaycomHistory.Open;
-
-  qryGetPilotDetails.close;
-  qryGetPilotDetails.open;
-  while not qryGetPilotDetails.eof do begin
-    WriteContractorsToPaycomTable(BatchTimeIn, False, qryGetPilotDetails);
-    qryGetPilotDetails.Next;
-  end ;
-
-  tblPaycomHistory.Close;
-  qryGetPilotDetails.Close;
-
-end;  { AddContractorsNotInPaycom }
+end;  { GenerateMissingFlightCrewReport }
 
 
-(* ------------------------------------------------------
-  Adding dummy records for newly-hired contractors so that they can
-   be trained on Certify before they have flown any trips.
 
-  The process requires that records be added to the following tables/files
-    1. PaycomHistory table
-    2. StartBucket table
-    3. trip_stop.csv file
-
-  Items 1 & 2 are performed here.
-  Item 3 is done in BuildValidationFiles() by calling InsertDummyNewHireTripStop()
-
--------------------------------------------------------- *)
-procedure TufrmCertifyExpDataLoader.Process_NewHire_Contractors(const BatchTimeIn: TDateTime);
-begin
-  gloNewHireDummyQuoteNum := 818181;     // a random but distinctive number for new Contractors
-
-  StatusBar1.Panels[1].Text := 'Current Task:  Processing New Hire Contractors' ;
-  Application.ProcessMessages;
-
-  tblPaycomHistory.Open;
-
-  (*
-  1. query PilotMast for new-hires    (employed_on within last 45 days)
-  2. filter-out people in PaycomHist (employees/contractors in current batch) to get only newly-hired contractors that have not flown
-  3. write to PaycomHistory's current batch
-  *)
-
-  DataSource1.DataSet := qryGetNewContractors;
-
-  qryGetNewContractors.close;
-  qryGetNewContractors.ParamByName('parmImportedOn').AsDateTime := BatchTimeIn;
-  qryGetNewContractors.open;
-
-  while not qryGetNewContractors.eof do begin
-    WriteContractorsToPaycomTable(BatchTimeIn, True, qryGetNewContractors);
-    if Not FindVendorNumInStartBucket(qryGetNewContractors.FieldByName('VendorNumber').AsInteger) then begin
-      AddDummyTripToStartBucket(qryGetNewContractors.FieldByName('VendorNumber').AsInteger, 'ConNewHire' );
-    end;
-    qryGetNewContractors.Next;
-  end;
-
-  qryGetNewContractors.Close;
-  tblPaycomHistory.close;
-
-end;  { ProcessNewHireContractors }
 
 
 procedure TufrmCertifyExpDataLoader.Process_NewHire_Employees_FlightCrew(const BatchTimeIn: TDateTime);
@@ -2909,6 +2882,7 @@ begin
   edNewDate.Text      := DateTimeToStr( NewBatchDateOut );
 
 end;  { GetBatchDates_CrewTrip }
+
 
 
 procedure TufrmCertifyExpDataLoader.GetBatchDates_CrewLog(var PreviousBatchDateOut, NewBatchDateOut: TDateTime);

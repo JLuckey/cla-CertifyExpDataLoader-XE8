@@ -687,121 +687,13 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Value = nil
       end>
   end
-  object qryContractorsNotInPaycom_Step1: TUniQuery
-    Connection = UniConnection1
-    SQL.Strings = (
-      
-        '-- Step 1: Insert FlightCrew who have flown in past 60 days but ' +
-        'are not in Paycom, these people are Contractors, by definition  '
-      ''
-      'insert into CertifyExp_Contractors45 '
-      
-        'select distinct S.CrewMemberVendorNum, '#39'Status'#39', '#39'EmpStatus'#39', 99' +
-        '99   '
-      'from CertifyExp_Trips_StartBucket S'
-      'where S.TripDepartDate > (CURRENT_TIMESTAMP - :parmDaysBack)'
-      '  and CrewMemberVendorNum not in ('
-      
-        '        select distinct certify_gp_vendornum      -- This result' +
-        ' set is an "exclusion list" of regular employees who are current' +
-        'ly employed'
-      
-        '        from CertifyExp_PayComHistory             --    - If you' +
-        ' are NOT a member of this set then you are a Contractor'
-      
-        '        where imported_on = :parmImportDateIn     -- '#39'2019-07-30' +
-        ' 08:30:00.387'#39'  -- identify the batch of records'
-      '          and certify_gp_vendornum is not null'
-      
-        '          and data_source = '#39'paycom_file'#39'         -- this identi' +
-        'fies Employees (as opposed to Contractors)'
-      
-        '          and record_status <> '#39'terminated'#39'       -- get only pe' +
-        'ople who are currently employees'
-      '      )'
-      ''
-      '')
-    Left = 492
-    Top = 4
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'parmDaysBack'
-        Value = nil
-      end
-      item
-        DataType = ftUnknown
-        Name = 'parmImportDateIn'
-        Value = nil
-      end>
-  end
-  object qryContractorsNotInPaycom_Step2: TUniQuery
-    Connection = UniConnection1
-    SQL.Strings = (
-      
-        '-- Step 2:  Remove any FlightCrew who have been terminated excep' +
-        't those within the last 14 day grace period; and older terminati' +
-        'ons'
-      ''
-      'delete from CertifyExp_Contractors45 '
-      'where CrewMemberVendorNum  in'
-      '  ('
-      '    select VendorNumber'
-      '    from QuoteSys_PilotMaster '
-      
-        '    where (TerminatedOn > (CURRENT_TIMESTAMP - 14))'#9'-- terminate' +
-        'd in last 14 days'
-      
-        '       or (ArchiveFlag = '#39'T'#39' and TerminatedOn is Null)'#9'-- older ' +
-        'terminated employee recs, lots of older recs only have ArchiveFl' +
-        'ag = T but no TerminatedOn date'
-      '  )'
-      ''
-      ''
-      ''
-      '')
-    Left = 616
-    Top = 18
-  end
   object qryPurgeWorkingTable: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
       'delete from CertifyExp_Contractors45'
       '')
     Left = 411
-    Top = 51
-  end
-  object qryGetPilotDetails: TUniQuery
-    Connection = UniConnection1
-    SQL.Strings = (
-      'select P.PilotID'
-      '      ,P.LastName'
-      '      ,P.FirstName'
-      '      ,P.VendorNumber'
-      '      ,P.UpdatedInQuoteSys'
-      '      ,P.UpdatedBy'
-      '      ,P.Base'
-      '      ,P.ArchiveFlag'
-      '      ,P.JobTitle'
-      '      ,P.EmployeeStatus'
-      '      ,P.Status'
-      '      ,P.EMail'
-      '      ,P.AssignedAC'
-      ''
-      
-        'from CertifyExp_Contractors45 C left outer join QuoteSys_PilotMa' +
-        'ster P '
-      '  on C.CrewMemberVendorNum = P.VendorNumber'
-      
-        'where P.EmployeeStatus <> '#39'Clients'#39'           -- special-case re' +
-        'cords in PilotMaster that do not represent actual Flight Crew pe' +
-        'rsonnel'
-      '  and CrewMemberVendorNum is not null'
-      'order by P.VendorNumber'
-      ''
-      '')
-    Left = 657
-    Top = 76
+    Top = 52
   end
   object qryGetEmployeeErrors: TUniQuery
     Connection = UniConnection1
@@ -1265,8 +1157,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'select CrewMemberVendorNum, QuoteNum'
       'from CertifyExp_Trips_StartBucket'
       'where CrewMemberVendorNum = :parmVendorNumIn')
-    Left = 615
-    Top = 113
+    Left = 589
+    Top = 123
     ParamData = <
       item
         DataType = ftUnknown
@@ -1286,8 +1178,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'select QuoteNum'
       'from CertifyExp_Trips_StartBucket'
       'where CrewMemberID in ('#39'ConNewHire'#39', '#39'EmpNewHire'#39')')
-    Left = 353
-    Top = 553
+    Left = 628
+    Top = 55
   end
   object qryGetFlightCrewNewHire: TUniQuery
     Connection = UniConnection1
@@ -1303,41 +1195,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'order  by certify_gp_vendornum')
     Left = 535
     Top = 533
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'parmImportedOn'
-        Value = nil
-      end>
-  end
-  object qryGetNewContractors: TUniQuery
-    Connection = UniConnection1
-    SQL.Strings = (
-      'select [PilotID]'
-      '      ,[LastName]'
-      '      ,[FirstName]'
-      '      ,[VendorNumber]'
-      '      ,[UpdatedInQuoteSys]'
-      '      ,[UpdatedBy]'
-      '      ,[Base]'
-      '      ,[ArchiveFlag]'
-      '      ,[JobTitle]'
-      '      ,[EmployeeStatus]'
-      '      ,[Status]'
-      '      ,[EMail]'
-      '      ,[AssignedAC]'
-      ''
-      'from QuoteSys_PilotMaster'
-      'where EmployedOn > (CURRENT_TIMESTAMP - 45)'
-      '  and VendorNumber not in'
-      '        (select distinct certify_gp_vendornum'
-      '        from CertifyExp_PayComHistory'
-      
-        '        where imported_on = :parmImportedOn        -- identify t' +
-        'he batch of records'
-      '          and certify_gp_vendornum is not null)')
-    Left = 582
-    Top = 61
     ParamData = <
       item
         DataType = ftUnknown
@@ -1689,5 +1546,50 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '')
     Left = 394
     Top = 129
+  end
+  object qryGetMissingFlightCrew: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      
+        'select distinct P.LastName, P.FirstName, S.CrewMemberVendorNum, ' +
+        'CrewMemberID, QuoteNum, TripDepartDate, TailNum'
+      
+        'from CertifyExp_Trips_StartBucket S left outer join QuoteSys_Pil' +
+        'otMaster P on S.CrewMemberID = P.PilotID'
+      'where S.TripDepartDate > (CURRENT_TIMESTAMP - :parmDaysBack)'
+      '  and CrewMemberVendorNum not in ('
+      
+        '        select distinct certify_gp_vendornum      -- This result' +
+        ' set is an "exclusion list" of regular employees who are current' +
+        'ly employed'
+      
+        '        from CertifyExp_PayComHistory             --    - If you' +
+        ' are NOT a member of this set then you are placed on the Missing' +
+        ' Flight Crew Report'
+      
+        '        where imported_on = :parmImportDateIn     -- '#39'2020-05-12' +
+        ' 08:30:00.387'#39'  -- identify the batch of records'
+      '          and certify_gp_vendornum is not null'
+      
+        '          and data_source = '#39'paycom_file'#39'         -- this identi' +
+        'fies Employees'
+      
+        '          and record_status <> '#39'terminated'#39'       -- get only pe' +
+        'ople who are currently employees'
+      '      )'
+      'order by P.LastName')
+    Left = 530
+    Top = 19
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmDaysBack'
+        Value = nil
+      end
+      item
+        DataType = ftUnknown
+        Name = 'parmImportDateIn'
+        Value = nil
+      end>
   end
 end
