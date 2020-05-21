@@ -25,7 +25,7 @@ EditWindowCount=1
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas]
 ModuleType=TSourceModule
 FormState=1
-FormOnTop=0
+FormOnTop=1
 
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj]
 ModuleType=TBaseProject
@@ -59,15 +59,15 @@ ClientHeight=9123
 DockedToMainForm=1
 BorlandEditorCodeExplorer=BorlandEditorCodeExplorer@EditWindow0
 TopPanelSize=0
-LeftPanelSize=1522
+LeftPanelSize=2038
 LeftPanelClients=PropertyInspector,DockSite3
-LeftPanelData=00000800010100000000B60F00000000000001F20500000000000001000000005D0E000009000000446F636B53697465330100000000631E00001100000050726F7065727479496E73706563746F72FFFFFFFF
+LeftPanelData=00000800010100000000A41100000000000001F60700000000000001000000005D0E000009000000446F636B536974653301000000001F2200001100000050726F7065727479496E73706563746F72FFFFFFFF
 RightPanelSize=1286
 RightPanelClients=DockSite2,DockSite4
-RightPanelData=00000800010100000000B60F00000000000001060500000000000001000000004412000009000000446F636B53697465320100000000631E000009000000446F636B5369746534FFFFFFFF
-BottomPanelSize=893
+RightPanelData=00000800010100000000A41100000000000001060500000000000001000000004412000009000000446F636B536974653201000000001F22000009000000446F636B5369746534FFFFFFFF
+BottomPanelSize=0
 BottomPanelClients=DockSite1,MessageView
-BottomPanelData=0000080001020100000009000000446F636B53697465318D4B000000000000027D0300000000000001000000008D4B00000F0000004D65737361676556696577466F726DFFFFFFFF
+BottomPanelData=0000080001020200000009000000446F636B53697465310F0000004D65737361676556696577466F726D8D4B000000000000027D0300000000000001000000008D4B00000F0000004D65737361676556696577466F726DFFFFFFFF
 BottomMiddlePanelSize=0
 BottomMiddlePanelClients=DockSite0,GraphDrawingModel
 BottomMiddelPanelData=0000080001020200000009000000446F636B536974653010000000477261706844726177696E6756696577991D00000000000002F906000000000000FFFFFFFF
@@ -90,13 +90,13 @@ EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpD
 [View2]
 CustomEditViewType=TEditView
 Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-CursorX=3
-CursorY=1850
-TopLine=1825
+CursorX=112
+CursorY=812
+TopLine=809
 LeftCol=1
 Elisions=
-Bookmarks={2,1820,3}
-EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
+Bookmarks={1,1430,6}{2,1828,3}
+EditViewName=Borland.FormDesignerView
 
 [View3]
 CustomEditViewType=TEditView
@@ -134,7 +134,8 @@ Dockable=1
 StayOnTop=0
 
 [Breakpoints]
-Count=0
+Count=1
+Breakpoint0='F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',530,'',0,1,'',1,0,0,'',1,'','','',0,''
 
 [EmbarcaderoWin32Debugger_AddressBreakpoints]
 Count=0
@@ -184,7 +185,7 @@ StayOnTop=0
 [MessageView]
 PercentageSizes=1
 Create=1
-Visible=1
+Visible=0
 Docked=1
 State=0
 Left=0
@@ -209,11 +210,11 @@ State=0
 Left=0
 Top=0
 Width=1286
-Height=2986
+Height=3984
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1286
-ClientHeight=2986
+ClientHeight=3984
 TBDockHeight=7148
 LRDockWidth=1995
 Dockable=1
@@ -303,17 +304,22 @@ Docked=1
 State=0
 Left=0
 Top=369
-Width=1522
-Height=4029
+Width=2038
+Height=5028
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=1522
-ClientHeight=4029
+ClientWidth=2038
+ClientHeight=5028
 TBDockHeight=8824
-LRDockWidth=1522
+LRDockWidth=2038
 Dockable=1
 StayOnTop=0
-SplitPos=90
+SplitPos=121
+
+[PropInspDesignerSelection]
+ArrangeBy=Name
+SelectedItem=,
+ExpandedItems=
 
 [frmDesignPreview]
 PercentageSizes=1
@@ -592,11 +598,11 @@ Docked=1
 State=0
 Left=0
 Top=0
-Width=1522
+Width=2038
 Height=3241
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=1522
+ClientWidth=2038
 ClientHeight=3241
 TBDockHeight=3685
 LRDockWidth=1896
@@ -764,14 +770,14 @@ Docked=1
 State=0
 Left=0
 Top=23
-Width=1522
+Width=2038
 Height=3541
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=1522
+ClientWidth=2038
 ClientHeight=3541
 TBDockHeight=8824
-LRDockWidth=1522
+LRDockWidth=2038
 Dockable=1
 StayOnTop=0
 TabPosition=1
@@ -789,11 +795,11 @@ State=0
 Left=0
 Top=463
 Width=1286
-Height=2986
+Height=3984
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1286
-ClientHeight=2986
+ClientHeight=3984
 TBDockHeight=8824
 LRDockWidth=1286
 Dockable=1
