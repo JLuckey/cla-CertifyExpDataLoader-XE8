@@ -195,6 +195,7 @@ type
     qryInsertTailsForIFS: TUniQuery;
     qryGetTailTripDepartdate: TUniQuery;
     qryGetMissingFlightCrew: TUniQuery;
+    qryGetJobCodeDescrips: TUniQuery;
 
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -309,7 +310,7 @@ type
 
 
     Function  GetTimeFromDBServer(): TDateTime;
-    Function  RecIsValid(Const TimeStampIn:TDateTime): Boolean ;
+    Function  RecIsValid(Const TimeStampIn:TDateTime; Const strValid_Roles, strValid_JobCodeDescrips: String ): Boolean ;
 
     Function  CalcPilotName(SourceQueryIn: TUniQuery): String;
     Function  ScrubFARPart(Const FarPartIn: String): String;
@@ -336,6 +337,10 @@ type
   // TID:1112 15 May 2020
     Procedure GenerateMissingFlightCrewReport(Const BatchTimeIn: TDateTime);
     Procedure WriteQueryResultsToFile(SourceQueryIn: TUniQuery; FileNameOut: String);
+
+    Function GetValidRoles(): String;
+    Function GetValidJobCodeDescrips(): String;
+
 
   public
     { Public declarations }
@@ -1357,7 +1362,7 @@ end;  { CaldInClause }
 
 
 
-function TufrmCertifyExpDataLoader.RecIsValid(Const TimeStampIn:TDateTime): Boolean;
+function TufrmCertifyExpDataLoader.RecIsValid(Const TimeStampIn:TDateTime; Const strValid_Roles, strValid_JobCodeDescrips: String): Boolean;
 var
   strErrorText : String;
 
@@ -1370,16 +1375,18 @@ begin
   if qryGetEmployees.FieldByName('certify_department').AsString = '' then
     strErrorText := strErrorText + 'missing certify_department; ';
 
-  if Pos( '|' + qryGetEmployees.FieldByName('certify_role').AsString + '|', '|Accountant|Employee|Executive|Manager|') = 0 then
+
+
+  if Pos( '|' + qryGetEmployees.FieldByName('certify_role').AsString + '|', strValid_Roles) = 0 then
     strErrorText := strErrorText + 'invalid certify_role; ';
 
-//  if qryGetEmployees.FieldByName('certify_role').AsString = '' then
-//    strErrorText := strErrorText + 'missing certify_role; ';
+  if Pos( '|' + qryGetEmployees.FieldByName('job_code_descrip').AsString + '|', strValid_JobCodeDescrips) = 0 then
+    strErrorText := strErrorText + 'invalid job_code_descrip; ';
+
 
 
   if qryGetEmployees.FieldByName('work_email').AsString = '' then
     strErrorText := strErrorText + 'missing work_email; ';
-
 
   qryGetEmployees.Edit;
   qryGetEmployees.FieldByName('status_timestamp').AsDateTime := TimeStampIn;
@@ -1426,6 +1433,8 @@ end;  { SplitEmployeeName }
 procedure TufrmCertifyExpDataLoader.ValidateEmployeeRecords(const BatchTimeIn: Tdatetime);
 var
   Time_Stamp :  TDateTime;
+  strValid_Roles : String;
+  strValid_JobCodeDescrips : String;
 
 begin
   StatusBar1.Panels[1].Text := 'Current Task:  Validating Employee Records';
@@ -1433,21 +1442,17 @@ begin
 
   Time_Stamp := GetTimeFromDBServer();
 
-(*  // Set status = 'terminated' for employees terminated more than edTerminatedDaysBack.Text days ago so that they don't get procesed
-  //   Test for Terminated employee first because if Terminated then other validation is moot.
-  qryFlagTerminatedEmployees.Close;
-  qryFlagTerminatedEmployees.ParamByName('parmDaysBackTerminated').AsInteger := StrToInt(edTerminatedDaysBack.Text);
-  qryFlagTerminatedEmployees.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
-  qryFlagTerminatedEmployees.Execute;   // Sets RecordStatus = 'terminated'
-*)
+  strValid_Roles           := GetValidRoles();
+  strValid_JobCodeDescrips := GetValidJobCodeDescrips();
 
   // check for valid Certify recs
   qryGetEmployees.Close;
   qryGetEmployees.ParamByName('parmImportDateIn').AsDateTime := BatchTimeIn;
   qryGetEmployees.ParamByName('parmRecordStatusIn').AsString := 'imported';
   qryGetEmployees.Open;
+
   while not qryGetEmployees.eof do begin
-    RecIsValid(Time_Stamp);
+    RecIsValid(Time_Stamp, strValid_Roles, strValid_JobCodeDescrips);
     qryGetEmployees.Next;
   end;
   qryGetEmployees.Close;
@@ -2998,6 +3003,32 @@ begin
 
 end;  { LogIt }
 
+
+function TufrmCertifyExpDataLoader.GetValidJobCodeDescrips: String;
+var
+  strAccum : String;
+
+begin
+  strAccum := '|';
+  qryGetJobCodeDescrips.Close;
+  qryGetJobCodeDescrips.Open;
+
+  While not qryGetJobCodeDescrips.Eof do begin
+    strAccum := strAccum + qryGetJobCodeDescrips.FieldByName('job_code_descrip').AsString + '|';
+    qryGetJobCodeDescrips.Next;
+  end;
+  qryGetJobCodeDescrips.Close;
+
+  Result := strAccum;
+
+end;  { GetValidJobCodeDescrips }
+
+
+function TufrmCertifyExpDataLoader.GetValidRoles: String;
+begin
+  Result := '|Accountant|Employee|Executive|Manager|';
+
+  end;
 
 
 end.

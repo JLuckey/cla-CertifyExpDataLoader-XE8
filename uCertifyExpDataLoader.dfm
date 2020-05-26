@@ -296,6 +296,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Database = 'WarehouseDEV'
     Username = 'sa'
     Server = '192.168.1.122'
+    Connected = True
     LoginPrompt = False
     Left = 43
     Top = 65529
@@ -658,8 +659,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       'delete from CertifyExp_PilotsNotInPaycom')
-    Left = 512
-    Top = 188
+    Left = 443
+    Top = 191
   end
   object qryDeleteTrips: TUniQuery
     Connection = UniConnection1
@@ -923,7 +924,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       end>
   end
   object DataSource1: TDataSource
-    DataSet = tblTailLeadPilot
+    DataSet = qryGetJobCodeDescrips
     Left = 191
     Top = 534
   end
@@ -1580,7 +1581,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'order by P.LastName'
       '')
     Left = 530
-    Top = 18
+    Top = 17
     ParamData = <
       item
         DataType = ftUnknown
@@ -1592,5 +1593,13 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Name = 'parmImportDateIn'
         Value = nil
       end>
+  end
+  object qryGetJobCodeDescrips: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select distinct job_code_descrip'
+      'FROM [CertifyExp_JobCode_Lookup]')
+    Left = 544
+    Top = 177
   end
 end
