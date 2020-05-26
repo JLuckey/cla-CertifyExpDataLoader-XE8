@@ -1510,8 +1510,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Username = 'sa'
     Server = '192.168.1.122'
     LoginPrompt = False
-    Left = 22
-    Top = 426
+    Left = 163
+    Top = 65522
     EncryptedPassword = '9CFF93FF9EFF8CFF8EFF93FF8CFF8DFF89FFCDFFCFFFCEFFC9FF'
   end
   object qryGetNewTailLeadPilotRecs: TUniQuery

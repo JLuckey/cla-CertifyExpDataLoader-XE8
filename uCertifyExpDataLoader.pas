@@ -639,13 +639,14 @@ begin
 
   BuildCrewTailFile(BatchTimeIn);
   BuildCrewTripFile;
-  BuildCrewLogFile;
+  //  BuildCrewLogFile;
+  BuildCrewDepartDateAirportFile;
 
-  BuildTripLogFile;
-//  BuildTailTripFile;               depricated 24 Oct 2019
-//  BuildTailLogFile;                          "
+  //  BuildTripLogFile;
 
-  BuildTailTripLogFile;
+  // BuildTailTripLogFile;
+  BuildTailTripDepartTimeAirport;
+
 
 //  BuildTripAccountantFile(TargetDirectory + 'trip_accountant.csv');
 
