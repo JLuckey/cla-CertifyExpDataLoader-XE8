@@ -423,8 +423,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       'select CURRENT_TIMESTAMP as DateTimeOut;')
-    Left = 318
-    Top = 141
+    Left = 288
+    Top = 147
   end
   object qryGetDupeEmails: TUniQuery
     Connection = UniConnection1
@@ -1454,9 +1454,12 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  ,[attr1206] as approver_email_1'
       '  ,[attr1207] as approver_email_2'
       '  ,[attr1208] as accountant_email'
+      '  ,[attr1325] as assigned_aircraft'
+      '  ,[attr1326] as comments'
+      ''
       'FROM [CLAOnBase].[hsi].[rmObjectInstance1023]'
       'WHERE activestatus = 0')
-    Left = 643
+    Left = 642
     Top = 505
   end
   object qryInsertTripsForGroup: TUniQuery

@@ -337,6 +337,7 @@ type
   // TID:1112 15 May 2020
     Procedure GenerateMissingFlightCrewReport(Const BatchTimeIn: TDateTime);
     Procedure WriteQueryResultsToFile(SourceQueryIn: TUniQuery; FileNameOut: String);
+    Procedure InsertSpecialUsersHistoryTable(const DataSetIn: TUniQuery; BatchTimeIn: TDateTime);
 
     Function GetValidRoles(): String;
     Function GetValidJobCodeDescrips(): String;
@@ -492,6 +493,10 @@ begin
 
     FlagTerminatedEmployees(BatchTimeIn);      // checks Termination Date & updates record_status in PaycomHistory, was part of ValidateEmployeeRecord
 
+
+  ImportSpecialUsers(BatchTimeIn);            //
+
+
   LoadTripsIntoStartBucket(BatchTimeIn);
 
     Load_CharterVisa_IntoStartBucket;
@@ -510,7 +515,7 @@ begin
 
   LoadCertFileFields(BatchTimeIn);
 
-    ImportSpecialUsers(BatchTimeIn);            //  <---- new 6 Jan 2020  ???JL
+//    ImportSpecialUsers(BatchTimeIn);            //  <---- new 6 Jan 2020  ???JL
 
   Load_IFS_IntoStartBucket(BatchTimeIn);
 
@@ -849,7 +854,7 @@ begin
 
 (* See Note 13, above
       //  Assign Approver1 Email
-      qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := 'CorporateCC@ClayLacy.com';
+      qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := 'CorporateCC@ClayLacy.com';   ???JL just get whatever is in paycom
 
       //  Assign Approver2 Email
       qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := 'CorporateCC@ClayLacy.com';
@@ -1126,6 +1131,67 @@ Paycom file columns:
   end;  { Try/Except }
 
 end;  { InsertIntoHistoryTable() }
+
+
+
+procedure TufrmCertifyExpDataLoader.InsertSpecialUsersHistoryTable(const DataSetIn: TUniQuery; BatchTimeIn: TDateTime);
+var
+  recStatus : String;
+  i : integer;
+
+begin
+
+  try
+    tblPayComHistory.Insert;
+    recStatus := 'imported';
+    tblPaycomHistory.FieldByName('employee_name').AsString := DataSetIn.FieldByName('last_name').AsString + ', ' + DataSetIn.FieldByName('first_name').AsString ;
+    tblPaycomHistory.FieldByName('work_email').AsString    := DataSetIn.FieldByName('work_email').AsString;
+
+    if DataSetIn.FieldByName('employee_id').AsString <> '' then begin    //  refactoring - move this test into ValidateRecords()?    ???JL
+      try
+        tblPaycomHistory.FieldByName('certify_gp_vendornum').AsInteger := StrToInt(DataSetIn.FieldByName('employee_id').AsString);
+      except on E1: Exception do begin
+        recStatus := 'error';
+        tblPaycomHistory.FieldByName('error_text').AsString := tblPaycomHistory.FieldByName('error_text').AsString + '; Field: certify_gp_vendornum - ' + E1.Message;
+      end;
+      end;
+    end else begin
+//      tblPaycomHistory.FieldByName('certify_gp_vendornum').AsInteger := '' ;
+    end;
+
+    tblPaycomHistory.FieldByName('certify_department').AsString     := DataSetIn.FieldByName('group').AsString;
+    tblPaycomHistory.FieldByName('certify_role').AsString           := DataSetIn.FieldByName('employee_type').AsString;
+    tblPaycomHistory.FieldByName('paycom_approver1_email').AsString := DataSetIn.FieldByName('approver_email_1').AsString;
+    tblPaycomHistory.FieldByName('paycom_approver2_email').AsString := DataSetIn.FieldByName('approver_email_2').AsString;
+    tblPaycomHistory.FieldByName('paycom_assigned_ac').AsString     := DataSetIn.FieldByName('assigned_aircraft').AsString;
+    tblPaycomHistory.FieldByName('accountant_email').AsString       := DataSetIn.FieldByName('accountant_email').AsString;
+
+    tblPaycomHistory.FieldByName('record_status').AsString          := recStatus ;
+    tblPaycomHistory.FieldByName('status_timestamp').AsDateTime     := BatchTimeIn;
+    tblPaycomHistory.FieldByName('imported_on').AsDateTime          := BatchTimeIn;
+    tblPaycomHistory.FieldByName('data_source').AsString            := 'special_users';
+    tblPaycomHistory.post;
+
+  except on E: Exception do begin
+    tblPaycomHistory.Edit;
+    tblPaycomHistory.FieldByName('record_status').AsString := 'error';
+    tblPaycomHistory.FieldByName('error_text').AsString    := tblPaycomHistory.FieldByName('error_text').AsString + '; ' + E.Message;
+    tblPaycomHistory.FieldByName('imported_on').AsDateTime := BatchTimeIn;
+    tblPaycomHistory.FieldByName('data_source').AsString   := 'special_users';
+    tblPaycomHistory.post;
+  end;
+
+  end;  { Try/Except }
+
+end;  { InsertSpecialUsersHistoryTable() }
+
+
+
+
+
+
+
+
 
 
 {  This new procedure gets Tail/LeadPilot data from OnBase/Workbench instead of from a manually-imported .csv file
@@ -2303,7 +2369,10 @@ begin
     qryGetSpecialUsers.Open;
 
     while not qryGetSpecialUsers.eof do begin
-      InsertSUIntoHistoryTable(BatchTimeIn);
+//      InsertSUIntoHistoryTable(BatchTimeIn);
+
+      InsertSpecialUsersHistoryTable(qryGetSpecialUsers, BatchTimeIn);
+
       qryGetSpecialUsers.Next;
     end;
 
@@ -2312,7 +2381,7 @@ begin
     qryGetSpecialUsers.Close;
 
   end;
-  OverrideWithSpecialUsers(BatchTimeIn);
+//  OverrideWithSpecialUsers(BatchTimeIn);  depricated
 
 end;  {ImportSpecialUsers}
 
@@ -2380,7 +2449,7 @@ begin
     tblPaycomHistory.FieldByName('certfile_last_name').AsString        := qryGetSpecialUsers.FieldByName('last_name').AsString;
     tblPaycomHistory.FieldByName('certfile_employee_type').AsString    := qryGetSpecialUsers.FieldByName('employee_type').AsString;
     tblPaycomHistory.FieldByName('certfile_group').AsString            := qryGetSpecialUsers.FieldByName('group').AsString;
-    tblPaycomHistory.FieldByName('certfile_department_name').AsString  := qryGetSpecialUsers.FieldByName('department_name').AsString;
+    tblPaycomHistory.FieldByName('certfile_department_name').AsString  := qryGetSpecialUsers.FieldByName('department_name').AsString;   //???JL should I call CalcCertfileDeptName()
     tblPaycomHistory.FieldByName('certfile_approver1_email').AsString  := qryGetSpecialUsers.FieldByName('approver_email_1').AsString;
     tblPaycomHistory.FieldByName('certfile_approver2_email').AsString  := qryGetSpecialUsers.FieldByName('approver_email_2').AsString;
     tblPaycomHistory.FieldByName('certfile_accountant_email').AsString := qryGetSpecialUsers.FieldByName('accountant_email').AsString;
@@ -3026,7 +3095,7 @@ end;  { GetValidJobCodeDescrips }
 
 function TufrmCertifyExpDataLoader.GetValidRoles: String;
 begin
-  Result := '|Accountant|Employee|Executive|Manager|';
+  Result := '|Accountant|Employee|Executive|Manager|';              // get this from .ini   ???JL
 
   end;
 
