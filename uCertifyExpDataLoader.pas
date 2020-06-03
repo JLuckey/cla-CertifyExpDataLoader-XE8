@@ -1142,7 +1142,7 @@ begin
     tblPaycomHistory.FieldByName('employee_name').AsString := DataSetIn.FieldByName('last_name').AsString + ', ' + DataSetIn.FieldByName('first_name').AsString ;
     tblPaycomHistory.FieldByName('work_email').AsString    := DataSetIn.FieldByName('work_email').AsString;
 
-    if DataSetIn.FieldByName('employee_id').AsString <> '' then begin    //  refactoring - move this test into ValidateRecords()?    ???JL
+    if DataSetIn.FieldByName('employee_id').AsString <> '' then begin
       try
         strEmpID := StripTrailingPipe(DataSetIn.FieldByName('employee_id').AsString);
         tblPaycomHistory.FieldByName('certify_gp_vendornum').AsInteger := StrToInt(strEmpID);
@@ -1416,7 +1416,6 @@ end;  { CaldInClause }
 
 
 
-
 function TufrmCertifyExpDataLoader.RecIsValid(Const TimeStampIn:TDateTime; Const strValid_Roles, strValid_JobCodeDescrips, strValidGroups: String): Boolean;
 var
   strErrorText : String;
@@ -1535,7 +1534,7 @@ begin
   qryFlagMissingFlightCrews.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
   qryFlagMissingFlightCrews.Execute;
 
-end;  { ValidateRecords }
+end;  { ValidateEmployeeRecords }
 
 
 procedure TufrmCertifyExpDataLoader.UpdateCCField(const BatchTimeIn: TDateTime);
