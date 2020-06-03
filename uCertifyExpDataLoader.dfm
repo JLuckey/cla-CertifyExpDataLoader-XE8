@@ -348,7 +348,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       '')
     Left = 122
-    Top = 235
+    Top = 234
     ParamData = <
       item
         DataType = ftUnknown
@@ -554,7 +554,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'rmRecStatusIn2)'
       ' ')
     Left = 476
-    Top = 140
+    Top = 139
     ParamData = <
       item
         DataType = ftUnknown
@@ -757,8 +757,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object tblStartBucket: TUniTable
     TableName = 'CertifyExp_Trips_StartBucket'
     Connection = UniConnection1
-    Left = 526
-    Top = 244
+    Left = 527
+    Top = 225
   end
   object qryUpdateHasCCField: TUniQuery
     Connection = UniConnection1
@@ -848,8 +848,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '  and termination_date < (CURRENT_TIMESTAMP - :parmDaysBackTermi' +
         'nated)'
       '  and record_status = '#39'imported'#39)
-    Left = 507
-    Top = 319
+    Left = 476
+    Top = 336
     ParamData = <
       item
         DataType = ftUnknown
@@ -1601,8 +1601,36 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       'select distinct job_code_descrip'
-      'FROM [CertifyExp_JobCode_Lookup]')
-    Left = 544
-    Top = 177
+      'FROM [CertifyExp_JobCode_Lookup]'
+      'where active = '#39'Y'#39
+      '')
+    Left = 543
+    Top = 176
+  end
+  object qryGetGroups: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select distinct certify_group'
+      'FROM [CertifyExp_JobCode_Lookup]'
+      'where active = '#39'Y'#39
+      '')
+    Left = 594
+    Top = 158
+  end
+  object qryGetCertifyDeptName: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select distinct certify_department_display_name'
+      'from CertifyExp_JobCode_Lookup'
+      'where certify_group = :parmGroupIn'
+      '  and certify_department_display_name is not null')
+    Left = 560
+    Top = 313
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmGroupIn'
+        Value = nil
+      end>
   end
 end

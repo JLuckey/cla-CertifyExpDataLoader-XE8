@@ -196,6 +196,8 @@ type
     qryGetTailTripDepartdate: TUniQuery;
     qryGetMissingFlightCrew: TUniQuery;
     qryGetJobCodeDescrips: TUniQuery;
+    qryGetGroups: TUniQuery;
+    qryGetCertifyDeptName: TUniQuery;
 
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -310,7 +312,7 @@ type
 
 
     Function  GetTimeFromDBServer(): TDateTime;
-    Function  RecIsValid(Const TimeStampIn:TDateTime; Const strValid_Roles, strValid_JobCodeDescrips: String ): Boolean ;
+    Function  RecIsValid(Const TimeStampIn:TDateTime; Const strValid_Roles, strValid_JobCodeDescrips, strValidGroups: String ): Boolean ;
 
     Function  CalcPilotName(SourceQueryIn: TUniQuery): String;
     Function  ScrubFARPart(Const FarPartIn: String): String;
@@ -318,7 +320,7 @@ type
     Function  CalcPaycomErrorFileName(Const BatchTimeIn: TDateTime): String;
 
 
-    Function CalcCertfileDepartmentName(Const GroupNameIn: String): String;
+    Function CalcCertfileDepartmentName(Const GroupNameIn: String; Var DeptNameOut: String): Boolean ;
 
     Function FindLeadPilot(Const AssignedACString: String; BatchTimeIn: TDateTime): String;
     Function EmployeeTerminated(Const EMailIn: String; ImportDateIn: TDateTime): Boolean;
@@ -341,7 +343,8 @@ type
 
     Function GetValidRoles(): String;
     Function GetValidJobCodeDescrips(): String;
-
+    Function GetValidGroups(): String;
+    Function StripTrailingPipe(Const strEmpIDin : string): String ;
 
   public
     { Public declarations }
@@ -535,30 +538,15 @@ var
 
 begin
 
-  BatchTime := StrToDateTime('04/08/2020 09:48:41.597');
+  BatchTime := StrToDateTime('06/04/2020 09:45:01.500');
 
-  GenerateMissingFlightCrewReport(BatchTime);
+//  ImportSpecialUsers(BatchTime);
+//  ValidateEmployeeRecords(BatchTime);
 
+  LoadCertFileFields(BatchTime);
 
-//  LoadTripsIntoStartBucket(BatchTime);
-//  Load_CharterVisa_IntoStartBucket;
-//  Load_IFS_IntoStartBucket(BatchTime);
-//
-//  BuildCrewDepartDateAirportFile;
-//  BuildTailTripDepartTimeAirport;
+//  GenerateMissingFlightCrewReport(BatchTime);
 
-
-//  Load_CharterVisa_IntoStartBucket();
-//  Load_IFS_IntoStartBucket(StrToDateTime('01/27/2020 10:13:09.407'));
-
-
-//  ImportSpecialUsers(StrToDateTime('01/21/2020 16:04:00'));
-
-//  LoadData(StrToDateTime('01/16/2020 10:45:00'));
-
-//  AddContractorsNotInPaycom( StrToDateTime('01/10/2020 11:39:22.057' ));
-
-//  OverrideWithSpecialUsers( StrToDateTime('01/07/2020 09:45:01.667') );
 
 end;
 
@@ -697,7 +685,7 @@ end;  { InsertDummyNewHireTripStop }
 
 procedure TufrmCertifyExpDataLoader.LoadCertFileFields(const BatchTime: TDateTime);
 Var
-  LNameOut, FNameOut : String;
+  LNameOut, FNameOut, DeptDisplayNameOut : String;
 
 begin
   StatusBar1.Panels[1].Text := 'Current Task:  Loading Certify fields in PaycomHistory ';
@@ -719,15 +707,21 @@ begin
       FieldByName('certfile_first_name').AsString      := FNameOut;
       FieldByName('certfile_employee_id').AsString     := FieldByName('certify_gp_vendornum').AsString;
       FieldByName('certfile_employee_type').AsString   := FieldByName('certify_role').AsString;
-      FieldByName('certfile_group').AsString           := ScrubCertifyDept(FieldByName('certify_department').AsString);
-      FieldByName('certfile_department_name').AsString := CalcCertfileDepartmentName( FieldByName('certfile_group').AsString );                                  // - depricated FieldByName('department_descrip').AsString;
+      FieldByName('certfile_group').AsString           := FieldByName('certify_department').AsString;     // already validated by RecIsValid()
+
+      If CalcCertfileDepartmentName( FieldByName('certfile_group').AsString, DeptDisplayNameOut ) Then
+        FieldByName('certfile_department_name').AsString := DeptDisplayNameOut
+      else begin
+        FieldByName('record_status').AsString := 'error';
+        FieldByName('error_text').AsString   := DeptDisplayNameOut;
+      end;
+
     end;
 
     CalculateApproverEmail(BatchTime);
 
     qryGetImportedRecs.Post;
     qryGetImportedRecs.Next;
-//    application.ProcessMessages;
   end;
 
   qryGetImportedRecs.Close;
@@ -1050,7 +1044,7 @@ end;  {PaycomImportMain }
 
 
 
-procedure TufrmCertifyExpDataLoader.InsertIntoHistoryTable(const slInputFileRec: TStringList; BatchTimeIn: TDateTime);
+procedure TufrmCertifyExpDataLoader.InsertIntoHistoryTable(const slInputFileRec: TStringList; BatchTimeIn: TDateTime);  // ???JL remove?
 var
   recStatus : String;
   i : integer;
@@ -1138,6 +1132,7 @@ procedure TufrmCertifyExpDataLoader.InsertSpecialUsersHistoryTable(const DataSet
 var
   recStatus : String;
   i : integer;
+  strEmpID: String;
 
 begin
 
@@ -1149,7 +1144,8 @@ begin
 
     if DataSetIn.FieldByName('employee_id').AsString <> '' then begin    //  refactoring - move this test into ValidateRecords()?    ???JL
       try
-        tblPaycomHistory.FieldByName('certify_gp_vendornum').AsInteger := StrToInt(DataSetIn.FieldByName('employee_id').AsString);
+        strEmpID := StripTrailingPipe(DataSetIn.FieldByName('employee_id').AsString);
+        tblPaycomHistory.FieldByName('certify_gp_vendornum').AsInteger := StrToInt(strEmpID);
       except on E1: Exception do begin
         recStatus := 'error';
         tblPaycomHistory.FieldByName('error_text').AsString := tblPaycomHistory.FieldByName('error_text').AsString + '; Field: certify_gp_vendornum - ' + E1.Message;
@@ -1184,13 +1180,6 @@ begin
   end;  { Try/Except }
 
 end;  { InsertSpecialUsersHistoryTable() }
-
-
-
-
-
-
-
 
 
 
@@ -1428,26 +1417,29 @@ end;  { CaldInClause }
 
 
 
-function TufrmCertifyExpDataLoader.RecIsValid(Const TimeStampIn:TDateTime; Const strValid_Roles, strValid_JobCodeDescrips: String): Boolean;
+function TufrmCertifyExpDataLoader.RecIsValid(Const TimeStampIn:TDateTime; Const strValid_Roles, strValid_JobCodeDescrips, strValidGroups: String): Boolean;
 var
   strErrorText : String;
 
 begin
   strErrorText := '';
   Result := True;
+
+  // don't validate job_code_descrip for Special Users, since it is not supplied from the Special Users data source
+  if qryGetEmployees.FieldByName('data_source').AsString <> 'special_users' then Begin
+    if Pos( '|' + qryGetEmployees.FieldByName('job_code_descrip').AsString + '|', strValid_JobCodeDescrips) = 0 then
+      strErrorText := strErrorText + 'invalid job_code_descrip; ';
+  End;
+
+
   if qryGetEmployees.FieldByName('certify_gp_vendornum').AsString = '' then
     strErrorText := strErrorText + 'missing certify_gp_vendornum; ';
-
-  if qryGetEmployees.FieldByName('certify_department').AsString = '' then
-    strErrorText := strErrorText + 'missing certify_department; ';
-
-
 
   if Pos( '|' + qryGetEmployees.FieldByName('certify_role').AsString + '|', strValid_Roles) = 0 then
     strErrorText := strErrorText + 'invalid certify_role; ';
 
-  if Pos( '|' + qryGetEmployees.FieldByName('job_code_descrip').AsString + '|', strValid_JobCodeDescrips) = 0 then
-    strErrorText := strErrorText + 'invalid job_code_descrip; ';
+  if Pos( '|' + qryGetEmployees.FieldByName('certify_department').AsString + '|', strValidGroups) = 0 then     // certify_department aka "group"
+    strErrorText := strErrorText + 'invalid certify_department(group); ';
 
 
 
@@ -1501,6 +1493,7 @@ var
   Time_Stamp :  TDateTime;
   strValid_Roles : String;
   strValid_JobCodeDescrips : String;
+  strValidGroups : String;
 
 begin
   StatusBar1.Panels[1].Text := 'Current Task:  Validating Employee Records';
@@ -1510,6 +1503,7 @@ begin
 
   strValid_Roles           := GetValidRoles();
   strValid_JobCodeDescrips := GetValidJobCodeDescrips();
+  strValidGroups           := GetValidGroups();
 
   // check for valid Certify recs
   qryGetEmployees.Close;
@@ -1518,7 +1512,7 @@ begin
   qryGetEmployees.Open;
 
   while not qryGetEmployees.eof do begin
-    RecIsValid(Time_Stamp, strValid_Roles, strValid_JobCodeDescrips);
+    RecIsValid(Time_Stamp, strValid_Roles, strValid_JobCodeDescrips, strValidGroups);
     qryGetEmployees.Next;
   end;
   qryGetEmployees.Close;
@@ -1956,12 +1950,28 @@ end;  { WriteQueryResultsToFile }
 
 
 
-function TufrmCertifyExpDataLoader.CalcCertfileDepartmentName(const GroupNameIn: String): String;
+function TufrmCertifyExpDataLoader.CalcCertfileDepartmentName(const GroupNameIn: String; Var DeptNameOut: String): Boolean;
 var
   slGroupToDropdown : TStringList;
   FoundIndex : Integer;
 
 begin
+  Result := True;
+
+  qryGetCertifyDeptName.Close;
+  qryGetCertifyDeptName.ParamByName('parmGroupIn').AsString := GroupNameIn;
+  qryGetCertifyDeptName.Open;
+
+  if qryGetCertifyDeptName.RecordCount > 0 then
+    DeptNameOut := qryGetCertifyDeptName.FieldByName('certify_department_display_name').AsString
+  else Begin
+    Result      := False;
+    DeptNameOut := QuotedStr(GroupNameIn) + ' - certify_deparment value not found in JobCode Lookup table';
+  End;
+
+  qryGetCertifyDeptName.Close;
+
+(*
   slGroupToDropdown := TStringList.Create;    // converting Group value to default value for Certify department_code
   slGroupToDropdown.StrictDelimiter := true;  // don't use space as delimeter;
   try
@@ -1975,6 +1985,7 @@ begin
   finally
     slGroupToDropdown.Free;
   end;
+*)
 
 end;
 
@@ -2509,7 +2520,7 @@ begin
 end;  {ScrubAndValidateVendorNum}
 
 
-function TufrmCertifyExpDataLoader.ScrubCertifyDept(const DepartmentIn: String): String;
+function TufrmCertifyExpDataLoader.ScrubCertifyDept(const DepartmentIn: String): String;  // ???JL depricate
 begin
 
   Result := DepartmentIn;     // need to implement ???JL
@@ -3073,6 +3084,27 @@ begin
 end;  { LogIt }
 
 
+function TufrmCertifyExpDataLoader.GetValidGroups: String;
+var
+  strAccum : String;
+
+begin
+  strAccum := '|';
+  qryGetGroups.Close;
+  qryGetgroups.Open;
+
+  While not qryGetgroups.Eof do begin
+    strAccum := strAccum + qryGetgroups.FieldByName('certify_group').AsString + '|';
+    qryGetgroups.Next;
+  end;
+  qryGetgroups.Close;
+
+  Result := strAccum;
+
+end;  {GetValidGroups}
+
+
+
 function TufrmCertifyExpDataLoader.GetValidJobCodeDescrips: String;
 var
   strAccum : String;
@@ -3097,7 +3129,21 @@ function TufrmCertifyExpDataLoader.GetValidRoles: String;
 begin
   Result := '|Accountant|Employee|Executive|Manager|';              // get this from .ini   ???JL
 
-  end;
+end;
+
+
+function TufrmCertifyExpDataLoader.StripTrailingPipe(const strEmpIDin: string): String;
+var
+  pipePos : Integer;
+begin
+  Result := strEmpIDin;
+
+  pipePos := Pos('|', strEmpIDin);
+  if pipePos > 0 then
+    Result :=  Copy(strEmpIDin, 1, pipePos - 1);
+
+end;  {StripTrailingPipe}
+
 
 
 end.
