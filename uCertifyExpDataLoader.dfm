@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'Certify Data Loader - ver 2.9'
+  Caption = 'Certify Data Loader - ver 3.0'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -821,13 +821,14 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'where imported_on = :parmImportDate'
       
         '  and job_code_descrip in ('#39'Pilot Designated'#39','#39'Pilot-Designated'#39 +
-        ','#39'FA Designated'#39','#39'Pilot Not-Designated'#39','#39'FA Non-Designated'#39')'
+        ','#39'FA Designated'#39','#39'Pilot Not-Designated'#39','#39'FA Non-Designated'#39', '#39'Pi' +
+        'lot On Demand'#39', '#39'FA On Demand'#39')'
       '  and record_status = '#39'non-certify'#39
       
         '  and ((termination_date is null) or (termination_date > CURRENT' +
         '_TIMESTAMP - 14))')
     Left = 357
-    Top = 321
+    Top = 320
     ParamData = <
       item
         DataType = ftUnknown
@@ -915,7 +916,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '  and imported_on = :parmImportedOn      /* '#39'2019-01-13 13:45:30' +
         '.227'#39' */')
     Left = 284
-    Top = 248
+    Top = 247
     ParamData = <
       item
         DataType = ftUnknown
@@ -1484,8 +1485,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       'insert into CertifyExp_Trips_StartBucket'
       
-        'select distinct null, :parmGroupNameIn, T.QUOTENO, L.acregno, nu' +
-        'll, :parmCrewMemberVendorNumIn, L.DEPARTURE, L.ARRIVEID, L.LEGNO'
+        'select distinct L.LogSheet, :parmGroupNameIn, T.QUOTENO, L.acreg' +
+        'no, null, :parmCrewMemberVendorNumIn, L.DEPARTURE, L.ARRIVEID, L' +
+        '.LEGNO'
       
         '  from QuoteSys_TripLeg L LEFT OUTER JOIN QuoteSys_Trip T ON L.A' +
         'CREGNO = T.ACREGNO AND L.LOGSHEET = T.LOGSHEET'
@@ -1583,8 +1585,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '      )'
       'order by P.LastName'
       '')
-    Left = 530
-    Top = 17
+    Left = 516
+    Top = 65520
     ParamData = <
       item
         DataType = ftUnknown

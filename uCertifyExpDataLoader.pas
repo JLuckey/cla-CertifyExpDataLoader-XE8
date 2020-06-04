@@ -578,7 +578,6 @@ procedure TufrmCertifyExpDataLoader.btnMainClick(Sender: TObject);
 begin
   Main;
 
-
 end;
 
 
@@ -1290,7 +1289,7 @@ begin
   // Load PIC data into StartBucket
   qryLoadTripData.SQL.Clear;
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
-  qryLoadTripData.SQL.Append('select distinct 0, L.PICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
+  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.PICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
   qryLoadTripData.SQL.Append('from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
   qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
   qryLoadTripData.SQL.Append('  and L.PICPILOTNO > 0');
@@ -1300,31 +1299,31 @@ begin
 
   // Load SIC data into StartBucket
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
-  qryLoadTripData.SQL.Append('select distinct 0, L.SICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
+  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.SICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
   qryLoadTripData.SQL.Append('from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
   qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
   qryLoadTripData.SQL.Append('and L.SICPILOTNO > 0');
-  qryLoadTripData.SQL.Append('  and L.LEGNO = 1 ');
+//  qryLoadTripData.SQL.Append('  and L.LEGNO = 1 ');
   qryLoadTripData.Execute;
   qryLoadTripData.SQL.Clear;
 
   // Load TIC data into StartBucket
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
-  qryLoadTripData.SQL.Append('select distinct 0, L.TICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
+  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.TICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
   qryLoadTripData.SQL.Append('from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
   qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
   qryLoadTripData.SQL.Append('and L.TICPILOTNO > 0');
-  qryLoadTripData.SQL.Append('  and L.LEGNO = 1 ');
+//  qryLoadTripData.SQL.Append('  and L.LEGNO = 1 ');
   qryLoadTripData.Execute;
   qryLoadTripData.SQL.Clear;
 
   // Load FA (Flight Attendant) data into StartBucket
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
-  qryLoadTripData.SQL.Append('select distinct 0, L.FANO, T.QUOTENO, L.ACREGNO, FARPART, 0, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
+  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.FANO, T.QUOTENO, L.ACREGNO, FARPART, 0, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
   qryLoadTripData.SQL.Append('from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
   qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
   qryLoadTripData.SQL.Append('and L.FANO > 0');
-  qryLoadTripData.SQL.Append('  and L.LEGNO = 1 ');
+//  qryLoadTripData.SQL.Append('  and L.LEGNO = 1 ');
   qryLoadTripData.Execute;
   qryLoadTripData.SQL.Clear;
 
@@ -2046,7 +2045,6 @@ begin
   qryGetMissingFlightCrew.Close;
   qryGetMissingFlightCrew.ParamByName('parmImportDateIn').AsDateTime := BatchTimeIn ;
   qryGetMissingFlightCrew.ParamByName('parmDaysBack').AsInteger       := StrToInt(edContractorDaysBack.text);
-  ShowMessage(qryGetMissingFlightCrew.SQL.Text);
   qryGetMissingFlightCrew.Open;
 
   WriteQueryResultsToFile(qryGetMissingFlightCrew, 'MissingFlightCrewTest.txt');
