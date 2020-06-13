@@ -198,6 +198,7 @@ type
     qryGetJobCodeDescrips: TUniQuery;
     qryGetGroups: TUniQuery;
     qryGetCertifyDeptName: TUniQuery;
+    qrySpecialUserDupes: TUniQuery;
 
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);

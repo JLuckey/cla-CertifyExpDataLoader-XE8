@@ -1369,8 +1369,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Username = 'sa'
     Server = '192.168.1.122'
     LoginPrompt = False
-    Left = 22
-    Top = 426
+    Left = 153
+    Top = 65520
     EncryptedPassword = '9CFF93FF9EFF8CFF8EFF93FF8CFF8DFF89FFCDFFCFFFCEFFC9FF'
   end
   object qryGetNewTailLeadPilotRecs: TUniQuery
@@ -1405,7 +1405,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '        and record_status = '#39'OK'#39'     '
       '        and data_source   = '#39'special_users'#39')')
     Left = 265
-    Top = 350
+    Top = 349
     ParamData = <
       item
         DataType = ftUnknown
@@ -1632,6 +1632,35 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       item
         DataType = ftUnknown
         Name = 'parmGroupIn'
+        Value = nil
+      end>
+  end
+  object qrySpecialUserDupes: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'update CertifyExp_PaycomHistory'
+      'set record_status    = '#39'error'#39','
+      '    status_timestamp = CURRENT_TIMESTAMP,'
+      
+        '    error_text       = '#39'Dupe certfile_employee_id (Vendor Number' +
+        ') from Special User file'#39'      '
+      ''
+      'where imported_on = :parmImportedOn'
+      '  and data_source in ('#39'special_users'#39' )                '
+      '  and record_status in ( '#39'OK'#39' ) '
+      '  and certify_gp_vendornum in'
+      ''
+      '     (select certfile_employee_id'
+      '      from CertifyExp_PaycomHistory'
+      '      where imported_on   = :parmImportedOn'
+      '        and record_status in ( '#39'OK'#39', '#39'terminated'#39' ) '
+      '        and data_source   = '#39'paycom_file'#39')')
+    Left = 35
+    Top = 416
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmImportedOn'
         Value = nil
       end>
   end
