@@ -304,7 +304,7 @@ type
     Procedure ImportSpecialUsers(Const BatchTimeIn: TDateTime);
     Procedure InsertSUIntoHistoryTable(BatchTimeIn: TDateTime);
 
-    Procedure OverrideWithSpecialUsers(Const BatchTimeIn: TDateTime);
+    Procedure OverrideWithSpecialUsers(Const BatchTimeIn: TDateTime);  // Remove this feature ???JL
 
     Procedure FlagTerminatedEmployees(Const BatchTimeIn: TDateTime);
 
@@ -498,17 +498,16 @@ begin
     FlagTerminatedEmployees(BatchTimeIn);      // checks Termination Date & updates record_status in PaycomHistory, was part of ValidateEmployeeRecord
 
 
-  ImportSpecialUsers(BatchTimeIn);            //
-
+  ImportSpecialUsers(BatchTimeIn);
 
   LoadTripsIntoStartBucket(BatchTimeIn);
 
     Load_CharterVisa_IntoStartBucket;
 
 //  AddContractorsNotInPaycom(BatchTimeIn);       // writes Contractors to PaycomHistory table
+//  Process_NewHire_Contractors(BatchTimeIn);     // writes New-Hire contractors to PaycomHistory, if they have not yet flown any trips
 
-//    Process_NewHire_Contractors(BatchTimeIn);     // writes New-Hire contractors to PaycomHistory, if they have not yet flown any trips
-    Process_NewHire_Employees_FlightCrew(BatchTimeIn);
+  Process_NewHire_Employees_FlightCrew(BatchTimeIn);
 
   UpdateCCField(BatchTimeIn);                   // Update Credit Card Field
 
@@ -516,19 +515,14 @@ begin
 
   ValidateEmployeeRecords(BatchTimeIn);         // rec status: OK
 
-
   LoadCertFileFields(BatchTimeIn);
-
-//    ImportSpecialUsers(BatchTimeIn);            //  <---- new 6 Jan 2020  ???JL
 
   Load_IFS_IntoStartBucket(BatchTimeIn);
 
   FilterTripsByCount;                           // removes selected recs from StartBucket
 
-
   // Should this go here?  What is the chronology?
   GenerateMissingFlightCrewReport(BatchTimeIn);
-
 
 end;  { LoadData() }
 
@@ -827,7 +821,6 @@ begin
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
 *)
 
-
       // Assign Accountant Email
       if qryGetImportedRecs.FieldByName('has_credit_card').AsString = 'T' then
         strAccountantEmail := 'FlightCrewCC@ClayLacy.com'
@@ -843,23 +836,13 @@ begin
 
     end else if GroupIsIn(strCertifyGroup, 'CharterVisa') then begin
 
-      // Assign Accountant Email
-      qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := 'FlightCrewCC@ClayLacy.com';
-
-(* See Note 13, above
-      //  Assign Approver1 Email
-      qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := 'CorporateCC@ClayLacy.com';   ???JL just get whatever is in paycom
-
-      //  Assign Approver2 Email
-      qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := 'CorporateCC@ClayLacy.com';
-*)
+      // Assign default approver email
+      qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString  := qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString;
 
 
     end else begin       // error, unknown Certify Department
 
-
       FlagRecordAsError('error', 'unknown certify_department/Group: ' + strCertifyGroup);
-
 
     end;
 
@@ -1063,7 +1046,12 @@ Paycom file columns:
 7  Supervisor_Primary_Code,
 8  CertifyDepartment,
 9  CertifyGPVendor,
-10 CertifyRole
+10 CertifyRole,
+11 Certify-APV-Email1
+12 Certify-APV-Email2
+13 Certify-AssignedAC
+14 Certify-AssignedAC2
+15 Hire_Date
 *)
 
   // Scrub data a little to eliminate leading & trialing spaces
