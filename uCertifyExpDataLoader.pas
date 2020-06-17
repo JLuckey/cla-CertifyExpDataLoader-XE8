@@ -219,7 +219,6 @@ type
     Procedure BuildCrewLogFile();
     Procedure BuildCrewTailFile(Const CurrBatchTimeIn: TDatetime);
     Procedure BuildCrewTripFile();
-    Procedure BuildTripLogFile();
 
     Procedure BuildCrewDepartDateAirportFile();
     Procedure BuildTailTripDepartTimeAirport();
@@ -639,7 +638,7 @@ begin
   BuildCrewTripFile;
   BuildCrewLogFile;
 
-  BuildTripLogFile;
+//  BuildTripLogFile;                depricated 17 Jun 2020
 //  BuildTailTripFile;               depricated 24 Oct 2019
 //  BuildTailLogFile;                          "
 
@@ -1733,48 +1732,6 @@ begin
   qryBuildValFile.Close;
 
 end;  { BuildCrewTripFile }
-
-
-procedure TufrmCertifyExpDataLoader.BuildTripLogFile;
-Var
-  RowOut : String;
-  WorkFile : TextFile;
-  strTripNum : String;
-
-begin
-  StatusBar1.Panels[1].Text := 'Current Task:  Writing trip_log.csv'  ;
-  Application.ProcessMessages;
-
-  AssignFile(WorkFile, edOutputDirectory.Text + 'trip_log.csv');
-  Rewrite(WorkFile);
-
-  qryBuildValFile.Close ;
-  qryBuildValFile.SQL.Clear;
-//  qryBuildValFile.SQL.Add( ' select QuoteNum, min(LogSheet) as LogSheet ' ); Disabled because requrirement for minimum LogSheet per Quote has been depricated  -- 11Sep2018 JL
-
-  qryBuildValFile.SQL.Add( ' select distinct QuoteNum, LogSheet ' ) ;
-  qryBuildValFile.SQL.Add( ' from   CertifyExp_Trips_StartBucket '  ) ;
-  qryBuildValFile.SQL.Add( ' where  LogSheet is not null '  ) ;
-  qryBuildValFile.SQL.Add( ' order by LogSheet ' );
-  qryBuildValFile.Open ;
-
-  RowOut := 'LogSheet,TripNumber';
-  WriteLn(WorkFile, RowOut) ;
-  while not qryBuildValFile.eof do begin
-    strTripNum := qryBuildValFile.FieldByName('QuoteNum').AsString;
-    if strTripNum = '' then
-      strTripNum := 'No-Trip-Num';
-
-    RowOut := Trim(qryBuildValFile.FieldByName('LogSheet').AsString) + ',' + strTripNum ;
-
-    WriteLn(WorkFile, RowOut) ;
-    qryBuildValFile.Next;
-  end;
-
-  CloseFile(WorkFile);
-  qryBuildValFile.Close;
-
-end;   { BuildTripLogFile }
 
 
 procedure TufrmCertifyExpDataLoader.BuildTailTripLogFile;
