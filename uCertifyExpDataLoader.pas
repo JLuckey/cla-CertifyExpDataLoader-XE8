@@ -346,6 +346,12 @@ type
     Function GetValidGroups(): String;
     Function StripTrailingPipe(Const strEmpIDin : string): String ;
 
+    Procedure ValidateFlightCrews(Const BatchTimeIn: TDateTime);
+
+    Function GetJobCodeDescripsByGroup(Const GroupIn:String):String;
+    Function GetGroupsByLogicGroup(Const LogicGroupIn:String): String;
+
+
   public
     { Public declarations }
   end;
@@ -508,11 +514,11 @@ begin
 
   Process_NewHire_Employees_FlightCrew(BatchTimeIn);
 
-  UpdateCCField(BatchTimeIn);                   // Update Credit Card Field
+  UpdateCCField(BatchTimeIn);                     // Update Credit Card Field
 
-  IdentifyNonCertifyRecs(BatchTimeIn);          // rec status: non-certify;     non-certify records flagged in record_status field
+  IdentifyNonCertifyRecs(BatchTimeIn);            // rec status: non-certify;     non-certify records flagged in record_status field
 
-  ValidateEmployeeRecords(BatchTimeIn);         // rec status: OK
+  ValidateEmployeeRecords(BatchTimeIn);           // rec status: OK
 
   LoadCertFileFields(BatchTimeIn);
 
@@ -532,12 +538,14 @@ var
 
 begin
 
-  BatchTime := StrToDateTime('06/04/2020 09:45:01.500');
+  BatchTime := StrToDateTime('06/17/2020 09:49:10.523');
+
+  ValidateFlightCrews(BatchTime);
 
 //  ImportSpecialUsers(BatchTime);
 //  ValidateEmployeeRecords(BatchTime);
 
-  LoadCertFileFields(BatchTime);
+//  LoadCertFileFields(BatchTime);
 
 //  GenerateMissingFlightCrewReport(BatchTime);
 
@@ -733,6 +741,8 @@ var
 
 begin
     strCertifyGroup := qryGetImportedRecs.FieldByName('certfile_group').AsString ;
+
+//    GetGroupsByLogicGroup(LogicGroupIn);
 
     if GroupIsIn(strCertifyGroup, 'Corporate|FBO|Maintenance|Marketing|AircraftManagement|HR') then begin
 
@@ -1399,7 +1409,7 @@ begin
 
   stlGroupString.Free;
 
-end;  { CaldInClause }
+end;  { CalcInClause }
 
 
 
@@ -1516,12 +1526,43 @@ begin
   qryValidateVendorNum.ParamByName('parmImportedOn').AsDateTime := BatchTimeIn;
   qryValidateVendorNum.Execute;   //        ... record_status = 'error' & error_text = 'certify_gp_vendornum not found' if not
 
-  // Set status = 'error' for flight crews that are missing values for important Certify fields, see query
-  qryFlagMissingFlightCrews.Close;
-  qryFlagMissingFlightCrews.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
-  qryFlagMissingFlightCrews.Execute;
+  ValidateFlightCrews(BatchTimeIn);
+
+//  // Set status = 'error' for flight crews that are missing values for important Certify fields, see query
+//  qryFlagMissingFlightCrews.Close;
+//  qryFlagMissingFlightCrews.ParamByName('parmImportDate').AsDateTime := BatchTimeIn;
+//  qryFlagMissingFlightCrews.Execute;
 
 end;  { ValidateEmployeeRecords }
+
+
+
+procedure TufrmCertifyExpDataLoader.ValidateFlightCrews(Const BatchTimeIn: TDateTime);
+var
+  strJobCodes : String;
+
+begin
+
+  strJobCodes := GetJobCodeDescripsByGroup('FlightCrew');
+
+  // is it cleaner to do this using the new V_CertifyExp_JobCode_Lookup in the query component?   ???JL
+  //  -- no, because it "hides" another table reference in that Query component, making subsequent maintenance more difficult
+  //     because the could would have to be changed here & in the query.
+  qryFlagMissingFlightCrews.Close;
+  qryFlagMissingFlightCrews.SQL.Clear;
+  qryFlagMissingFlightCrews.SQL.Append('update CertifyExp_PayComHistory ');
+  qryFlagMissingFlightCrews.SQL.Append(' set record_status = ' + QuotedStr('error') + ', ');
+  qryFlagMissingFlightCrews.SQL.Append('     error_text    = ' + QuotedStr(' Foo!! - flight crew missing Certify fields: gp_vendornum, department, role;') );
+  qryFlagMissingFlightCrews.SQL.Append(' where imported_on = ' + QuotedStr(FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',BatchTimeIn)) );
+  qryFlagMissingFlightCrews.SQL.Append('   and job_code_descrip in ( ' + strJobCodes + ' )' );
+  qryFlagMissingFlightCrews.SQL.Append('   and record_status = ' + QuotedStr('non-certify')  );
+  qryFlagMissingFlightCrews.SQL.Append('   and ((termination_date is null) or (termination_date > CURRENT_TIMESTAMP - 14)) ');
+
+  ShowMessage(qryFlagMissingFlightCrews.SQL.Text);
+
+  qryFlagMissingFlightCrews.Execute;
+
+end;
 
 
 procedure TufrmCertifyExpDataLoader.UpdateCCField(const BatchTimeIn: TDateTime);
@@ -3087,6 +3128,37 @@ begin
 
 end;  {StripTrailingPipe}
 
+
+
+
+function TufrmCertifyExpDataLoader.GetGroupsByLogicGroup(const LogicGroupIn: String): String;
+begin
+
+
+
+end; { GetGroups }
+
+
+
+// Return looks like:  'Pilot Designated','Pilot-Designated','FA Designated','Pilot Not-Designated','FA Non-Designated', 'Pilot On Demand', 'FA On Demand'
+function TufrmCertifyExpDataLoader.GetJobCodeDescripsByGroup(const GroupIn: String): String;
+var
+  strDescripsAccum : String;
+
+begin
+  qryGetJobCodeDescrips.Close;
+  qryGetJobCodeDescrips.ParamByName('parmCertifyGroupIn').AsString := GroupIn;
+  qryGetJobCodeDescrips.Open;
+
+  while not qryGetJobCodeDescrips.eof do begin
+    strDescripsAccum := strDescripsAccum + QuotedStr(qryGetJobCodeDescrips.FieldByName('job_code_descrip').AsString) + ',' ;
+    qryGetJobCodeDescrips.Next;
+  end;  {while}
+
+  qryGetJobCodeDescrips.Close;
+  Result := Copy(strDescripsAccum, 0, Length(strDescripsAccum) - 1 );  // get rid of trailing comma
+
+end;  { GetJobCodeDescrips }
 
 
 end.

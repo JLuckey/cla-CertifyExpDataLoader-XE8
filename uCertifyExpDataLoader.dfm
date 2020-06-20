@@ -822,18 +822,25 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '  and job_code_descrip in ('#39'Pilot Designated'#39','#39'Pilot-Designated'#39 +
         ','#39'FA Designated'#39','#39'Pilot Not-Designated'#39','#39'FA Non-Designated'#39', '#39'Pi' +
-        'lot On Demand'#39', '#39'FA On Demand'#39')'
+        'lot On Demand'#39', '#39'FA On Demand'#39')*/'
       '  and record_status = '#39'non-certify'#39
       
         '  and ((termination_date is null) or (termination_date > CURRENT' +
-        '_TIMESTAMP - 14))')
+        '_TIMESTAMP - 14))'
+      ''
+      ''
+      
+        '/*  and job_code_descrip in (select job_code_descrip from Certif' +
+        'yExp_JobCode_Lookup where certify_group = '#39'FlightCrew'#39')  */'
+      ''
+      '')
     Left = 357
-    Top = 320
+    Top = 318
     ParamData = <
       item
-        DataType = ftUnknown
+        DataType = ftString
         Name = 'parmImportDate'
-        Value = nil
+        Value = '2020-06-17 09:49:10.523'
       end>
   end
   object qryFlagTerminatedEmployees: TUniQuery
@@ -925,9 +932,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       end>
   end
   object DataSource1: TDataSource
-    DataSet = qryGetJobCodeDescrips
+    DataSet = qryFlagMissingFlightCrews
     Left = 191
-    Top = 534
+    Top = 533
   end
   object qryInsertCrewTailHist: TUniQuery
     Connection = UniConnection1
@@ -1159,8 +1166,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'select CrewMemberVendorNum, QuoteNum'
       'from CertifyExp_Trips_StartBucket'
       'where CrewMemberVendorNum = :parmVendorNumIn')
-    Left = 589
-    Top = 123
+    Left = 598
+    Top = 108
     ParamData = <
       item
         DataType = ftUnknown
@@ -1503,7 +1510,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       '')
     Left = 207
-    Top = 205
+    Top = 204
     ParamData = <
       item
         DataType = ftUnknown
@@ -1603,11 +1610,18 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       'select distinct job_code_descrip'
-      'FROM [CertifyExp_JobCode_Lookup]'
+      'FROM [V_CertifyExp_JobCode_Lookup]'
       'where active = '#39'Y'#39
+      '  and certify_group = :parmCertifyGroupIn'
       '')
     Left = 543
-    Top = 176
+    Top = 174
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmCertifyGroupIn'
+        Value = nil
+      end>
   end
   object qryGetGroups: TUniQuery
     Connection = UniConnection1
@@ -1617,7 +1631,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'where active = '#39'Y'#39
       '')
     Left = 594
-    Top = 158
+    Top = 157
   end
   object qryGetCertifyDeptName: TUniQuery
     Connection = UniConnection1
