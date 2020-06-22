@@ -17,9 +17,9 @@ File_14=TSourceModule,'F:\XDrive\DCS\CLA\DataWarehouse\DataLoader\TripLoader_hou
 
 [Modules]
 Module0=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-Module1=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj
-Module2=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini
-Module3=Main_Page
+Module1=Main_Page
+Module2=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj
+Module3=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini
 Count=4
 EditWindowCount=1
 
@@ -28,14 +28,14 @@ ModuleType=TSourceModule
 FormState=1
 FormOnTop=0
 
+[Main_Page]
+ModuleType=TURLModule
+
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj]
 ModuleType=TBaseProject
 
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini]
 ModuleType=TSourceModule
-
-[Main_Page]
-ModuleType=TURLModule
 
 [EditWindow0]
 ViewCount=4
@@ -91,9 +91,9 @@ EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpD
 [View2]
 CustomEditViewType=TEditView
 Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-CursorX=1
-CursorY=3136
-TopLine=3122
+CursorX=49
+CursorY=1537
+TopLine=1508
 LeftCol=1
 Elisions=
 Bookmarks={1,851,1}{2,1104,2}{5,1154,1}{7,743,1}{8,1938,14}{9,1529,36}
@@ -316,11 +316,6 @@ LRDockWidth=2225
 Dockable=1
 StayOnTop=0
 SplitPos=175
-
-[PropInspDesignerSelection]
-ArrangeBy=Name
-SelectedItem=Name,
-ExpandedItems=Anchors=0,Constraints=0,FilterOptions=0,"LiveBindings Designer=0",Options=0,RefreshOptions=0,SmartFetch=0,Encryption=0
 
 [frmDesignPreview]
 PercentageSizes=1

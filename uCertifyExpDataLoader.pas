@@ -196,7 +196,7 @@ type
     qryGetTailTripDepartdate: TUniQuery;
     qryGetMissingFlightCrew: TUniQuery;
     qryGetJobCodeDescrips: TUniQuery;
-    qryGetGroups: TUniQuery;
+    qryGetCertifyGroups: TUniQuery;
     qryGetCertifyDeptName: TUniQuery;
     qrySpecialUserDupes: TUniQuery;
 
@@ -227,7 +227,7 @@ type
     Procedure BuildGenericValidationFile2(const TargetFileName, SQLIn: String) ;
     Procedure LoadTripsIntoStartBucket(Const BatchTimeIn : TDateTime);
     Procedure BuildValidationFiles(Const BatchTimeIn : TDateTime);
-    Procedure CalculateApproverEmail(Const BatchTimeIn: TDateTime) ;
+    Procedure CalculateApproverEmail(Const lgFlightCrewList, lgCharterVisaList, lgCorporateList, lgDOMList : String;  Const BatchTimeIn: TDateTime) ;
     Procedure FilterTripsByCount;
     Procedure FindPilotsNotInPaycom(Const BatchTimeIn : TDateTime);               // de-cruft, appears not to be called  ???JL  3 dec 2018
     Procedure DeleteTrip(Const LogSheetIn, QuoteNumIn : Integer; CrewMemberIDIn: String);
@@ -368,6 +368,7 @@ var
   gloNewHireDummyQuoteNum : Integer;
 
   gloFlightCrewGroup: String = 'FlightCrew|PoolPilot|PoolFA|FlightCrewCorp|FlightCrewNonPCal|IFS';
+
 
 implementation
 
@@ -687,17 +688,24 @@ end;  { InsertDummyNewHireTripStop }
 procedure TufrmCertifyExpDataLoader.LoadCertFileFields(const BatchTime: TDateTime);
 Var
   LNameOut, FNameOut, DeptDisplayNameOut : String;
+  lgFlightCrew, lgCorporate, lgCharterVISA, lgDOM : String;
 
 begin
   StatusBar1.Panels[1].Text := 'Current Task:  Loading Certify fields in PaycomHistory ';
   Application.ProcessMessages;
 
+  // Prep Logic Group Lists for CalculateApproverEmail()
+  lgFlightCrew  := GetGroupsByLogicGroup('lg_FlightCrew');    // returns pipe-symbol-separated list of certify_groups
+  lgCharterVISA := GetGroupsByLogicGroup('lg_CharterVISA');
+  lgCorporate   := GetGroupsByLogicGroup('lg_Corporate');
+  lgDOM         := GetGroupsByLogicGroup('lg_DOM');
+
   qryGetImportedRecs.Close;
   qryGetImportedRecs.ParamByName('parmBatchTimeIn').AsDateTime := BatchTime ;
   qryGetImportedRecs.ParamByName('parmRecStatusIn').AsString   := 'OK' ;
   qryGetImportedRecs.ParamByName('parmRecStatusIn2').AsString  := 'warning' ;
-
   qryGetImportedRecs.Open ;
+
   while not qryGetImportedRecs.eof do begin
     qryGetImportedRecs.Edit;
 
@@ -715,15 +723,15 @@ begin
       else begin
         FieldByName('record_status').AsString := 'error';
         FieldByName('error_text').AsString   := DeptDisplayNameOut;
-      end;
+      end;   { if }
 
-    end;
+    end;   { with }
 
-    CalculateApproverEmail(BatchTime);
+    CalculateApproverEmail(lgFlightCrew, lgCharterVisa, lgCorporate, lgDOM, BatchTime);
 
     qryGetImportedRecs.Post;
     qryGetImportedRecs.Next;
-  end;
+  end;  { While }
 
   qryGetImportedRecs.Close;
 
@@ -731,20 +739,20 @@ end; { LoadCertFileFields }
 
 
 
-procedure TufrmCertifyExpDataLoader.CalculateApproverEmail(Const BatchTimeIn : TDateTime);
+procedure TufrmCertifyExpDataLoader.CalculateApproverEmail(Const lgFlightCrewList, lgCharterVisaList, lgCorporateList, lgDOMList : String;  Const BatchTimeIn : TDateTime);
 var
   strAccountantEmail : String;
-  strCertifyGroup : String;
+  myCertifyGroup : String;
   strAssignedAC : String;
   PaycomApprover1, PaycomApprover2: String;
   PilotEmail : String;
+  strGroupList : String;
 
 begin
-    strCertifyGroup := qryGetImportedRecs.FieldByName('certfile_group').AsString ;
+    myCertifyGroup := qryGetImportedRecs.FieldByName('certfile_group').AsString ;
 
-//    GetGroupsByLogicGroup(LogicGroupIn);
-
-    if GroupIsIn(strCertifyGroup, 'Corporate|FBO|Maintenance|Marketing|AircraftManagement|HR') then begin
+    if GroupIsIn(myCertifyGroup, lgCorporateList) then begin
+//    if GroupIsIn(strCertifyGroup, 'Corporate|FBO|Maintenance|Marketing|AircraftManagement|HR') then begin
 
       // Assign Accountant Email
       if qryGetImportedRecs.FieldByName('has_credit_card').AsString = 'T' then
@@ -759,7 +767,7 @@ begin
       if qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString <> '' then
         qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString
       else begin
-        FlagRecordAsError('error', 'error-approver1_email_not_provided ' + strCertifyGroup);
+        FlagRecordAsError('error', 'error-approver1_email_not_provided ' + myCertifyGroup);
       end;
 
 
@@ -770,8 +778,8 @@ begin
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail;
 
 
-    end else if GroupIsIn(strCertifyGroup, 'DOM') then begin
-
+    end else if GroupIsIn(myCertifyGroup, lgDOMList) then begin
+//    end else if GroupIsIn(myCertifyGroup, 'DOM') then begin
 
       strAssignedAC   := qryGetImportedRecs.FieldByName('paycom_assigned_ac').AsString;
       PaycomApprover1 := qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString;
@@ -817,7 +825,8 @@ begin
 
 
 //    end else if GroupIsIn(strCertifyGroup, '|FlightCrew|PoolPilot|PoolFA|FlightCrewCorp|FlightCrewNonPCal|IFS|') then begin
-    end else if GroupIsIn(strCertifyGroup, gloFlightCrewGroup) then begin
+    end else if GroupIsIn(myCertifyGroup, lgFlightCrewList) then begin
+//    end else if GroupIsIn(myCertifyGroup, gloFlightCrewGroup) then begin
 
 (* Note 13: This logic is now handled by Certify "Workflows" within the Certify system      4Feb2019 -JL
       //  Assign Approver1 Email
@@ -843,7 +852,8 @@ begin
       qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString  := strAccountantEmail;
 
 
-    end else if GroupIsIn(strCertifyGroup, 'CharterVisa') then begin
+    end else if GroupIsIn(myCertifyGroup, lgCharterVisaList) then begin
+//  end else if GroupIsIn(myCertifyGroup, 'CharterVisa') then begin
 
       // Assign default approver email
       qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString  := qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString;
@@ -851,7 +861,7 @@ begin
 
     end else begin       // error, unknown Certify Department
 
-      FlagRecordAsError('error', 'unknown certify_department/Group: ' + strCertifyGroup);
+      FlagRecordAsError('error', 'unknown certify_department/Group: ' + myCertifyGroup);
 
     end;
 
@@ -861,21 +871,23 @@ end;  { CalculateApproverEmail }
 
 
 function TufrmCertifyExpDataLoader.GroupIsIn(const GroupIn, GroupSetIn: String): Boolean;
-var
-  stlGroupSet : TStringList;
-
 begin
   Result := False;
 
-  stlGroupSet := TStringList.Create;
-  try
-    stlGroupSet.Delimiter := '|';
-    stlGroupSet.DelimitedText := GroupSetIn;    // GroupSetIn looks like: 'Corporate|FBO|Maintenance|Marketing|AircraftManagement|HR'
-    Result := stlGroupSet.IndexOf(GroupIn) > -1;
-  finally
-    stlGroupSet.Free;
-  end;
-end;
+  if Pos(GroupIn + '|', GroupSetIn) > 0 then
+    Result := True;
+
+
+//  stlGroupSet := TStringList.Create;
+//  try
+//    stlGroupSet.Delimiter := '|';
+//    stlGroupSet.DelimitedText := GroupSetIn;    // GroupSetIn looks like: 'Corporate|FBO|Maintenance|Marketing|AircraftManagement|HR'
+//    Result := stlGroupSet.IndexOf(GroupIn) > -1;
+//  finally
+//    stlGroupSet.Free;
+//  end;
+
+end;   { GroupIsIn }
 
 
 procedure TufrmCertifyExpDataLoader.FilterTripsByCount;
@@ -1267,6 +1279,7 @@ end;  { WriteTailLeadPilotToFile }
 procedure TufrmCertifyExpDataLoader.LoadTripsIntoStartBucket(Const BatchTimeIn : TDateTime);
 var
   strDaysBack: String;
+  strInClause: String;
 
 begin
 (*  1. Empty Start Bucket & Load trips into Start Bucket from Trip tables
@@ -1333,11 +1346,17 @@ begin
    2. run WriteToStartBucket twice w/ field name as param
  D 3. add paycom_assigned_ac_2 field to PaycomHistory table
 *)
+
+  strInClause :=  CalcInClause(GetGroupsByLogicGroup('lg_FlightCrew'));
   qryLoadTripData.SQL.Clear;
   qryLoadTripData.SQL.Append('SELECT certify_gp_vendornum, certify_department, certfile_group, paycom_assigned_ac, paycom_assigned_ac_2');
   qryLoadTripData.SQL.Append('FROM CertifyExp_PaycomHistory' );
   qryLoadTripData.SQL.Append('WHERE imported_on = ' + QuotedStr(FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', BatchTimeIn) ) );   // get current Batch
-  qryLoadTripData.SQL.Append('  AND certify_department IN ( ' + CalcInClause(gloFlightCrewGroup) + ' )' );                    // build IN clause
+
+  //  qryLoadTripData.SQL.Append('  AND certify_department IN ( ' + CalcInClause(gloFlightCrewGroup) + ' )' );                    // build IN clause
+
+  qryLoadTripData.SQL.Append('  AND certify_department IN ( ' + strInClause + ' )' );                    // build IN clause
+
   qryLoadTripData.SQL.Append('  AND not (paycom_assigned_ac = ' + QuotedStr('') + ' or paycom_assigned_ac is null ) ');       // assigned_ac field not blank
   qryLoadTripData.SQL.Append('  AND termination_date IS NULL' );                                                              // only currently employed people
 //  ShowMessage(qryLoadTripData.SQL.Text);
@@ -1542,12 +1561,11 @@ var
   strJobCodes : String;
 
 begin
-
-  strJobCodes := GetJobCodeDescripsByGroup('FlightCrew');
+  strJobCodes := GetJobCodeDescripsByGroup('FlightCrew'); // Returns comma-separated list of Job Code Descrips
 
   // is it cleaner to do this using the new V_CertifyExp_JobCode_Lookup in the query component?   ???JL
   //  -- no, because it "hides" another table reference in that Query component, making subsequent maintenance more difficult
-  //     because the could would have to be changed here & in the query.
+  //     because the code would have to be changed here & in the query.
   qryFlagMissingFlightCrews.Close;
   qryFlagMissingFlightCrews.SQL.Clear;
   qryFlagMissingFlightCrews.SQL.Append('update CertifyExp_PayComHistory ');
@@ -1562,7 +1580,7 @@ begin
 
   qryFlagMissingFlightCrews.Execute;
 
-end;
+end;  { ValidateFlightCrews }
 
 
 procedure TufrmCertifyExpDataLoader.UpdateCCField(const BatchTimeIn: TDateTime);
@@ -3074,14 +3092,14 @@ var
 
 begin
   strAccum := '|';
-  qryGetGroups.Close;
-  qryGetgroups.Open;
+  qryGetCertifyGroups.Close;
+  qryGetCertifyGroups.Open;
 
-  While not qryGetgroups.Eof do begin
-    strAccum := strAccum + qryGetgroups.FieldByName('certify_group').AsString + '|';
-    qryGetgroups.Next;
+  While not qryGetCertifyGroups.Eof do begin
+    strAccum := strAccum + qryGetCertifyGroups.FieldByName('certify_group').AsString + '|';
+    qryGetCertifyGroups.Next;
   end;
-  qryGetgroups.Close;
+  qryGetCertifyGroups.Close;
 
   Result := strAccum;
 
@@ -3132,11 +3150,25 @@ end;  {StripTrailingPipe}
 
 
 function TufrmCertifyExpDataLoader.GetGroupsByLogicGroup(const LogicGroupIn: String): String;
+var
+  strGroupAccum : String;
+
 begin
+  qryGetCertifyGroups.Close;
+  qryGetCertifyGroups.ParamByName('parmLogicGroupIn').AsString := LogicGroupIn;
+  qryGetCertifyGroups.Open;
 
+  while not qryGetCertifyGroups.eof do begin
+    strGroupAccum := strGroupAccum + QuotedStr(qryGetCertifyGroups.FieldByName('certify_group').AsString) + '|' ;
+    qryGetCertifyGroups.Next;
+  end;  {while}
 
+  qryGetCertifyGroups.Close;
+  Result := strGroupAccum;
 
-end; { GetGroups }
+//  Result := Copy(strGroupAccum, 0, Length(strGroupAccum) - 1 );  // get rid of trailing comma
+
+end; { GetGroupsByLogicGroup }
 
 
 

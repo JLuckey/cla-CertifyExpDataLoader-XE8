@@ -1187,8 +1187,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'select QuoteNum'
       'from CertifyExp_Trips_StartBucket'
       'where CrewMemberID in ('#39'ConNewHire'#39', '#39'EmpNewHire'#39')')
-    Left = 628
-    Top = 55
+    Left = 596
+    Top = 152
   end
   object qryGetFlightCrewNewHire: TUniQuery
     Connection = UniConnection1
@@ -1614,8 +1614,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'where active = '#39'Y'#39
       '  and certify_group = :parmCertifyGroupIn'
       '')
-    Left = 543
-    Top = 174
+    Left = 640
+    Top = 57
     ParamData = <
       item
         DataType = ftUnknown
@@ -1623,15 +1623,24 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Value = nil
       end>
   end
-  object qryGetGroups: TUniQuery
+  object qryGetCertifyGroups: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
       'select distinct certify_group'
-      'FROM [CertifyExp_JobCode_Lookup]'
+      'FROM [V_CertifyExp_JobCode_Lookup]'
       'where active = '#39'Y'#39
+      '  and data_loader_logic_group = :parmLogicGroupIn'
+      ''
+      ''
       '')
-    Left = 594
-    Top = 157
+    Left = 540
+    Top = 48
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmLogicGroupIn'
+        Value = nil
+      end>
   end
   object qryGetCertifyDeptName: TUniQuery
     Connection = UniConnection1
