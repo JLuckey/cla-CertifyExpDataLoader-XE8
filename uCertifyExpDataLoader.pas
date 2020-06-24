@@ -541,7 +541,14 @@ begin
 
   BatchTime := StrToDateTime('06/17/2020 09:49:10.523');
 
-  ValidateFlightCrews(BatchTime);
+// 23 Jun testing:
+
+  LoadCertFileFields(BatchTime);
+
+//  ValidateFlightCrews(BatchTime);
+
+
+
 
 //  ImportSpecialUsers(BatchTime);
 //  ValidateEmployeeRecords(BatchTime);
@@ -695,7 +702,7 @@ begin
   Application.ProcessMessages;
 
   // Prep Logic Group Lists for CalculateApproverEmail()
-  lgFlightCrew  := GetGroupsByLogicGroup('lg_FlightCrew');    // returns pipe-symbol-separated list of certify_groups
+  lgFlightCrew  := GetGroupsByLogicGroup('lg_FlightCrew');    // returns pipe-symbol-separated list of certify_groups for use in CalculateApproverEmail
   lgCharterVISA := GetGroupsByLogicGroup('lg_CharterVISA');
   lgCorporate   := GetGroupsByLogicGroup('lg_Corporate');
   lgDOM         := GetGroupsByLogicGroup('lg_DOM');
@@ -3159,7 +3166,7 @@ begin
   qryGetCertifyGroups.Open;
 
   while not qryGetCertifyGroups.eof do begin
-    strGroupAccum := strGroupAccum + QuotedStr(qryGetCertifyGroups.FieldByName('certify_group').AsString) + '|' ;
+    strGroupAccum := strGroupAccum + qryGetCertifyGroups.FieldByName('certify_group').AsString + '|' ;
     qryGetCertifyGroups.Next;
   end;  {while}
 

@@ -462,8 +462,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '  and imported_on = :parmImportDateIn                          /' +
         '* '#39'2018-08-22 12:34:18.780'#39' */'
       '  and record_status = '#39'OK'#39)
-    Left = 482
-    Top = 72
+    Left = 473
+    Top = 71
     ParamData = <
       item
         DataType = ftUnknown
@@ -693,7 +693,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     SQL.Strings = (
       'delete from CertifyExp_Contractors45'
       '')
-    Left = 411
+    Left = 402
     Top = 52
   end
   object qryGetEmployeeErrors: TUniQuery
@@ -1615,7 +1615,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  and certify_group = :parmCertifyGroupIn'
       '')
     Left = 640
-    Top = 57
+    Top = 56
     ParamData = <
       item
         DataType = ftUnknown
@@ -1634,7 +1634,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       '')
     Left = 540
-    Top = 48
+    Top = 46
     ParamData = <
       item
         DataType = ftUnknown
