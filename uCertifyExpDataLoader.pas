@@ -199,6 +199,7 @@ type
     qryGetCertifyGroups: TUniQuery;
     qryGetCertifyDeptName: TUniQuery;
     qrySpecialUserDupes: TUniQuery;
+    qryGetValidGroups: TUniQuery;
 
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -573,7 +574,7 @@ procedure TufrmCertifyExpDataLoader.FormClose(Sender: TObject; var Action: TClos
 begin
 
   try
-    UniConnection1.Close;              //  ???JL  this still may be cause the program to hang on exit under some unknown conditions  14 may 2019
+    UniConnection1.Close;              //  ???JL  this still may cause the program to hang on exit under some unknown conditions  14 may 2019
 
   except
 
@@ -1366,7 +1367,9 @@ begin
 
   qryLoadTripData.SQL.Append('  AND not (paycom_assigned_ac = ' + QuotedStr('') + ' or paycom_assigned_ac is null ) ');       // assigned_ac field not blank
   qryLoadTripData.SQL.Append('  AND termination_date IS NULL' );                                                              // only currently employed people
-//  ShowMessage(qryLoadTripData.SQL.Text);
+
+  ShowMessage('LoadTripsIntoStartBucket' + #13 + qryLoadTripData.SQL.Text);
+
   DataSource1.DataSet := qryLoadTripData;
   qryLoadTripData.Open;
 
@@ -1461,7 +1464,7 @@ begin
     strErrorText := strErrorText + 'invalid certify_role; ';
 
   if Pos( '|' + qryGetEmployees.FieldByName('certify_department').AsString + '|', strValidGroups) = 0 then     // certify_department aka "group"
-    strErrorText := strErrorText + 'invalid certify_department(group); ';
+    strErrorText := strErrorText + 'invalid certify_department (group); ';
 
 
 
@@ -3099,14 +3102,14 @@ var
 
 begin
   strAccum := '|';
-  qryGetCertifyGroups.Close;
-  qryGetCertifyGroups.Open;
+  qryGetValidGroups.Close;
+  qryGetValidGroups.Open;
 
-  While not qryGetCertifyGroups.Eof do begin
-    strAccum := strAccum + qryGetCertifyGroups.FieldByName('certify_group').AsString + '|';
-    qryGetCertifyGroups.Next;
+  While not qryGetValidGroups.Eof do begin
+    strAccum := strAccum + qryGetValidGroups.FieldByName('certify_group').AsString + '|';
+    qryGetValidGroups.Next;
   end;
-  qryGetCertifyGroups.Close;
+  qryGetValidGroups.Close;
 
   Result := strAccum;
 
@@ -3114,13 +3117,21 @@ end;  {GetValidGroups}
 
 
 
+// Result looks like:  |Pilot Designated|Pilot-Designated|FA Designated| etc
 function TufrmCertifyExpDataLoader.GetValidJobCodeDescrips: String;
 var
   strAccum : String;
 
 begin
   strAccum := '|';
+
+  // Get ALL JobCodeDescriptions
   qryGetJobCodeDescrips.Close;
+  qryGetJobCodeDescrips.SQL.Clear;
+  qryGetJobCodeDescrips.SQL.Append(' select distinct job_code_descrip ');
+  qryGetJobCodeDescrips.SQL.Append(' from V_CertifyExp_JobCode_Lookup ');
+  qryGetJobCodeDescrips.SQL.Append(' where active = ' + QuotedStr('Y') );
+  ShowMessage(qryGetJobCodeDescrips.SQL.Text);
   qryGetJobCodeDescrips.Open;
 
   While not qryGetJobCodeDescrips.Eof do begin
@@ -3132,6 +3143,37 @@ begin
   Result := strAccum;
 
 end;  { GetValidJobCodeDescrips }
+
+
+
+// Result looks like:  'Pilot Designated','Pilot-Designated','FA Designated','Pilot Not-Designated','FA Non-Designated', 'Pilot On Demand', 'FA On Demand'
+//  -- used in SQL "IN" clauses
+function TufrmCertifyExpDataLoader.GetJobCodeDescripsByGroup(const GroupIn: String): String;
+var
+  strDescripsAccum : String;
+
+begin
+  qryGetJobCodeDescrips.Close;
+  qryGetJobCodeDescrips.SQL.Clear;
+  qryGetJobCodeDescrips.SQL.Append(' select distinct job_code_descrip ');
+  qryGetJobCodeDescrips.SQL.Append(' from V_CertifyExp_JobCode_Lookup ');
+  qryGetJobCodeDescrips.SQL.Append(' where active = ' + QuotedStr('Y') );
+  qryGetJobCodeDescrips.SQL.Append('   and certify_group = ' + QuotedStr(GroupIn) );
+
+  ShowMessage(qryGetJobCodeDescrips.SQL.Text);
+  qryGetJobCodeDescrips.Open;
+
+  while not qryGetJobCodeDescrips.eof do begin
+    strDescripsAccum := strDescripsAccum + QuotedStr(qryGetJobCodeDescrips.FieldByName('job_code_descrip').AsString) + ',' ;
+    qryGetJobCodeDescrips.Next;
+  end;  {while}
+
+  qryGetJobCodeDescrips.Close;
+  Result := Copy(strDescripsAccum, 0, Length(strDescripsAccum) - 1 );  // get rid of trailing comma
+
+end;  { GetJobCodeDescrips }
+
+
 
 
 function TufrmCertifyExpDataLoader.GetValidRoles: String;
@@ -3154,8 +3196,6 @@ begin
 end;  {StripTrailingPipe}
 
 
-
-
 function TufrmCertifyExpDataLoader.GetGroupsByLogicGroup(const LogicGroupIn: String): String;
 var
   strGroupAccum : String;
@@ -3176,28 +3216,6 @@ begin
 //  Result := Copy(strGroupAccum, 0, Length(strGroupAccum) - 1 );  // get rid of trailing comma
 
 end; { GetGroupsByLogicGroup }
-
-
-
-// Return looks like:  'Pilot Designated','Pilot-Designated','FA Designated','Pilot Not-Designated','FA Non-Designated', 'Pilot On Demand', 'FA On Demand'
-function TufrmCertifyExpDataLoader.GetJobCodeDescripsByGroup(const GroupIn: String): String;
-var
-  strDescripsAccum : String;
-
-begin
-  qryGetJobCodeDescrips.Close;
-  qryGetJobCodeDescrips.ParamByName('parmCertifyGroupIn').AsString := GroupIn;
-  qryGetJobCodeDescrips.Open;
-
-  while not qryGetJobCodeDescrips.eof do begin
-    strDescripsAccum := strDescripsAccum + QuotedStr(qryGetJobCodeDescrips.FieldByName('job_code_descrip').AsString) + ',' ;
-    qryGetJobCodeDescrips.Next;
-  end;  {while}
-
-  qryGetJobCodeDescrips.Close;
-  Result := Copy(strDescripsAccum, 0, Length(strDescripsAccum) - 1 );  // get rid of trailing comma
-
-end;  { GetJobCodeDescrips }
 
 
 end.

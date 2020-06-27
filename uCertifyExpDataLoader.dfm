@@ -932,9 +932,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       end>
   end
   object DataSource1: TDataSource
-    DataSet = qryFlagMissingFlightCrews
+    DataSet = qryGetValidGroups
     Left = 191
-    Top = 533
+    Top = 532
   end
   object qryInsertCrewTailHist: TUniQuery
     Connection = UniConnection1
@@ -1609,13 +1609,15 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryGetJobCodeDescrips: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
+      '/* the SQL for this query is calculated in the code'
+      '     this SQL is an sample of the typical SQL       */'
       'select distinct job_code_descrip'
       'FROM [V_CertifyExp_JobCode_Lookup]'
       'where active = '#39'Y'#39
       '  and certify_group = :parmCertifyGroupIn'
       '')
     Left = 640
-    Top = 56
+    Top = 62
     ParamData = <
       item
         DataType = ftUnknown
@@ -1633,13 +1635,13 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       ''
       '')
-    Left = 540
-    Top = 46
+    Left = 548
+    Top = 41
     ParamData = <
       item
-        DataType = ftUnknown
+        DataType = ftString
         Name = 'parmLogicGroupIn'
-        Value = nil
+        Value = ''
       end>
   end
   object qryGetCertifyDeptName: TUniQuery
@@ -1686,5 +1688,17 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Name = 'parmImportedOn'
         Value = nil
       end>
+  end
+  object qryGetValidGroups: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select distinct certify_group'
+      'FROM [V_CertifyExp_JobCode_Lookup]'
+      'where active = '#39'Y'#39
+      '  '
+      ''
+      '')
+    Left = 611
+    Top = 24
   end
 end
