@@ -1383,11 +1383,14 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryGetNewTailLeadPilotRecs: TUniQuery
     Connection = connOnBase
     SQL.Strings = (
-      'select attr1131 as tail_number, attr1192 as lead_pilot_email'
+      
+        'select distinct attr1131 as tail_number, attr1192 as lead_pilot_' +
+        'email'
       'FROM [CLAOnBase].[hsi].[rmObjectInstance1014]'
       'where attr1192 is not null'
+      '  and activeStatus = 0'
       'order by attr1131')
-    Left = 52
+    Left = 54
     Top = 484
   end
   object qrySpecialUserOverride: TUniQuery
