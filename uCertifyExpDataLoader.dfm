@@ -495,7 +495,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'select distinct LogSheet, CrewMemberID'
       'from CertifyExp_Trips_StartBucket')
     Left = 34
-    Top = 281
+    Top = 280
   end
   object qryGetAirCrewVendorNum: TUniQuery
     Connection = UniConnection1
@@ -594,7 +594,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '')
     Connection = UniConnection1
     Left = 223
-    Top = 12
+    Top = 11
   end
   object qryGetTripStopRecs: TUniQuery
     Connection = UniConnection1
@@ -1049,7 +1049,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  and TailNum is not null '
       '  and CrewMemberVendorNum > 0')
     Left = 90
-    Top = 439
+    Top = 438
     ParamData = <
       item
         DataType = ftString
@@ -1511,18 +1511,16 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Server = '192.168.1.122'
     LoginPrompt = False
     Left = 163
-    Top = 65522
+    Top = 65521
     EncryptedPassword = '9CFF93FF9EFF8CFF8EFF93FF8CFF8DFF89FFCDFFCFFFCEFFC9FF'
   end
   object qryGetNewTailLeadPilotRecs: TUniQuery
-    Connection = connOnBase
+    Connection = UniConnection1
     SQL.Strings = (
-      'select attr1131 as tail_number, attr1192 as lead_pilot_email'
-      'FROM [CLAOnBase].[hsi].[rmObjectInstance1014]'
-      'where attr1192 is not null'
-      'order by attr1131')
+      'select tail_number, lead_pilot_email'
+      'from V_CertifyExp_TailLeadPilot')
     Left = 52
-    Top = 484
+    Top = 483
   end
   object qrySpecialUserOverride: TUniQuery
     Connection = UniConnection1

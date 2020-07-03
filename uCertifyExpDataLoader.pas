@@ -522,14 +522,24 @@ var
 
 begin
 
-  BatchTime := StrToDateTime('04/13/2020 09:45:02.727');
+  BatchTime := StrToDateTime('07/02/2020 16:07:39.767');
+
+
+
+//  BuildValidationFiles(BatchTime);
+
+
+//  scrLoadTripStopData.Execute;    // puts recs into working table CertifyExp_TripStop_Step1
+
 
   LoadTripsIntoStartBucket(BatchTime);
-  Load_CharterVisa_IntoStartBucket;
-  Load_IFS_IntoStartBucket(BatchTime);
+//  Load_CharterVisa_IntoStartBucket;
+//  Load_IFS_IntoStartBucket(BatchTime);
 
-  BuildCrewDepartDateAirportFile;
-  BuildTailTripDepartTimeAirport;
+//  BuildCrewDepartDateAirportFile;
+//  BuildTailTripDepartTimeAirport;
+
+
 
 
 //  Load_CharterVisa_IntoStartBucket();
@@ -639,16 +649,8 @@ begin
 
   BuildCrewTailFile(BatchTimeIn);
   BuildCrewTripFile;
-  //  BuildCrewLogFile;
   BuildCrewDepartDateAirportFile;
-
-  //  BuildTripLogFile;
-
-  // BuildTailTripLogFile;
   BuildTailTripDepartTimeAirport;
-
-
-//  BuildTripAccountantFile(TargetDirectory + 'trip_accountant.csv');
 
   // Build Trip/Stop records
   scrLoadTripStopData.Execute;    // puts recs into working table CertifyExp_TripStop_Step1
@@ -1121,7 +1123,7 @@ end;  { InsertIntoHistoryTable() }
 {  This new procedure gets Tail/LeadPilot data from OnBase/Workbench instead of from a manually-imported .csv file
   1. open local tail_leadpilot table
   2. query OnBase to get latest Tail/LeadPilot data
-  3. if record counts within tolerance then empty CertifyExp_Tail_LeadPilot & add new recs
+  3. if record counts are within tolerance then empty CertifyExp_Tail_LeadPilot & add new recs
   4. write tail_leadpilot.csv to output directory
 }
 procedure TufrmCertifyExpDataLoader.LoadTailLeadPilot2;
@@ -1225,7 +1227,7 @@ begin
   // Load PIC data into StartBucket
   qryLoadTripData.SQL.Clear;
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
-  qryLoadTripData.SQL.Append('select distinct 0, L.PICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
+  qryLoadTripData.SQL.Append('select distinct L.LogSheet, L.PICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
   qryLoadTripData.SQL.Append('from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
   qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
   qryLoadTripData.SQL.Append('  and L.PICPILOTNO > 0');
@@ -1235,7 +1237,7 @@ begin
 
   // Load SIC data into StartBucket
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
-  qryLoadTripData.SQL.Append('select distinct 0, L.SICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
+  qryLoadTripData.SQL.Append('select distinct L.LogSheet, L.SICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
   qryLoadTripData.SQL.Append('from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
   qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
   qryLoadTripData.SQL.Append('and L.SICPILOTNO > 0');
@@ -1245,7 +1247,7 @@ begin
 
   // Load TIC data into StartBucket
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
-  qryLoadTripData.SQL.Append('select distinct 0, L.TICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
+  qryLoadTripData.SQL.Append('select distinct L.LogSheet, L.TICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, 0, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
   qryLoadTripData.SQL.Append('from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
   qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
   qryLoadTripData.SQL.Append('and L.TICPILOTNO > 0');
@@ -1255,7 +1257,7 @@ begin
 
   // Load FA (Flight Attendant) data into StartBucket
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
-  qryLoadTripData.SQL.Append('select distinct 0, L.FANO, T.QUOTENO, L.ACREGNO, FARPART, 0, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
+  qryLoadTripData.SQL.Append('select distinct L.LogSheet, L.FANO, T.QUOTENO, L.ACREGNO, FARPART, 0, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
   qryLoadTripData.SQL.Append('from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
   qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
   qryLoadTripData.SQL.Append('and L.FANO > 0');
