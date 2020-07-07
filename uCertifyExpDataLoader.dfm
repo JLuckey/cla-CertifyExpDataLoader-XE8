@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'Certify Data Loader - ver 2.8'
+  Caption = 'Certify Data Loader - ver 2.95 (Sandbox)'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -1686,6 +1686,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'order by QuoteNum'
       '')
     Left = 394
-    Top = 129
+    Top = 128
   end
 end

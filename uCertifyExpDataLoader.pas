@@ -1782,7 +1782,7 @@ begin
   CloseFile(WorkFile);
   qryGetTailTripDepartdate.Close;
 
-end;  { BuildTailTripLogFile }
+end;  { BuildTailTripDepartTimeAirport }
 
 
 
