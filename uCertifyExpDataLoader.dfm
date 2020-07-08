@@ -2,7 +2,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
   Caption = 'Certify Data Loader - ver 2.95 (Sandbox)'
-  ClientHeight = 601
+  ClientHeight = 610
   ClientWidth = 716
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -153,7 +153,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 582
+    Top = 591
     Width = 716
     Height = 19
     Panels = <
@@ -260,7 +260,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     TitleFont.Style = []
   end
   object edNewDate: TEdit
-    Left = 174
+    Left = 185
     Top = 429
     Width = 152
     Height = 21
@@ -290,6 +290,16 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Alignment = taRightJustify
     TabOrder = 15
     Text = '15718'
+  end
+  object cbShowSQL: TCheckBox
+    Left = 8
+    Top = 433
+    Width = 160
+    Height = 17
+    Caption = 'Show SQL Before Queries Run'
+    Color = clBtnFace
+    ParentColor = False
+    TabOrder = 16
   end
   object UniConnection1: TUniConnection
     ProviderName = 'SQL Server'
@@ -658,8 +668,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       'delete from CertifyExp_PilotsNotInPaycom')
-    Left = 512
-    Top = 188
+    Left = 454
+    Top = 211
   end
   object qryDeleteTrips: TUniQuery
     Connection = UniConnection1
@@ -801,7 +811,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       '')
     Left = 657
-    Top = 76
+    Top = 75
   end
   object qryGetEmployeeErrors: TUniQuery
     Connection = UniConnection1
@@ -1048,8 +1058,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'where CrewMemberVendorNum is not null '
       '  and TailNum is not null '
       '  and CrewMemberVendorNum > 0')
-    Left = 90
-    Top = 438
+    Left = 89
+    Top = 452
     ParamData = <
       item
         DataType = ftString
@@ -1093,8 +1103,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       ''
       '')
-    Left = 620
-    Top = 554
+    Left = 587
+    Top = 522
     ParamData = <
       item
         DataType = ftUnknown
@@ -1266,7 +1276,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from CertifyExp_Trips_StartBucket'
       'where CrewMemberVendorNum = :parmVendorNumIn')
     Left = 615
-    Top = 113
+    Top = 112
     ParamData = <
       item
         DataType = ftUnknown
@@ -1597,7 +1607,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'FROM [CLAOnBase].[hsi].[rmObjectInstance1023]'
       'WHERE activestatus = 0')
     Left = 643
-    Top = 505
+    Top = 500
   end
   object qryInsertTripsForGroup: TUniQuery
     Connection = UniConnection1
@@ -1687,5 +1697,44 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '')
     Left = 394
     Top = 128
+  end
+  object qryCrewChange: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      '/* SQL for this query is calculated in Delphi code */')
+    Left = 515
+    Top = 187
+  end
+  object qryGetChangedCrew: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      'select distinct O.QuoteNum, O.CrewMemberID'
+      'from CertifyExp_OtherLegs O left join CertifyExp_FirstLegs F '
+      '  on O.QuoteNum = F.QuoteNum and O.CrewMemberID = F.CrewMemberID'
+      'where F.QuoteNum is null'
+      'order by QuoteNum')
+    Left = 584
+    Top = 160
+  end
+  object qryLookUpFirstLeg: TUniQuery
+    Connection = UniConnection1
+    SQL.Strings = (
+      
+        'select T.QuoteNo, L.ACREGNO, L.LOGSHEET, L.LEGNO, L.DEPTID, L.AR' +
+        'RIVEID, L.PICPILOTNO, L.SICPILOTNO, '
+      '       L.TICPILOTNO, L.FANO, L.DEPARTURE, T.FARPART'
+      
+        'from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on L.ACR' +
+        'EGNO = T.ACREGNO and L.LogSheet = T.Logsheet'
+      'where T.QuoteNo = :parmQuoteNumIn'
+      'order by T.QuoteNo')
+    Left = 250
+    Top = 127
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'parmQuoteNumIn'
+        Value = nil
+      end>
   end
 end

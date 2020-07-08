@@ -198,6 +198,10 @@ type
     qryInsertTripsForGroup: TUniQuery;
     qryInsertTailsForIFS: TUniQuery;
     qryGetTailTripDepartdate: TUniQuery;
+    qryCrewChange: TUniQuery;
+    cbShowSQL: TCheckBox;
+    qryGetChangedCrew: TUniQuery;
+    qryLookUpFirstLeg: TUniQuery;
 
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -338,6 +342,15 @@ type
     Function CalcInClause(Const GroupStrIn: String): String;
 
     Function ScrubVendorNum(Const strVendorNumIn: String; Var ErrorTxtOut: String): Integer;
+
+
+    // 7 July 2020
+    Procedure CrewChangeMain;
+    Procedure CrewChange_LoadFirstLegs(Const CrewRole: String; DaysBack: Integer);
+    Procedure CrewChange_LoadOtherLegs(Const CrewRole: String; DaysBack: Integer);
+    Procedure CrewChange_InsertStartBucket(Const qryDataToInsert: TUniQuery; strCrewIDFieldName: String);
+
+
 
   public
     { Public declarations }
@@ -524,6 +537,10 @@ begin
 
   BatchTime := StrToDateTime('07/02/2020 16:07:39.767');
 
+  CrewChangeMain;
+
+//  CrewChange_LoadFirstLegs('PICPilotNo', StrToInt(edDaysBack.Text) );
+//  CrewChange_LoadOtherLegs('PICPilotNo', StrToInt(edDaysBack.Text) );
 
 
 //  BuildValidationFiles(BatchTime);
@@ -532,7 +549,7 @@ begin
 //  scrLoadTripStopData.Execute;    // puts recs into working table CertifyExp_TripStop_Step1
 
 
-  LoadTripsIntoStartBucket(BatchTime);
+//  LoadTripsIntoStartBucket(BatchTime);
 //  Load_CharterVisa_IntoStartBucket;
 //  Load_IFS_IntoStartBucket(BatchTime);
 
@@ -2259,6 +2276,120 @@ begin
 end;  { CreateEmployeeErrorReport }
 
 
+
+
+
+procedure TufrmCertifyExpDataLoader.CrewChangeMain;
+var
+  stlCrewIDFieldNames: TStringList;
+  i : Integer;
+
+begin
+  stlCrewIDFieldNames := TStringList.Create;
+  stlCrewIDFieldNames.CommaText := 'PICPilotNo, SICPilotNo, TICPilotNo, FANo' ;
+
+  try
+    qryLookUpFirstLeg.Close;
+    tblStartBucket.Open;
+
+
+    for i := 0 to stlCrewIDFieldNames.Count - 1 do begin
+      qryGetChangedCrew.Close;
+
+      CrewChange_LoadFirstLegs(stlCrewIDFieldNames[i], StrToInt(edDaysBack.text));
+      CrewChange_LoadOtherLegs(stlCrewIDFieldNames[i], StrToInt(edDaysBack.text));
+
+      qryGetChangedCrew.Open;   // Returns trips where crew member changed bewteen legs for each Crew Member role [PIC, SIC, TIC, FA]
+
+      while Not qryGetChangedCrew.Eof do begin
+        qryLookupFirstLeg.ParamByName('parmQuoteNumIn').AsInteger := qryGetChangedCrew.FieldByName('QuoteNum').AsInteger;
+        qryLookUpFirstLeg.Open;
+
+        CrewChange_InsertStartBucket(qryLookupFirstLeg, stlCrewIDFieldNames[i]);
+
+        qryLookUpFirstLeg.Close;
+        qryGetChangedCrew.Next;
+      end;  { While }
+
+    end;  { For }
+
+    qryGetChangedCrew.Close;
+    tblStartBucket.Close;
+
+  finally
+    stlCrewIDFieldNames.Free;
+  end;
+
+end;  { CrewChangeMain }
+
+
+
+procedure TufrmCertifyExpDataLoader.CrewChange_InsertStartBucket(const qryDataToInsert: TUniQuery; strCrewIDFieldName: String);
+begin
+  qryDataToInsert.First;            ;
+
+  tblStartBucket.Insert;
+  tblStartBucket.FieldByName('LogSheet').AsInteger        := qryDataToInsert.FieldByName('LOGSHEET').AsInteger;
+  tblStartBucket.FieldByName('CrewMemberID').AsString     := qryDataToInsert.FieldByName(strCrewIDFieldName).AsString;
+  tblStartBucket.FieldByName('QuoteNum').AsInteger        := qryDataToInsert.FieldByName('QUOTENO').AsInteger;
+  tblStartBucket.FieldByName('TailNum').AsString          := qryDataToInsert.FieldByName('ACREGNO').AsString;
+  tblStartBucket.FieldByName('FARPart').AsString          := qryDataToInsert.FieldByName('FARPART').AsString;
+  tblStartBucket.FieldByName('TripDepartDate').AsDatetime := qryDataToInsert.FieldByName('DEPARTURE').AsDateTime;
+  tblStartBucket.FieldByName('FirstDestination').AsString := qryDataToInsert.FieldByName('ARRIVEID').AsString;
+  tblStartBucket.FieldByName('LegNum').AsInteger          := 999;      //  Conspicuous value indicating rec is from the Crew Change process
+
+  tblStartBucket.Post;
+
+end;  { CrewChange_InsertStartBucket }
+
+
+
+procedure TufrmCertifyExpDataLoader.CrewChange_LoadFirstLegs(const CrewRole: String; DaysBack: Integer);
+begin
+
+  PurgeTable('CertifyExp_FirstLegs');
+  qryCrewChange.SQL.Clear;
+  qryCrewChange.SQL.Append('insert into CertifyExp_FirstLegs');
+  qryCrewChange.SQL.Append('select T.QuoteNo, L.' + CrewRole + ' as PilotID, L.LegNo ');
+  qryCrewChange.SQL.Append('from QuoteSys_TripLeg L left join QuoteSys_Trip T on L.ACREGNO = T.ACREGNO and L.LogSheet = T.Logsheet');
+  qryCrewChange.SQL.Append('where T.TR_Depart > CURRENT_TIMESTAMP - ' + IntToStr(DaysBack) );
+  qryCrewChange.SQL.Append('  and quoteno is not null ');
+  qryCrewChange.SQL.Append('  and LegNo = 1 ');
+  qryCrewChange.SQL.Append('  and L.' + CrewRole + ' > 0 ');
+  qryCrewChange.SQL.Append('order by quoteno, legno ');
+
+  if cbShowSQL.Checked then
+    ShowMessage(qryCrewChange.SQL.Text);
+
+  qryCrewChange.Execute;
+
+end;  { CrewChange_LoadFirstLegs }
+
+
+procedure TufrmCertifyExpDataLoader.CrewChange_LoadOtherLegs(const CrewRole: String; DaysBack: Integer);
+begin
+
+  PurgeTable('CertifyExp_OtherLegs');
+  qryCrewChange.SQL.Clear;
+  qryCrewChange.SQL.Append('insert into CertifyExp_OtherLegs');
+  qryCrewChange.SQL.Append('select T.QuoteNo, L.' + CrewRole + ' as PilotID, L.LegNo ');
+  qryCrewChange.SQL.Append('from QuoteSys_TripLeg L left join QuoteSys_Trip T on L.ACREGNO = T.ACREGNO and L.LogSheet = T.Logsheet');
+  qryCrewChange.SQL.Append('where T.TR_Depart > CURRENT_TIMESTAMP - ' + IntToStr(DaysBack) );
+  qryCrewChange.SQL.Append('  and quoteno is not null ');
+  qryCrewChange.SQL.Append('  and LegNo > 1 ');
+  qryCrewChange.SQL.Append('  and L.' + CrewRole + ' > 0 ');
+  qryCrewChange.SQL.Append('order by quoteno, legno ');
+
+  if cbShowSQL.Checked then
+    ShowMessage(qryCrewChange.SQL.Text);
+
+  qryCrewChange.Execute;
+
+end;  { CrewChange_LoadOtherLegs }
+
+
+
+
 function TufrmCertifyExpDataLoader.CalcPaycomErrorFileName(const BatchTimeIn: TDateTime): String;
 var
   myMonth, myDay, myYear: word;
@@ -2992,6 +3123,12 @@ begin
   qryLoadCertifyEmployeesTable.Execute;
 
 end;
+
+
+
+
+
+
 
 
 
