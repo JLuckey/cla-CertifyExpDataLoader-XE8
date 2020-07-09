@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'Certify Data Loader - ver 2.95 (Sandbox)'
+  Caption = 'Certify Data Loader - ver 2.96 (Sandbox)'
   ClientHeight = 610
   ClientWidth = 716
   Color = clBtnFace
@@ -1041,7 +1041,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       end>
   end
   object DataSource1: TDataSource
-    DataSet = tblTailLeadPilot
+    DataSet = qryGetChangedCrew
     Left = 191
     Top = 534
   end
@@ -1727,6 +1727,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on L.ACR' +
         'EGNO = T.ACREGNO and L.LogSheet = T.Logsheet'
       'where T.QuoteNo = :parmQuoteNumIn'
+      '  and L.LEGNO = 1'
       'order by T.QuoteNo')
     Left = 250
     Top = 127
