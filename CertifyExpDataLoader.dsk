@@ -1,4 +1,5 @@
 ﻿[Closed Files]
+<<<<<<< HEAD
 File_0=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.dfm',0,1,1,1,1,0,0,,
 File_1=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',0,1,1,1,1,0,0,,
 File_2=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini',0,1,1,52,10,0,0,,
@@ -19,6 +20,27 @@ File_14=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\d
 Module0=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
 Module1=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj
 Module2=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini
+=======
+File_0=TSourceModule,'c:\codegear\delphixe8\source\rtl\common\System.Classes.pas',0,1,6904,1,6930,0,0,,
+File_1=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.Controls.pas',0,1,9766,1,9792,0,0,,
+File_2=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.pas',0,1,29588,1,29619,0,0,,
+File_3=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.dfm',0,1,1,1,1,0,0,,
+File_4=TSourceModule,'F:\XDrive\DCS\CLA\DataWarehouse\DataLoader\QuoteLoader\DelphiSourceXE8\uQuoteLoader.pas',0,1,861,1,884,0,0,,
+File_5=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.SysUtils.pas',0,1,19808,1,19837,0,0,,
+File_6=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.StdCtrls.pas',0,1,5763,1,5789,0,0,{{1651,4}
+File_7=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uPushToCertify.pas',0,1,66,1,101,0,0,,
+File_8=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.Forms.pas',0,1,4402,1,4428,0,0,{{1716,4}
+File_9=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Release\CertifyExpDataLoader.ini',0,1,1,1,19,0,0,,
+File_10=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\InputFiles\certify_special_users_20190613.csv',0,1,1,1,1,0,0,,
+File_11=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uPushToCertify.dfm',0,1,1,1,1,0,0,,
+File_12=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\dmCertifyGroupClass_Corporate.pas',0,1,1,3,110,0,0,,
+File_13=TSourceModule,'F:\XDrive\DCS\CLA\DataWarehouse\DataLoader\TripLoader_hourly\DelphiSourceXE8\uQuoteLoader.pas',0,1,620,1,647,0,0,,
+
+[Modules]
+Module0=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
+Module1=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
+Module2=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj
+>>>>>>> branch_dev_TE-57_CrewChange
 Module3=Main_Page
 Count=4
 EditWindowCount=1
@@ -28,11 +50,18 @@ ModuleType=TSourceModule
 FormState=1
 FormOnTop=1
 
+<<<<<<< HEAD
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj]
 ModuleType=TBaseProject
 
 [F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini]
+=======
+[F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini]
+>>>>>>> branch_dev_TE-57_CrewChange
 ModuleType=TSourceModule
+
+[F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.dproj]
+ModuleType=TBaseProject
 
 [Main_Page]
 ModuleType=TURLModule
@@ -60,9 +89,15 @@ ClientHeight=9123
 DockedToMainForm=1
 BorlandEditorCodeExplorer=BorlandEditorCodeExplorer@EditWindow0
 TopPanelSize=0
+<<<<<<< HEAD
 LeftPanelSize=2121
 LeftPanelClients=PropertyInspector,DockSite3
 LeftPanelData=00000800010100000000970F00000000000001490800000000000001000000005D0E000009000000446F636B53697465330100000000631E00001100000050726F7065727479496E73706563746F72FFFFFFFF
+=======
+LeftPanelSize=1521
+LeftPanelClients=PropertyInspector,DockSite3
+LeftPanelData=00000800010100000000970F00000000000001F10500000000000001000000005D0E000009000000446F636B53697465330100000000631E00001100000050726F7065727479496E73706563746F72FFFFFFFF
+>>>>>>> branch_dev_TE-57_CrewChange
 RightPanelSize=1287
 RightPanelClients=DockSite2,DockSite4
 RightPanelData=00000800010100000000970F00000000000001070500000000000001000000004412000009000000446F636B53697465320100000000631E000009000000446F636B5369746534FFFFFFFF
@@ -91,20 +126,33 @@ EditViewName=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpD
 [View2]
 CustomEditViewType=TEditView
 Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
+<<<<<<< HEAD
 CursorX=56
 CursorY=1209
 TopLine=1203
+=======
+CursorX=36
+CursorY=1285
+TopLine=1263
+>>>>>>> branch_dev_TE-57_CrewChange
 LeftCol=1
 Elisions=
-Bookmarks=
+Bookmarks={1,2338,7}{2,562,1}{5,498,76}{9,543,70}
 EditViewName=Borland.FormDesignerView
 
 [View3]
 CustomEditViewType=TEditView
+<<<<<<< HEAD
 Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini
 CursorX=1
 CursorY=61
 TopLine=19
+=======
+Module=F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini
+CursorX=34
+CursorY=16
+TopLine=1
+>>>>>>> branch_dev_TE-57_CrewChange
 LeftCol=1
 Elisions=
 Bookmarks=
@@ -233,11 +281,19 @@ State=0
 Left=0
 Top=0
 Width=1287
+<<<<<<< HEAD
 Height=8524
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1287
 ClientHeight=8524
+=======
+Height=4284
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=1287
+ClientHeight=4284
+>>>>>>> branch_dev_TE-57_CrewChange
 TBDockHeight=4883
 LRDockWidth=5305
 Dockable=1
@@ -249,8 +305,13 @@ Create=1
 Visible=0
 Docked=1
 State=0
+<<<<<<< HEAD
 Left=-139
 Top=-106
+=======
+Left=-237
+Top=-102
+>>>>>>> branch_dev_TE-57_CrewChange
 Width=1848
 Height=3141
 MaxLeft=-1
@@ -308,6 +369,7 @@ Docked=1
 State=0
 Left=0
 Top=369
+<<<<<<< HEAD
 Width=2121
 Height=4029
 MaxLeft=-1
@@ -316,14 +378,29 @@ ClientWidth=2121
 ClientHeight=4029
 TBDockHeight=8824
 LRDockWidth=2121
+=======
+Width=1521
+Height=4029
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=1521
+ClientHeight=4029
+TBDockHeight=7791
+LRDockWidth=1521
+>>>>>>> branch_dev_TE-57_CrewChange
 Dockable=1
 StayOnTop=0
 SplitPos=168
 
 [PropInspDesignerSelection]
 ArrangeBy=Name
+<<<<<<< HEAD
 SelectedItem=Name,
 ExpandedItems=HorzScrollBar=0,LiveBindings=0,"LiveBindings Designer=0",Margins=0,FilterOptions=0
+=======
+SelectedItem=Name,DataController
+ExpandedItems=Anchors=0,BorderIcons=0,Options=0,RefreshOptions=0,SmartFetch=0,"LiveBindings Designer=0",FilterOptions=0,HorzScrollBar=0,LiveBindings=0,Margins=0,Padding=0,Encryption=0,PoolingOptions=1,BackgroundBitmaps=0,DataController=1,DateTimeHandling=0,EditForm=0,FilterBox=0,Filtering=0,FilterRow=0,FindPanel=0,Navigator=0,DataController.DataModeController=0,DataController.Filter=0,DataController.MultiThreadedOptions=0,DataController.Options=0,DataController.Summary=0,NewItemRow=0
+>>>>>>> branch_dev_TE-57_CrewChange
 
 [frmDesignPreview]
 PercentageSizes=1
@@ -334,11 +411,19 @@ State=0
 Left=0
 Top=0
 Width=1287
+<<<<<<< HEAD
 Height=8524
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1287
 ClientHeight=8524
+=======
+Height=4284
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=1287
+ClientHeight=4284
+>>>>>>> branch_dev_TE-57_CrewChange
 TBDockHeight=5960
 LRDockWidth=2514
 Dockable=1
@@ -350,8 +435,13 @@ Create=1
 Visible=0
 Docked=1
 State=0
+<<<<<<< HEAD
 Left=-1598
 Top=-106
+=======
+Left=-1486
+Top=-26
+>>>>>>> branch_dev_TE-57_CrewChange
 Width=2846
 Height=6204
 MaxLeft=-1
@@ -370,7 +460,11 @@ Visible=0
 Docked=1
 State=0
 Left=-1716
+<<<<<<< HEAD
 Top=-106
+=======
+Top=218
+>>>>>>> branch_dev_TE-57_CrewChange
 Width=273
 Height=355
 MaxLeft=-1
@@ -539,11 +633,19 @@ State=0
 Left=0
 Top=0
 Width=1287
+<<<<<<< HEAD
 Height=8524
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1287
 ClientHeight=8524
+=======
+Height=4284
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=1287
+ClientHeight=4284
+>>>>>>> branch_dev_TE-57_CrewChange
 TBDockHeight=4883
 LRDockWidth=7148
 Dockable=1
@@ -555,8 +657,13 @@ Create=1
 Visible=0
 Docked=1
 State=0
+<<<<<<< HEAD
 Left=0
 Top=0
+=======
+Left=353
+Top=715
+>>>>>>> branch_dev_TE-57_CrewChange
 Width=2857
 Height=3208
 MaxLeft=-1
@@ -602,11 +709,19 @@ Docked=1
 State=0
 Left=0
 Top=0
+<<<<<<< HEAD
 Width=2121
 Height=3241
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=2121
+=======
+Width=1521
+Height=3241
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=1521
+>>>>>>> branch_dev_TE-57_CrewChange
 ClientHeight=3241
 TBDockHeight=3685
 LRDockWidth=1897
@@ -659,12 +774,21 @@ Docked=1
 State=0
 Left=0
 Top=0
+<<<<<<< HEAD
 Width=763
 Height=8824
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=763
 ClientHeight=8824
+=======
+Width=1298
+Height=7403
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=1298
+ClientHeight=7403
+>>>>>>> branch_dev_TE-57_CrewChange
 TBDockHeight=3685
 LRDockWidth=1897
 Dockable=1
@@ -701,7 +825,11 @@ Visible=0
 Docked=1
 State=0
 Left=0
+<<<<<<< HEAD
 Top=0
+=======
+Top=23
+>>>>>>> branch_dev_TE-57_CrewChange
 Width=2334
 Height=1476
 MaxLeft=-1
@@ -725,7 +853,11 @@ Visible=0
 Docked=1
 State=0
 Left=0
+<<<<<<< HEAD
 Top=0
+=======
+Top=23
+>>>>>>> branch_dev_TE-57_CrewChange
 Width=3822
 Height=810
 MaxLeft=-1
@@ -756,7 +888,11 @@ MaxLeft=-1
 MaxTop=-1
 ClientWidth=1287
 ClientHeight=4584
+<<<<<<< HEAD
 TBDockHeight=8824
+=======
+TBDockHeight=7791
+>>>>>>> branch_dev_TE-57_CrewChange
 LRDockWidth=1287
 Dockable=1
 StayOnTop=0
@@ -774,6 +910,7 @@ Docked=1
 State=0
 Left=0
 Top=23
+<<<<<<< HEAD
 Width=2121
 Height=3541
 MaxLeft=-1
@@ -782,6 +919,16 @@ ClientWidth=2121
 ClientHeight=3541
 TBDockHeight=8824
 LRDockWidth=2121
+=======
+Width=1521
+Height=3541
+MaxLeft=-1
+MaxTop=-1
+ClientWidth=1521
+ClientHeight=3541
+TBDockHeight=7791
+LRDockWidth=1521
+>>>>>>> branch_dev_TE-57_CrewChange
 Dockable=1
 StayOnTop=0
 TabPosition=1
@@ -804,7 +951,11 @@ MaxLeft=-1
 MaxTop=-1
 ClientWidth=1287
 ClientHeight=2986
+<<<<<<< HEAD
 TBDockHeight=8824
+=======
+TBDockHeight=7791
+>>>>>>> branch_dev_TE-57_CrewChange
 LRDockWidth=1287
 Dockable=1
 StayOnTop=0
