@@ -1,13 +1,8 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-<<<<<<< HEAD
   Caption = 'Certify Data Loader - ver 3.0'
   ClientHeight = 601
-=======
-  Caption = 'Certify Data Loader - ver 2.96 (Sandbox)'
-  ClientHeight = 610
->>>>>>> branch_dev_TE-57_CrewChange
   ClientWidth = 716
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -158,7 +153,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 591
+    Top = 582
     Width = 716
     Height = 19
     Panels = <
@@ -674,13 +669,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       'delete from CertifyExp_PilotsNotInPaycom')
-<<<<<<< HEAD
     Left = 443
     Top = 191
-=======
-    Left = 454
-    Top = 211
->>>>>>> branch_dev_TE-57_CrewChange
   end
   object qryDeleteTrips: TUniQuery
     Connection = UniConnection1
@@ -713,45 +703,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     SQL.Strings = (
       'delete from CertifyExp_Contractors45'
       '')
-<<<<<<< HEAD
     Left = 402
     Top = 52
-=======
-    Left = 411
-    Top = 51
-  end
-  object qryGetPilotDetails: TUniQuery
-    Connection = UniConnection1
-    SQL.Strings = (
-      'select P.PilotID'
-      '      ,P.LastName'
-      '      ,P.FirstName'
-      '      ,P.VendorNumber'
-      '      ,P.UpdatedInQuoteSys'
-      '      ,P.UpdatedBy'
-      '      ,P.Base'
-      '      ,P.ArchiveFlag'
-      '      ,P.JobTitle'
-      '      ,P.EmployeeStatus'
-      '      ,P.Status'
-      '      ,P.EMail'
-      '      ,P.AssignedAC'
-      ''
-      
-        'from CertifyExp_Contractors45 C left outer join QuoteSys_PilotMa' +
-        'ster P '
-      '  on C.CrewMemberVendorNum = P.VendorNumber'
-      
-        'where P.EmployeeStatus <> '#39'Clients'#39'           -- special-case re' +
-        'cords in PilotMaster that do not represent actual Flight Crew pe' +
-        'rsonnel'
-      '  and CrewMemberVendorNum is not null'
-      'order by P.VendorNumber'
-      ''
-      '')
-    Left = 657
-    Top = 75
->>>>>>> branch_dev_TE-57_CrewChange
   end
   object qryGetEmployeeErrors: TUniQuery
     Connection = UniConnection1
@@ -989,11 +942,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       end>
   end
   object DataSource1: TDataSource
-<<<<<<< HEAD
     DataSet = qryGetValidGroups
-=======
-    DataSet = qryGetChangedCrew
->>>>>>> branch_dev_TE-57_CrewChange
     Left = 191
     Top = 532
   end
@@ -1227,13 +1176,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'select CrewMemberVendorNum, QuoteNum'
       'from CertifyExp_Trips_StartBucket'
       'where CrewMemberVendorNum = :parmVendorNumIn')
-<<<<<<< HEAD
     Left = 598
     Top = 108
-=======
-    Left = 615
-    Top = 112
->>>>>>> branch_dev_TE-57_CrewChange
     ParamData = <
       item
         DataType = ftUnknown
@@ -1442,34 +1386,17 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Username = 'sa'
     Server = '192.168.1.122'
     LoginPrompt = False
-<<<<<<< HEAD
     Left = 153
     Top = 65520
-=======
-    Left = 163
-    Top = 65521
->>>>>>> branch_dev_TE-57_CrewChange
     EncryptedPassword = '9CFF93FF9EFF8CFF8EFF93FF8CFF8DFF89FFCDFFCFFFCEFFC9FF'
   end
   object qryGetNewTailLeadPilotRecs: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
-<<<<<<< HEAD
-      
-        'select distinct attr1131 as tail_number, attr1192 as lead_pilot_' +
-        'email'
-      'FROM [CLAOnBase].[hsi].[rmObjectInstance1014]'
-      'where attr1192 is not null'
-      '  and activeStatus = 0'
-      'order by attr1131')
-    Left = 54
-    Top = 484
-=======
       'select tail_number, lead_pilot_email'
       'from V_CertifyExp_TailLeadPilot')
     Left = 52
     Top = 483
->>>>>>> branch_dev_TE-57_CrewChange
   end
   object qrySpecialUserOverride: TUniQuery
     Connection = UniConnection1
@@ -1548,13 +1475,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       'FROM [CLAOnBase].[hsi].[rmObjectInstance1023]'
       'WHERE activestatus = 0')
-<<<<<<< HEAD
     Left = 642
     Top = 505
-=======
-    Left = 643
-    Top = 500
->>>>>>> branch_dev_TE-57_CrewChange
   end
   object qryInsertTripsForGroup: TUniQuery
     Connection = UniConnection1
@@ -1661,8 +1583,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       '  on O.QuoteNum = F.QuoteNum and O.CrewMemberID = F.CrewMemberID'
       'where F.QuoteNum is null'
       'order by QuoteNum')
-    Left = 584
-    Top = 160
+    Left = 547
+    Top = 162
   end
   object qryLookUpFirstLeg: TUniQuery
     Connection = UniConnection1
