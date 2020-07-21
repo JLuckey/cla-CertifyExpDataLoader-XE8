@@ -309,7 +309,6 @@ type
 
     // 17 Dec 2019
     Procedure ImportSpecialUsers(Const BatchTimeIn: TDateTime);
-    Procedure InsertSUIntoHistoryTable(BatchTimeIn: TDateTime);
 
     Procedure OverrideWithSpecialUsers(Const BatchTimeIn: TDateTime);  // Remove this feature ???JL
 
@@ -519,17 +518,13 @@ begin
 
   ImportPaycomData(BatchTimeIn);               // rec status: imported or error  6 Jan 2020
 
-    FlagTerminatedEmployees(BatchTimeIn);      // checks Termination Date & updates record_status in PaycomHistory, was part of ValidateEmployeeRecord
-
+  FlagTerminatedEmployees(BatchTimeIn);      // checks Termination Date & updates record_status in PaycomHistory, was part of ValidateEmployeeRecord
 
   ImportSpecialUsers(BatchTimeIn);
 
   LoadTripsIntoStartBucket(BatchTimeIn);
 
-    Load_CharterVisa_IntoStartBucket;
-
-//  AddContractorsNotInPaycom(BatchTimeIn);       // writes Contractors to PaycomHistory table
-//  Process_NewHire_Contractors(BatchTimeIn);     // writes New-Hire contractors to PaycomHistory, if they have not yet flown any trips
+  Load_CharterVisa_IntoStartBucket;
 
   Process_NewHire_Employees_FlightCrew(BatchTimeIn);
 
@@ -545,7 +540,6 @@ begin
 
   FilterTripsByCount;                           // removes selected recs from StartBucket
 
-  // Should this go here?  What is the chronology?
   GenerateMissingFlightCrewReport(BatchTimeIn);
 
 end;  { LoadData() }
@@ -764,7 +758,6 @@ var
   strAssignedAC : String;
   PaycomApprover1, PaycomApprover2: String;
   PilotEmail : String;
-  strGroupList : String;
 
 begin
     myCertifyGroup := qryGetImportedRecs.FieldByName('certfile_group').AsString ;
@@ -1158,11 +1151,9 @@ end;  { InsertIntoHistoryTable() }
 procedure TufrmCertifyExpDataLoader.InsertSpecialUsersHistoryTable(const DataSetIn: TUniQuery; BatchTimeIn: TDateTime);
 var
   recStatus : String;
-  i : integer;
   strEmpID: String;
 
 begin
-
   try
     tblPayComHistory.Insert;
     recStatus := 'imported';
@@ -2084,7 +2075,7 @@ begin
   qryGetMissingFlightCrew.ParamByName('parmDaysBack').AsInteger       := StrToInt(edContractorDaysBack.text);
   qryGetMissingFlightCrew.Open;
 
-  WriteQueryResultsToFile(qryGetMissingFlightCrew, 'MissingFlightCrewTest.txt');
+  WriteQueryResultsToFile(qryGetMissingFlightCrew, edOutputDirectory.Text + 'MissingFlightCrew.csv');
   qryGetMissingFlightCrew.Close;
 
 end;  { GenerateMissingFlightCrewReport }
@@ -2503,28 +2494,22 @@ end;  { CalcCrewTailFileName }
 
 procedure TufrmCertifyExpDataLoader.ImportSpecialUsers(const BatchTimeIn: TDateTime);
 begin
-  StatusBar1.Panels[1].Text := 'Current Task:  Importing Special Users file' ;
+  StatusBar1.Panels[1].Text := 'Current Task:  Importing Special Users' ;
   Application.ProcessMessages;
 
   tblPaycomHistory.Open;
   try
     qryGetSpecialUsers.Close;
     qryGetSpecialUsers.Open;
-
     while not qryGetSpecialUsers.eof do begin
-//      InsertSUIntoHistoryTable(BatchTimeIn);
-
       InsertSpecialUsersHistoryTable(qryGetSpecialUsers, BatchTimeIn);
-
       qryGetSpecialUsers.Next;
     end;
 
   finally
     tblPaycomHistory.Close;
     qryGetSpecialUsers.Close;
-
   end;
-//  OverrideWithSpecialUsers(BatchTimeIn);  depricated
 
 end;  {ImportSpecialUsers}
 
@@ -2538,84 +2523,6 @@ begin
   qrySpecialUserOverride.Execute;
 
 end;
-
-
-
-
-(*
-special_users file columns:
-
-0   work_email,           [certfile_work_email]
-1   first_name,           [certfile_first_name]
-2   last_name,            [certfile_last_name]
-3   employee_id,          [certfile_employee_id]
-4   employee_type,        [certfile_employee_type]
-5   group,                [certfile_group]
-6   department_name,      [certfile_department_name]
-7   approver_email - 1,   [certfile_approver1_email]
-8   approver_email - 2,   [certfile_approver2_email]
-9   accountant_email      [certfile_accountant_email]
-
-
-PaycomHistory Table Field Names:
-
-0   ,[certfile_work_email]
-1   ,[certfile_first_name]
-2   ,[certfile_last_name]
-3   ,[certfile_employee_id]
-4   ,[certfile_employee_type]
-5   ,[certfile_group]
-6   ,[certfile_department_name]
-7   ,[certfile_approver1_email]
-8   ,[certfile_approver2_email]
-9   ,[certfile_accountant_email]
-
-*)
-
-procedure TufrmCertifyExpDataLoader.InsertSUIntoHistoryTable(BatchTimeIn: TDateTime);
-var
-  strRecStatus : String;
-  strErrorTextOut : String;
-  VendorNum: Integer;
-
-begin
-  try
-    tblPayComHistory.Insert;
-    tblPaycomHistory.FieldByName('data_source').AsString        := 'special_users';
-    tblPaycomHistory.FieldByName('status_timestamp').AsDateTime := BatchTimeIn;
-    tblPaycomHistory.FieldByName('imported_on').AsDateTime      := BatchTimeIn;
-
-    strRecStatus := 'OK';    // set to OK so no other subsequent validation happens to these recs
-
-    tblPaycomHistory.FieldByName('certfile_work_email').AsString       := qryGetSpecialUsers.FieldByName('work_email').AsString;
-    tblPaycomHistory.FieldByName('certfile_first_name').AsString       := qryGetSpecialUsers.FieldByName('first_name').AsString;
-    tblPaycomHistory.FieldByName('certfile_last_name').AsString        := qryGetSpecialUsers.FieldByName('last_name').AsString;
-    tblPaycomHistory.FieldByName('certfile_employee_type').AsString    := qryGetSpecialUsers.FieldByName('employee_type').AsString;
-    tblPaycomHistory.FieldByName('certfile_group').AsString            := qryGetSpecialUsers.FieldByName('group').AsString;
-    tblPaycomHistory.FieldByName('certfile_department_name').AsString  := qryGetSpecialUsers.FieldByName('department_name').AsString;   //???JL should I call CalcCertfileDeptName()
-    tblPaycomHistory.FieldByName('certfile_approver1_email').AsString  := qryGetSpecialUsers.FieldByName('approver_email_1').AsString;
-    tblPaycomHistory.FieldByName('certfile_approver2_email').AsString  := qryGetSpecialUsers.FieldByName('approver_email_2').AsString;
-    tblPaycomHistory.FieldByName('certfile_accountant_email').AsString := qryGetSpecialUsers.FieldByName('accountant_email').AsString;
-
-    VendorNum := ScrubVendorNum(qryGetSpecialUsers.FieldByName('employee_id').AsString, strErrorTextOut);
-    if VendorNum = 0 then begin
-      tblPaycomHistory.FieldByName('error_text').AsString := tblPaycomHistory.FieldByName('error_text').AsString + '; ' + strErrorTextOut;
-      strRecStatus := 'error';
-    end;
-    tblPaycomHistory.FieldByName('certfile_employee_id').AsInteger := VendorNum;
-    tblPaycomHistory.FieldByName('record_status').AsString         := strRecStatus ;
-    tblPaycomHistory.post;
-
-  except on E: Exception do begin
-    tblPaycomHistory.Edit;
-    tblPaycomHistory.FieldByName('record_status').AsString := 'error';
-    tblPaycomHistory.FieldByName('error_text').AsString    := tblPaycomHistory.FieldByName('error_text').AsString + '; ' + E.Message;
-    tblPaycomHistory.post;
-  end;
-
-  end;  { Try/Except }
-
-end;  {InsertSUIntoHistoryTable}
 
 
 function TufrmCertifyExpDataLoader.ScrubVendorNum(const strVendorNumIn: String; Var ErrorTxtOut: String): Integer;

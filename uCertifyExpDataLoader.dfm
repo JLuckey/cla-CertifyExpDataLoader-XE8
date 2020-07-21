@@ -289,7 +289,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Height = 21
     Alignment = taRightJustify
     TabOrder = 15
-    Text = '15718'
   end
   object cbShowSQL: TCheckBox
     Left = 8
@@ -1457,25 +1456,25 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       end>
   end
   object qryGetSpecialUsers: TUniQuery
-    Connection = connOnBase
+    Connection = UniConnection1
     SQL.Strings = (
       'SELECT'
-      '   [attr1199] as work_email'
-      '  ,[attr1200] as first_name'
-      '  ,[attr1201] as last_name'
-      '  ,[attr1202] as employee_id'
-      '  ,[attr1203] as employee_type'
-      '  ,[attr1204] as "group"'
-      '  ,[attr1205] as department_name'
-      '  ,[attr1206] as approver_email_1'
-      '  ,[attr1207] as approver_email_2'
-      '  ,[attr1208] as accountant_email'
-      '  ,[attr1325] as assigned_aircraft'
-      '  ,[attr1326] as comments'
+      '   work_email'
+      '  ,first_name'
+      '  ,last_name'
+      '  ,employee_id'
+      '  ,employee_type'
+      '  ,"group"'
+      '  ,department_name'
+      '  ,approver_email_1'
+      '  ,approver_email_2'
+      '  ,accountant_email'
+      '  ,assigned_aircraft'
+      '  ,comments'
       ''
-      'FROM [CLAOnBase].[hsi].[rmObjectInstance1023]'
-      'WHERE activestatus = 0')
-    Left = 642
+      'FROM V_CertifyExp_SpecialUsers'
+      '')
+    Left = 641
     Top = 505
   end
   object qryInsertTripsForGroup: TUniQuery
@@ -1632,16 +1631,16 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         ' 08:30:00.387'#39'  -- identify the batch of records'
       '          and certify_gp_vendornum is not null'
       
-        '          and data_source = '#39'paycom_file'#39'         -- this identi' +
-        'fies Employees'
+        '          and data_source in ('#39'paycom_file'#39','#39'special_users'#39') -- ' +
+        'this identifies Employees & Special Users'
       
         '          and record_status <> '#39'terminated'#39'       -- get only pe' +
         'ople who are currently employees'
       '      )'
       'order by P.LastName'
       '')
-    Left = 516
-    Top = 65520
+    Left = 497
+    Top = 65523
     ParamData = <
       item
         DataType = ftUnknown
