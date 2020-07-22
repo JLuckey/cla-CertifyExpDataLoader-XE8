@@ -352,6 +352,7 @@ var
   myIni : TIniFile;
   myLog : TIniFile;
   gloPaycomErrorFile: String;
+  gloMissingFlightCrewFile : String;
 
   gloPusher : TfrmPushToCertify;
   gloNewHireDummyQuoteNum : Integer;
@@ -524,6 +525,8 @@ procedure TufrmCertifyExpDataLoader.btnFixerClick(Sender: TObject);
 
 begin
 //  BatchTime := StrToDateTime('07/02/2020 16:07:39.767');
+BuildCrewDepartDateAirportFile();
+
 ////  LoadCrewChangeRecsIntoStartBucket;
 //  strTest :=  GetGroupsByLogicGroup('lg_FlightCrew');
 //  retvalq := CalcInClause(strTEst);
@@ -1606,7 +1609,7 @@ begin
 
   qryBuildValFile.Close;
   qryBuildValFile.SQL.Clear;
-  qryBuildValFile.SQL.Text := 'select distinct Cast(TripDepartDate as Date) as TripDepartDate, FirstDestination, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and TripDepartDate is not null order by TripDepartDate';
+  qryBuildValFile.SQL.Text := 'select distinct FORMAT(TripDepartDate,' + QuotedStr('MM/dd/yyyy') + ') as TripDepartDate, FirstDestination, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and TripDepartDate is not null order by TripDepartDate';
   if cbShowSQL.checked then ShowMessage('BuildCrewDepartDateAirport(): ' + #13#13 + qryBuildValFile.SQL.Text);
 
   qryBuildValFile.Open ;
@@ -1614,6 +1617,7 @@ begin
   RowOut := 'DepartDate_Airport, CrewMemberVendorNum';
   WriteLn(WorkFile, RowOut) ;
   while ( not qryBuildValFile.eof ) do begin
+    // ShowMessage('here I am');
     strDateDest := Trim(FormatDateTime('mm/dd/yy', qryBuildValFile.FieldByName('TripDepartDate').AsDateTime)) + ' ' + qryBuildValFile.FieldByName('FirstDestination').AsString;
     RowOut := strDateDest + ',' +
               qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + strDateDest;
@@ -1884,7 +1888,10 @@ begin
   qryGetMissingFlightCrew.ParamByName('parmDaysBack').AsInteger       := StrToInt(edContractorDaysBack.text);
   qryGetMissingFlightCrew.Open;
 
-  WriteQueryResultsToFile(qryGetMissingFlightCrew, edOutputDirectory.Text + 'MissingFlightCrew.csv');
+  gloMissingFlightCrewFile := 'C:\CertifyExpense\OutputFiles\MissingFlightCrew.csv';
+
+  WriteQueryResultsToFile(qryGetMissingFlightCrew, gloMissingFlightCrewFile );
+
   qryGetMissingFlightCrew.Close;
 
 end;  { GenerateMissingFlightCrewReport }
@@ -1986,6 +1993,10 @@ begin
   // Add the Paycom Error file to attachemnt list
   if FileExists( gloPaycomErrorFile ) then
     TIDAttachmentFile.Create(myMessage.MessageParts, gloPaycomErrorFile );
+
+  if FileExists( gloMissingFlightCrewFile ) then
+    TIDAttachmentFile.Create(myMessage.MessageParts, gloMissingFlightCrewFile );
+
 
   mySMTP := TIdSMTP.Create(nil);
   mySMTP.Host     := myIni.ReadString('Startup', 'EmailServer', '192.168.1.73') ;

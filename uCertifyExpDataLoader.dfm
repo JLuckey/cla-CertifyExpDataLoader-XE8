@@ -1616,7 +1616,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       'select distinct certify_department_display_name'
-      'from CertifyExp_JobCode_Lookup'
+      'from V_CertifyExp_JobCode_Lookup'
       'where certify_group = :parmGroupIn'
       '  and certify_department_display_name is not null')
     Left = 560
