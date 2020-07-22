@@ -627,43 +627,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Left = 608
     Top = 207
   end
-  object qryPilotsNotInPaycom: TUniQuery
-    Connection = UniConnection1
-    SQL.Strings = (
-      'insert into CertifyExp_PilotsNotInPaycom'
-      'select distinct  CrewMemberVendorNum '
-      'from CertifyExp_Trips_StartBucket'
-      'where CrewMemberVendorNum not in ('
-      #9'select distinct certify_gp_vendornum'
-      #9'from CertifyExp_PayComHistory'
-      #9'where imported_on = :parmBatchTimeIn'
-      #9'  and certify_department = '#39'Flight Crew'#39
-      #9'  and certify_gp_vendornum is not null    )')
-    Left = 40
-    Top = 325
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'parmBatchTimeIn'
-        Value = nil
-      end>
-  end
-  object qryGetPilotsNotInPaycom: TUniQuery
-    Connection = UniConnection1
-    SQL.Strings = (
-      'select * from QuoteSys_PilotMaster'
-      
-        'where VendorNumber in ( select CrewMemberVendorNum from CertifyE' +
-        'xp_PilotsNotInPaycom )'
-      
-        '  and Status         in ('#39'Agent of CLA'#39', '#39'Cabin Serv'#39', '#39'Parttime' +
-        '-CLA'#39')'
-      '  and EmployeeStatus in ('#39'Part 91'#39', '#39'Part 135'#39', '#39'Cabin Serv'#39')'
-      '  and ArchiveFlag is null'
-      'order by LastName')
-    Left = 365
-    Top = 232
-  end
   object qryEmptyPilotsNotInPaycom: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
@@ -786,18 +749,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         Name = 'parmImportedOn'
         Value = nil
       end>
-  end
-  object qryGetTailTripLog: TUniQuery
-    Connection = UniConnection1
-    SQL.Strings = (
-      'select distinct TailNum, QuoteNum, LogSheet'
-      'from CertifyExp_Trips_StartBucket'
-      'where QuoteNum is not Null'
-      '  and LogSheet is not Null '
-      'order by LogSheet'
-      '')
-    Left = 358
-    Top = 277
   end
   object qryValidateVendorNum: TUniQuery
     Connection = UniConnection1
@@ -1396,36 +1347,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from V_CertifyExp_TailLeadPilot')
     Left = 52
     Top = 483
-  end
-  object qrySpecialUserOverride: TUniQuery
-    Connection = UniConnection1
-    SQL.Strings = (
-      ''
-      'update CertifyExp_PaycomHistory'
-      'set record_status    = '#39'SpecialUserOverride'#39','
-      '    status_timestamp = CURRENT_TIMESTAMP,'
-      '    error_text       = '#39'record_status was: '#39' + record_status'
-      ''
-      'where imported_on = :parmImportedOn'
-      
-        '  and data_source in ('#39'paycom_file'#39', '#39'PilotMaster'#39', '#39'PilotMaster' +
-        '-NewHire'#39')'
-      '  and record_status in ( '#39'OK'#39', '#39'terminated'#39' )'#9
-      '  and certify_gp_vendornum in'
-      ''
-      '     (select certfile_employee_id'
-      '      from CertifyExp_PaycomHistory'
-      '      where imported_on   = :parmImportedOn'
-      '        and record_status = '#39'OK'#39'     '
-      '        and data_source   = '#39'special_users'#39')')
-    Left = 265
-    Top = 349
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'parmImportedOn'
-        Value = nil
-      end>
   end
   object qryLoadCertifyEmployeesTable: TUniQuery
     Connection = UniConnection1

@@ -122,8 +122,6 @@ type
     scrLoadTripStopData: TUniScript;
     qryGetTripStopRecs: TUniQuery;
     qryGetStartBucketSorted: TUniQuery;
-    qryPilotsNotInPaycom: TUniQuery;
-    qryGetPilotsNotInPaycom: TUniQuery;
     qryEmptyPilotsNotInPaycom: TUniQuery;
     qryDeleteTrips: TUniQuery;
     qryPurgeWorkingTable: TUniQuery;
@@ -131,7 +129,6 @@ type
     qryGetFutureTrips: TUniQuery;
     tblStartBucket: TUniTable;
     qryUpdateHasCCField: TUniQuery;
-    qryGetTailTripLog: TUniQuery;
     qryValidateVendorNum: TUniQuery;
     qryFlagMissingFlightCrews: TUniQuery;
     qryFlagTerminatedEmployees: TUniQuery;
@@ -188,25 +185,21 @@ type
     qryGetNewTailLeadPilotRecs: TUniQuery;
     edIFSPseudoUsers: TEdit;
     Label20: TLabel;
-    qrySpecialUserOverride: TUniQuery;
     qryLoadCertifyEmployeesTable: TUniQuery;
     qryGetSpecialUsers: TUniQuery;
     qryInsertTripsForGroup: TUniQuery;
     qryInsertTailsForIFS: TUniQuery;
     qryGetTailTripDepartdate: TUniQuery;
-// <<<<<<< HEAD
     qryGetMissingFlightCrew: TUniQuery;
     qryGetJobCodeDescrips: TUniQuery;
     qryGetCertifyGroups: TUniQuery;
     qryGetCertifyDeptName: TUniQuery;
     qrySpecialUserDupes: TUniQuery;
     qryGetValidGroups: TUniQuery;
-// =======
     qryCrewChange: TUniQuery;
     cbShowSQL: TCheckBox;
     qryGetChangedCrew: TUniQuery;
     qryLookUpFirstLeg: TUniQuery;
-// >>>>>>> branch_dev_TE-57_CrewChange
 
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -224,23 +217,18 @@ type
     Procedure IdentifyNonCertifyRecs( Const BatchTimeIn : TDateTime );
     Procedure ValidateEmployeeRecords(Const BatchTimeIn: Tdatetime);
     Procedure UpdateDupeEmailRecs( Const EMailIn: String; BatchTimeIn: TDateTime);
-    Procedure BuildCrewLogFile();
     Procedure BuildCrewTailFile(Const CurrBatchTimeIn: TDatetime);
     Procedure BuildCrewTripFile();
 
     Procedure BuildCrewDepartDateAirportFile();
     Procedure BuildTailTripDepartTimeAirport();
 
-    Procedure BuildGenericValidationFile(const TargetFileName, SQLIn: String) ;
     Procedure BuildGenericValidationFile2(const TargetFileName, SQLIn: String) ;
     Procedure LoadTripsIntoStartBucket(Const BatchTimeIn : TDateTime);
     Procedure BuildValidationFiles(Const BatchTimeIn : TDateTime);
     Procedure CalculateApproverEmail(Const lgFlightCrewList, lgCharterVisaList, lgCorporateList, lgDOMList : String;  Const BatchTimeIn: TDateTime) ;
     Procedure FilterTripsByCount;
-    Procedure FindPilotsNotInPaycom(Const BatchTimeIn : TDateTime);               // de-cruft, appears not to be called  ???JL  3 dec 2018
     Procedure DeleteTrip(Const LogSheetIn, QuoteNumIn : Integer; CrewMemberIDIn: String);
-
-    Procedure WriteContractorsToPaycomTable(Const BatchTimeIn: TDateTime; NewHireFlag: Boolean; SourceQry: TUniQuery );
 
     Procedure ConnectToDB();
     Procedure SendStatusEmail;
@@ -251,9 +239,6 @@ type
     Procedure UpdateCCField(Const BatchTimeIn: TDateTime);
 
     Procedure LoadCertFileFields(Const BatchTime: TDateTime);
-
-    Procedure BuildTailTripLogFile;
-
 
     Procedure Load_CharterVisa_IntoStartBucket;
     Procedure InsertCrewTail(Const TailNumIn:String; VendorNumIn: Integer; DataSourceIn: String);
@@ -309,21 +294,13 @@ type
 
     // 17 Dec 2019
     Procedure ImportSpecialUsers(Const BatchTimeIn: TDateTime);
-
-    Procedure OverrideWithSpecialUsers(Const BatchTimeIn: TDateTime);  // Remove this feature ???JL
-
     Procedure FlagTerminatedEmployees(Const BatchTimeIn: TDateTime);
-
-    Procedure  LoadCertifyEmployeesTable(Const BatchTimeIn: TDateTime);
-
-
+    Procedure LoadCertifyEmployeesTable(Const BatchTimeIn: TDateTime);
 
     Function  GetTimeFromDBServer(): TDateTime;
     Function  RecIsValid(Const TimeStampIn:TDateTime; Const strValid_Roles, strValid_JobCodeDescrips, strValidGroups: String ): Boolean ;
 
-    Function  CalcPilotName(SourceQueryIn: TUniQuery): String;
     Function  ScrubFARPart(Const FarPartIn: String): String;
-    Function  ScrubCertifyDept(Const DepartmentIn : String) : String;
     Function  CalcPaycomErrorFileName(Const BatchTimeIn: TDateTime): String;
 
 
@@ -343,7 +320,6 @@ type
 
     Function ScrubVendorNum(Const strVendorNumIn: String; Var ErrorTxtOut: String): Integer;
 
-// <<<<<<< HEAD
   // TID:1112 15 May 2020
     Procedure GenerateMissingFlightCrewReport(Const BatchTimeIn: TDateTime);
     Procedure WriteQueryResultsToFile(SourceQueryIn: TUniQuery; FileNameOut: String);
@@ -358,16 +334,12 @@ type
 
     Function GetJobCodeDescripsByGroup(Const GroupIn:String):String;
     Function GetGroupsByLogicGroup(Const LogicGroupIn:String): String;
-// =======
 
     // 7 July 2020
     Procedure LoadCrewChangeRecsIntoStartBucket;
     Procedure CrewChange_LoadFirstLegs(Const CrewIDFieldName: String; DaysBack: Integer);
     Procedure CrewChange_LoadOtherLegs(Const CrewIDFieldName: String; DaysBack: Integer);
     Procedure CrewChange_InsertStartBucket(Const qryDataToInsert: TUniQuery; strCrewID: String);
-
-// >>>>>>> branch_dev_TE-57_CrewChange
-
 
   public
     { Public declarations }
@@ -383,8 +355,6 @@ var
 
   gloPusher : TfrmPushToCertify;
   gloNewHireDummyQuoteNum : Integer;
-
-  gloFlightCrewGroup: String = 'FlightCrew|PoolPilot|PoolFA|FlightCrewCorp|FlightCrewNonPCal|IFS';
 
 
 implementation
@@ -546,26 +516,18 @@ end;  { LoadData() }
 
 
 procedure TufrmCertifyExpDataLoader.btnFixerClick(Sender: TObject);
-var
-  BatchTime, PreviousBatchDate, NewBatchDate : TDateTime;
-  strTest : String;
-  retValq : String;
+//var
+//  BatchTime, PreviousBatchDate, NewBatchDate : TDateTime;
+//  strTest : String;
+//  retValq : String;
 
 
 begin
-  BatchTime := StrToDateTime('07/02/2020 16:07:39.767');
-//  LoadCrewChangeRecsIntoStartBucket;
-  strTest :=  GetGroupsByLogicGroup('lg_FlightCrew');
-  retvalq := CalcInClause(strTEst);
-  sleep(500);
-
-
-//  ImportSpecialUsers(BatchTime);
-//  ValidateEmployeeRecords(BatchTime);
-
-//  LoadCertFileFields(BatchTime);
-
-//  GenerateMissingFlightCrewReport(BatchTime);
+//  BatchTime := StrToDateTime('07/02/2020 16:07:39.767');
+////  LoadCrewChangeRecsIntoStartBucket;
+//  strTest :=  GetGroupsByLogicGroup('lg_FlightCrew');
+//  retvalq := CalcInClause(strTEst);
+//  sleep(500);
 
 
 end;
@@ -662,10 +624,8 @@ begin
 
   BuildCrewTailFile(BatchTimeIn);
   BuildCrewTripFile;
-// =======
   BuildCrewDepartDateAirportFile;
   BuildTailTripDepartTimeAirport;
-// >>>>>>> branch_dev_TE-57_CrewChange
 
   // Build Trip/Stop records
   scrLoadTripStopData.Execute;    // puts recs into working table CertifyExp_TripStop_Step1
@@ -835,9 +795,7 @@ begin
         qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := PaycomApprover2 ;
 
 
-//    end else if GroupIsIn(strCertifyGroup, '|FlightCrew|PoolPilot|PoolFA|FlightCrewCorp|FlightCrewNonPCal|IFS|') then begin
     end else if GroupIsIn(myCertifyGroup, lgFlightCrewList) then begin
-//    end else if GroupIsIn(myCertifyGroup, gloFlightCrewGroup) then begin
 
 (* Note 13: This logic is now handled by Certify "Workflows" within the Certify system      4Feb2019 -JL
       //  Assign Approver1 Email
@@ -1349,7 +1307,6 @@ begin
 
   LoadCrewChangeRecsIntoStartBucket();
 
-// <<<<<<< HEAD
   //  T&E-25  Adding default crew_tail recs for employees & T&E:25b
 (*
  D 1. import new field from paycom_employees.csv
@@ -1358,20 +1315,14 @@ begin
 *)
 
   strInClause :=  CalcInClause(GetGroupsByLogicGroup('lg_FlightCrew'));
-// =======
   qryGetAirCrewVendorNum.Execute;     // assigns VendorNum to StartBucket recs
 
   //  T&E-25:  Adding default crew_tail recs (into StartBucket) for employees & T&E:25b
-// >>>>>>> branch_dev_TE-57_CrewChange
   qryLoadTripData.SQL.Clear;
   qryLoadTripData.SQL.Append('SELECT certify_gp_vendornum, certify_department, certfile_group, paycom_assigned_ac, paycom_assigned_ac_2');
   qryLoadTripData.SQL.Append('FROM CertifyExp_PaycomHistory' );
   qryLoadTripData.SQL.Append('WHERE imported_on = ' + QuotedStr(FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', BatchTimeIn) ) );   // get current Batch
-
-  //  qryLoadTripData.SQL.Append('  AND certify_department IN ( ' + CalcInClause(gloFlightCrewGroup) + ' )' );                    // build IN clause
-
   qryLoadTripData.SQL.Append('  AND certify_department IN ( ' + strInClause + ' )' );                    // build IN clause
-
   qryLoadTripData.SQL.Append('  AND not (paycom_assigned_ac = ' + QuotedStr('') + ' or paycom_assigned_ac is null ) ');       // assigned_ac field not blank
   qryLoadTripData.SQL.Append('  AND termination_date IS NULL' );                                                              // only currently employed people
   if cbShowSQL.Checked then ShowMessage('LoadTripsIntoStartBucket:qryLoadTripData:' + #13#13 + qryLoadTripData.SQL.Text);
@@ -1467,7 +1418,6 @@ begin
       strErrorText := strErrorText + 'invalid job_code_descrip; ';
   End;
 
-
   if qryGetEmployees.FieldByName('certify_gp_vendornum').AsString = '' then
     strErrorText := strErrorText + 'missing certify_gp_vendornum; ';
 
@@ -1476,7 +1426,6 @@ begin
 
   if Pos( '|' + qryGetEmployees.FieldByName('certify_department').AsString + '|', strValidGroups) = 0 then     // certify_department aka "group"
     strErrorText := strErrorText + 'invalid certify_department (group); ';
-
 
 
   if qryGetEmployees.FieldByName('work_email').AsString = '' then
@@ -1642,38 +1591,6 @@ begin
 end;
 
 
-
-procedure TufrmCertifyExpDataLoader.BuildCrewLogFile;
-Var
-  RowOut : String;
-  WorkFile : TextFile;
-
-begin
-  AssignFile(WorkFile, edOutputDirectory.Text + 'crew_log.csv');
-  Rewrite(WorkFile);
-
-  qryBuildValFile.Close;
-  qryBuildValFile.SQL.Clear;
-  qryBuildValFile.SQL.Text := 'select distinct LogSheet, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null AND LogSheet is not null order by LogSheet';
-  qryBuildValFile.Open ;
-
-  RowOut := 'LogSheet,CrewMemberVendorNum';
-  WriteLn(WorkFile, RowOut) ;
-  while ( not qryBuildValFile.eof ) do begin
-    RowOut := Trim(qryBuildValFile.FieldByName('LogSheet').AsString) + ',' +
-              qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + Trim(qryBuildValFile.FieldByName('LogSheet').AsString);
-
-    WriteLn(WorkFile, RowOut) ;
-    qryBuildValFile.Next;
-  end;
-
-  CloseFile(WorkFile);
-  qryBuildValFile.Close;
-
-end;  { BuildCrewLogFile }
-
-
-
 procedure TufrmCertifyExpDataLoader.BuildCrewDepartDateAirportFile;
 Var
   RowOut : String;
@@ -1816,37 +1733,6 @@ begin
 end;  { BuildCrewTripFile }
 
 
-procedure TufrmCertifyExpDataLoader.BuildTailTripLogFile;
-Var
-  RowOut : String;
-  WorkFile : TextFile;
-
-begin
-  StatusBar1.Panels[1].Text := 'Current Task:  Writing tail_trip_log.csv'  ;
-  Application.ProcessMessages;
-
-  AssignFile(WorkFile, edOutputDirectory.Text + 'tail_trip_log.csv');
-  Rewrite(WorkFile);
-  RowOut := 'TailNum,TripNum,LogSheet';
-  WriteLn(WorkFile, RowOut) ;
-
-  qryGetTailTripLog.Close;
-  qryGetTailTripLog.Open;
-  while Not qryGetTailTripLog.eof do Begin
-    RowOut := Trim(qryGetTailTripLog.FieldByName('TailNum').AsString) + ',' +
-                   qryGetTailTripLog.FieldByName('QuoteNum').AsString + ',' +
-                   qryGetTailTripLog.FieldByName('LogSheet').AsString;
-    WriteLn(WorkFile, RowOut) ;
-    qryGetTailTripLog.Next;
-  end;
-
-  CloseFile(WorkFile);
-  qryGetTailTripLog.Close;
-
-end;  { BuildTailTripLogFile }
-
-
-
 procedure TufrmCertifyExpDataLoader.BuildTailTripDepartTimeAirport;
 Var
   RowOut : String;
@@ -1877,37 +1763,6 @@ begin
   qryGetTailTripDepartdate.Close;
 
 end;  { BuildTailTripDepartTimeAirport }
-
-
-
-
-procedure TufrmCertifyExpDataLoader.BuildGenericValidationFile(const TargetFileName, SQLIn: String);
-Var
-  RowOut : String;
-  WorkFile : TextFile;
-
-begin
-  AssignFile(WorkFile, TargetFileName);
-  Rewrite(WorkFile);
-
-  qryBuildValFile.Close;
-  qryBuildValFile.SQL.Text := SQLIn;
-  qryBuildValFile.Open ;
-
-  RowOut := qryBuildValFile.Fields[0].FieldName +',' + qryBuildValFile.Fields[1].FieldName ;
-  WriteLn(WorkFile, RowOut) ;
-  while not qryBuildValFile.eof do begin
-    RowOut := Trim(qryBuildValFile.Fields[0].AsString) + ',' +
-              Trim(qryBuildValFile.Fields[1].AsString) + '|' + Trim(qryBuildValFile.Fields[0].AsString);
-
-    WriteLn(WorkFile, RowOut) ;
-    qryBuildValFile.Next;
-  end;
-
-  CloseFile(WorkFile);
-  qryBuildValFile.Close;
-
-end; { BuildGenericValidationFile }
 
 
 procedure TufrmCertifyExpDataLoader.BuildGenericValidationFile2(const TargetFileName, SQLIn: String);
@@ -1977,10 +1832,6 @@ end;  { WriteQueryResultsToFile }
 
 
 function TufrmCertifyExpDataLoader.CalcCertfileDepartmentName(const GroupNameIn: String; Var DeptNameOut: String): Boolean;
-var
-  slGroupToDropdown : TStringList;
-  FoundIndex : Integer;
-
 begin
   Result := True;
 
@@ -1997,46 +1848,7 @@ begin
 
   qryGetCertifyDeptName.Close;
 
-(*
-  slGroupToDropdown := TStringList.Create;    // converting Group value to default value for Certify department_code
-  slGroupToDropdown.StrictDelimiter := true;  // don't use space as delimeter;
-  try
-    slGroupToDropdown.CommaText := myIni.ReadString('Lookups', 'DepartmentName', '');
-    FoundIndex := slGroupToDropdown.IndexOf(GroupNameIn);
-    if FoundIndex > -1 then
-      Result := slGroupToDropdown[FoundIndex + 1]
-    else
-      Result := 'Error! - ' + GroupNameIn + ' not found in Department Name Lookup (in .ini)';
-
-  finally
-    slGroupToDropdown.Free;
-  end;
-*)
-
 end;
-
-
-procedure TufrmCertifyExpDataLoader.FindPilotsNotInPaycom(Const BatchTimeIn : TDateTime);
-begin
-
-//  Notice: this flight crew member was not in Paycom but flew trips during this period and was added from the PilotMaster
-//  Notice: flight-crew-member was not in Paycom but flew trips during this period and therefore was added from PilotMaster
-
-  qryEmptyPilotsNotInPaycom.Execute;
-
-  qryPilotsNotInPaycom.Close;
-  qryPilotsNotInPaycom.paramByName('parmBatchTimeIn').AsDateTime := BatchTimeIn;
-  qryPilotsNotInPaycom.Execute;
-
-  qryGetPilotsNotInPaycom.Close;
-  qryGetPilotsNotInPaycom.Open;
-  while not qryBuildValFile.eof do begin
-
-//    LoadPilotIntoPaycom;
-    qryGetPilotsNotInPaycom.Next;
-  end;
-
-end;  { FindPilotsNotInPaycom }
 
 
 procedure TufrmCertifyExpDataLoader.DeleteTrip(const LogSheetIn, QuoteNumIn: Integer; CrewMemberIDIn : String);
@@ -2045,9 +1857,6 @@ begin
   qryDeleteTrips.Close;
   qryDeleteTrips.ParamByName('parmLogSheetIn').AsInteger     := LogSheetIn;
   qryDeleteTrips.ParamByName('parmCrewMemberIDIn').AsString  := CrewMemberIDIn;
-
-//  qryDeleteTrips.ParamByName('parmCrewMemberIDIn').AsInteger := CrewMemberIDIn;
-
   qryDeleteTrips.ParamByName('parmQuoteNumIn').AsInteger     := QuoteNumIn;
 
   try
@@ -2123,42 +1932,6 @@ begin
 end;  { AddDummyTripToStartBucket }
 
 
-procedure TufrmCertifyExpDataLoader.WriteContractorsToPaycomTable( Const BatchTimeIn: TDateTime; NewHireFlag: Boolean; SourceQry: TUniQuery ) ;
-begin
-
-  tblPaycomHistory.Insert;
-  tblPaycomHistory.FieldByName('employee_code').AsString           := 'contractor';     // should we use parameter to signify Contractor New Hire  ???JL
-  tblPaycomHistory.FieldByName('employee_name').AsString           := CalcPilotName(SourceQry);
-  tblPaycomHistory.FieldByName('work_email').AsString              := SourceQry.FieldByName('EMail').AsString;
-  tblPaycomHistory.FieldByName('position').AsString                := SourceQry.FieldByName('JobTitle').AsString;
-  tblPaycomHistory.FieldByName('department_descrip').AsString      := 'Designated-' + SourceQry.FieldByName('AssignedAC').AsString ;  //CalcDeptDescrip ;
-  tblPaycomHistory.FieldByName('job_code_descrip').AsString        := 'Pilot-Designated' ;
-  tblPaycomHistory.FieldByName('supervisor_primary_code').AsString := '';
-  tblPaycomHistory.FieldByName('certify_gp_vendornum').AsInteger   := SourceQry.FieldByName('VendorNumber').AsInteger;
-  tblPaycomHistory.FieldByName('certify_department').AsString      := 'FlightCrew';
-  tblPaycomHistory.FieldByName('certify_role').AsString            := 'Manager';
-
-  tblPaycomHistory.FieldByName('certfile_approver1_email').AsString  := 'FlightCrew@ClayLacy.com';
-  tblPaycomHistory.FieldByName('certfile_approver2_email').AsString  := 'FlightCrew@ClayLacy.com';
-  tblPaycomHistory.FieldByName('accountant_email').AsString          := 'FlightCrew@ClayLacy.com';
-  tblPaycomHistory.FieldByName('certfile_accountant_email').AsString := 'FlightCrew@ClayLacy.com';
-
-  tblPaycomHistory.FieldByName('paycom_assigned_ac').AsString      := SourceQry.FieldByName('AssignedAC').AsString ;
-
-  tblPaycomHistory.FieldByName('record_status').AsString           := 'imported';
-  tblPaycomHistory.FieldByName('status_timestamp').AsDateTime      := BatchTimeIn;
-  tblPaycomHistory.FieldByName('imported_on').AsDateTime           := BatchTimeIn;
-
-  tblPaycomHistory.FieldByName('data_source').AsString             := 'PilotMaster';         // how about pilot_masterNewHire
-  If NewHireFlag then
-    tblPaycomHistory.FieldByName('data_source').AsString           := 'PilotMaster-NewHire';         // how about pilot_masterNewHire
-
-  tblPaycomHistory.Post;
-
-end;  { WriteContractorsToPaycomTable }
-
-
-
 function TufrmCertifyExpDataLoader.FindVendorNumInStartBucket(const VendorNumIn: Integer): Boolean;
 begin
   Result := False;
@@ -2169,13 +1942,6 @@ begin
 
   if qryFindVendorNumInStartBucket.RecordCount > 0 then
     Result := True;
-
-end;
-
-
-function TufrmCertifyExpDataLoader.CalcPilotName(SourceQueryIn: TUniQuery): String;
-begin
-  Result := SourceQueryIn.FieldByName('LastName').AsString + ',' + SourceQueryIn.FieldByName('FirstName').AsString  ;
 
 end;
 
@@ -2514,17 +2280,6 @@ begin
 end;  {ImportSpecialUsers}
 
 
-
-procedure TufrmCertifyExpDataLoader.OverrideWithSpecialUsers(const BatchTimeIn: TDateTime);
-begin
-
-  qrySpecialUserOverride.Close;
-  qrySpecialUserOverride.ParamByName('parmImportedOn').AsDateTime := BatchTimeIn;
-  qrySpecialUserOverride.Execute;
-
-end;
-
-
 function TufrmCertifyExpDataLoader.ScrubVendorNum(const strVendorNumIn: String; Var ErrorTxtOut: String): Integer;
 Var
   intVendorNum : Integer;
@@ -2557,14 +2312,6 @@ begin
   end;
 
 end;  {ScrubAndValidateVendorNum}
-
-
-function TufrmCertifyExpDataLoader.ScrubCertifyDept(const DepartmentIn: String): String;  // ???JL depricate
-begin
-
-  Result := DepartmentIn;     // need to implement ???JL
-
-end;
 
 
 function TufrmCertifyExpDataLoader.ScrubFARPart(const FarPartIn: String): String;
