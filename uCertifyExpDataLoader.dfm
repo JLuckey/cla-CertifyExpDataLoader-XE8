@@ -305,10 +305,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Database = 'WarehouseDEV'
     Username = 'sa'
     Server = '192.168.1.122'
-    Connected = True
     LoginPrompt = False
     Left = 43
-    Top = 65529
+    Top = 65528
     EncryptedPassword = '9CFF93FF9EFF8CFF8EFF93FF8CFF8DFF89FFCDFFCFFFCEFFC9FF'
   end
   object qryGetEmployees: TUniQuery

@@ -800,16 +800,16 @@ begin
 
     end else if GroupIsIn(myCertifyGroup, lgFlightCrewList) then begin
 
-(* Note 13: This logic is now handled by Certify "Workflows" within the Certify system      4Feb2019 -JL
-      //  Assign Approver1 Email
-      qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := strAccountantEmail;
+      (* Note 13: This logic is now handled by Certify "Workflows" within the Certify system      4Feb2019 -JL
+            //  Assign Approver1 Email
+            qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString := strAccountantEmail;
 
-      //  Assign Approver2 Email
-      if qryGetImportedRecs.FieldByName('employee_code').AsString = 'contractor'  then
-        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail
-      else
-        qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
-*)
+            //  Assign Approver2 Email
+            if qryGetImportedRecs.FieldByName('employee_code').AsString = 'contractor'  then
+              qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := strAccountantEmail
+            else
+              qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString := '';
+      *)
 
       // Assign Accountant Email
       if qryGetImportedRecs.FieldByName('has_credit_card').AsString = 'T' then
@@ -819,13 +819,13 @@ begin
 
       qryGetImportedRecs.FieldByName('certfile_accountant_email').AsString := strAccountantEmail;
 
-(* 15May2019 - added per "Phase3 Tasks & Estimates" item #21 *)
+        (* 15May2019 - added per "Phase3 Tasks & Estimates" item #21 *)
       qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString  := strAccountantEmail;
       qryGetImportedRecs.FieldByName('certfile_approver2_email').AsString  := strAccountantEmail;
 
 
     end else if GroupIsIn(myCertifyGroup, lgCharterVisaList) then begin
-//  end else if GroupIsIn(myCertifyGroup, 'CharterVisa') then begin
+        //  end else if GroupIsIn(myCertifyGroup, 'CharterVisa') then begin
 
       // Assign default approver email
       qryGetImportedRecs.FieldByName('certfile_approver1_email').AsString  := qryGetImportedRecs.FieldByName('paycom_approver1_email').AsString;
