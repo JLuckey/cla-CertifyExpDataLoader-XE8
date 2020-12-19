@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'Certify Data Loader - ver 3.0'
+  Caption = 'Certify Data Loader - ver 3.X - FX Testing'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -140,6 +140,13 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 176
     Height = 13
     Caption = 'Inflight Services (IFS) Pseudo Users:'
+  end
+  object Label5: TLabel
+    Left = 321
+    Top = 238
+    Width = 48
+    Height = 13
+    Caption = 'End Date:'
   end
   object edPayComInputFile: TEdit
     Left = 257
@@ -299,6 +306,15 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Color = clBtnFace
     ParentColor = False
     TabOrder = 16
+  end
+  object edEndDate: TEdit
+    Left = 321
+    Top = 254
+    Width = 76
+    Height = 21
+    Alignment = taRightJustify
+    TabOrder = 17
+    Text = '2020-08-28'
   end
   object UniConnection1: TUniConnection
     ProviderName = 'SQL Server'
@@ -587,16 +603,16 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'insert into CertifyExp_TripStop_Step1'
       'select distinct B.QuoteNum, L.DEPTID as AirportID'
       
-        'from CertifyExp_Trips_StartBucket B left outer join QuoteSys_Tri' +
-        'pLeg L on B.TailNum = L.ACREGNO and B.LogSheet = L.LOGSHEET'
+        'from CertifyExp_Trips_StartBucket B left outer join vQuoteSys_Tr' +
+        'ipLeg L on B.TailNum = L.ACREGNO and B.LogSheet = L.LOGSHEET'
       'where QuoteNum is not null'
       'order by QuoteNum'
       ''
       'insert into CertifyExp_TripStop_Step1'
       'select distinct B.QuoteNum, L.ARRIVEID as AirportID'
       
-        'from CertifyExp_Trips_StartBucket B left outer join QuoteSys_Tri' +
-        'pLeg L on B.TailNum = L.ACREGNO and B.LogSheet = L.LOGSHEET'
+        'from CertifyExp_Trips_StartBucket B left outer join vQuoteSys_Tr' +
+        'ipLeg L on B.TailNum = L.ACREGNO and B.LogSheet = L.LOGSHEET'
       'where QuoteNum is not null'
       'order by QuoteNum'
       ''
@@ -624,7 +640,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'FS'#39')'
       '  ORDER By crewmemberid , TripDepartDate desc ')
     Left = 608
-    Top = 207
+    Top = 206
   end
   object qryEmptyPilotsNotInPaycom: TUniQuery
     Connection = UniConnection1
@@ -1126,7 +1142,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'from CertifyExp_Trips_StartBucket'
       'where CrewMemberVendorNum = :parmVendorNumIn')
     Left = 598
-    Top = 108
+    Top = 107
     ParamData = <
       item
         DataType = ftUnknown
@@ -1400,22 +1416,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryInsertTripsForGroup: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
-      '/*'
-      'insert into CertifyExp_Trips_StartBucket'
-      
-        'select distinct L.logsheet, :parmGroupNameIn, T.QUOTENO, L.acreg' +
-        'no, null, :parmCrewMemberVendorNumIn, null'
-      
-        'from QuoteSys_TripLeg L LEFT OUTER JOIN QuoteSys_Trip T ON L.ACR' +
-        'EGNO = T.ACREGNO AND L.LOGSHEET = T.LOGSHEET'
-      
-        'where ( (L.departure < CURRENT_TIMESTAMP)                     an' +
-        'd (L.arrival > CURRENT_TIMESTAMP) )   -- in-progress'
-      
-        '   OR ( (L.departure > (CURRENT_TIMESTAMP - :parmDaysBackIn)) an' +
-        'd (L.arrival < CURRENT_TIMESTAMP) )   -- ended within the past n' +
-        ' days'
-      '*/'
       ''
       'insert into CertifyExp_Trips_StartBucket'
       
@@ -1423,8 +1423,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'no, null, :parmCrewMemberVendorNumIn, L.DEPARTURE, L.ARRIVEID, L' +
         '.LEGNO'
       
-        '  from QuoteSys_TripLeg L LEFT OUTER JOIN QuoteSys_Trip T ON L.A' +
-        'CREGNO = T.ACREGNO AND L.LOGSHEET = T.LOGSHEET'
+        '  from vQuoteSys_TripLeg L LEFT OUTER JOIN vQuoteSys_Trip T ON L' +
+        '.ACREGNO = T.ACREGNO AND L.LOGSHEET = T.LOGSHEET'
       
         '  where ( (L.departure < CURRENT_TIMESTAMP)                     ' +
         'and (L.arrival > CURRENT_TIMESTAMP) )   -- in-progress'
@@ -1433,11 +1433,12 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'and (L.arrival < CURRENT_TIMESTAMP) )   -- ended within the past' +
         ' n days'
       '    AND L.LEGNO = 1'
+      '    AND L.Source = '#39'IB'#39
       'ORDER BY DEPARTURE'
       ''
       '')
     Left = 207
-    Top = 204
+    Top = 202
     ParamData = <
       item
         DataType = ftUnknown
@@ -1506,6 +1507,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Top = 162
   end
   object qryLookUpFirstLeg: TUniQuery
+    LocalUpdate = True
     Connection = UniConnection1
     SQL.Strings = (
       
@@ -1513,13 +1515,14 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'RIVEID, L.PICPILOTNO, L.SICPILOTNO, '
       '       L.TICPILOTNO, L.FANO, L.DEPARTURE, T.FARPART'
       
-        'from QuoteSys_TripLeg L left outer join QuoteSys_Trip T on L.ACR' +
-        'EGNO = T.ACREGNO and L.LogSheet = T.Logsheet'
+        'from vQuoteSys_TripLeg L left outer join vQuoteSys_Trip T on L.A' +
+        'CREGNO = T.ACREGNO and L.LogSheet = T.Logsheet'
       'where T.QuoteNo = :parmQuoteNumIn'
       '  and L.LEGNO = 1'
+      '  and L.Source = '#39'IB'#39
       'order by T.QuoteNo')
     Left = 250
-    Top = 127
+    Top = 126
     ParamData = <
       item
         DataType = ftUnknown
