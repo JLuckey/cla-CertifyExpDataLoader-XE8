@@ -1265,39 +1265,27 @@ begin
   qryLoadTripData.SQL.Clear;
   strDaysBack := edDaysBack.Text;
 
-  // Empty the working table
-  qryLoadTripData.SQL.Append('delete from CertifyExp_Trips_StartBucket');
-  qryLoadTripData.Execute;
-  qryLoadTripData.SQL.Clear;
+  PurgeTable('CertifyExp_Trips_StartBucket');
 
   // Load PIC data into StartBucket
   qryLoadTripData.SQL.Clear;
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');                                //  v
   qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.PICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, L.PICPILOTNO, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
   qryLoadTripData.SQL.Append('from vQuoteSys_TripLeg L left outer join vQuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
-  qryLoadTripData.SQL.Append('where L.DEPARTURE between (CURRENT_TIMESTAMP - ' + strDaysBack + ') and ' + QuotedStr(edEndDate.Text) );
-
-//  qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
+  qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
   qryLoadTripData.SQL.Append('  and L.PICPILOTNO > 0');
   qryLoadTripData.SQL.Append('  and L.LEGNO = 1 ');
-//  qryLoadTripData.SQL.Append('  and L.Source = ''FX''');
-
   if cbShowSQL.checked then ShowMessage('LoadTripsIntoStartBucket: ' + #13#13 + qryLoadTripData.SQL.Text);
-
   qryLoadTripData.Execute;
   qryLoadTripData.SQL.Clear;
-//  ShowMessage('stopping now');
 
   // Load SIC data into StartBucket
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
   qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.SICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, L.SICPILOTNO, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
   qryLoadTripData.SQL.Append('from vQuoteSys_TripLeg L left outer join vQuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
-  qryLoadTripData.SQL.Append('where L.DEPARTURE between (CURRENT_TIMESTAMP - ' + strDaysBack + ') and ' + QuotedStr(edEndDate.Text) );
-
-//  qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
-  qryLoadTripData.SQL.Append('and L.SICPILOTNO > 0');
+  qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
+  qryLoadTripData.SQL.Append('  and L.SICPILOTNO > 0');
   qryLoadTripData.SQL.Append('  and L.LEGNO = 1 ');
-//  qryLoadTripData.SQL.Append('  and L.Source = ''FX''');
   qryLoadTripData.Execute;
   qryLoadTripData.SQL.Clear;
 
@@ -1305,12 +1293,9 @@ begin
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
   qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.TICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, L.TICPILOTNO, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
   qryLoadTripData.SQL.Append('from vQuoteSys_TripLeg L left outer join vQuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
-  qryLoadTripData.SQL.Append('where L.DEPARTURE between (CURRENT_TIMESTAMP - ' + strDaysBack + ') and ' + QuotedStr(edEndDate.Text) );
-
-//  qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
-  qryLoadTripData.SQL.Append('and L.TICPILOTNO > 0');
+  qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
+  qryLoadTripData.SQL.Append('  and L.TICPILOTNO > 0');
   qryLoadTripData.SQL.Append('  and L.LEGNO = 1 ');
-//  qryLoadTripData.SQL.Append('  and L.Source = ''FX''');
   qryLoadTripData.Execute;
   qryLoadTripData.SQL.Clear;
 
@@ -1318,22 +1303,18 @@ begin
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
   qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.FANO, T.QUOTENO, L.ACREGNO, FARPART, L.FANO, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
   qryLoadTripData.SQL.Append('from vQuoteSys_TripLeg L left outer join vQuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
-  qryLoadTripData.SQL.Append('where L.DEPARTURE between (CURRENT_TIMESTAMP - ' + strDaysBack + ') and ' + QuotedStr(edEndDate.Text) );
-
-  //qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
-  qryLoadTripData.SQL.Append('and L.FANO > 0');
-  qryLoadTripData.SQL.Append('and L.LEGNO = 1 ');
-//  qryLoadTripData.SQL.Append('  and L.Source = ''FX''');
+  qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
+  qryLoadTripData.SQL.Append('  and L.FANO > 0');
+  qryLoadTripData.SQL.Append('  and L.LEGNO = 1 ');
   qryLoadTripData.Execute;
   qryLoadTripData.SQL.Clear;
 
   LoadCrewChangeRecsIntoStartBucket();
 
-  //  T&E-25  Adding default crew_tail recs for employees & T&E:25b
-(*
- D 1. import new field from paycom_employees.csv
-   2. run WriteToStartBucket twice w/ field name as param
- D 3. add paycom_assigned_ac_2 field to PaycomHistory table
+(* T&E-25  Adding default crew_tail recs for employees & T&E:25b
+   D 1. import new field from paycom_employees.csv
+     2. run WriteToStartBucket twice w/ field name as param
+   D 3. add paycom_assigned_ac_2 field to PaycomHistory table
 *)
 
   strInClause :=  CalcInClause(GetGroupsByLogicGroup('lg_FlightCrew'));
