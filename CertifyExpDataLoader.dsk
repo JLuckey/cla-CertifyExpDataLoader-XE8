@@ -1,39 +1,44 @@
 ﻿[Closed Files]
-File_0=TSourceModule,'Z:\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini',0,1,1,51,7,0,0,,
-File_1=TSourceModule,'Z:\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',0,1,1258,41,1265,0,0,,
-File_2=TSourceModule,'Z:\DCS\CLA\DataWarehouse\DataLoader\QuoteLoader\DelphiSourceXE8\uQuoteLoader.pas',0,1,658,66,672,0,0,,
-File_3=TSourceModule,'Z:\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Release\CertifyExpDataLoader.ini',0,1,1,82,16,0,0,,
-File_4=TSourceModule,'Z:\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Release\CertifyDataLoader.log',0,1,1,1,1,0,0,,
-File_5=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.dfm',0,1,1,1,1,0,0,,
-File_6=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini',0,1,16,52,10,0,0,,
-File_7=TSourceModule,'F:\XDrive\DCS\CLA\DataWarehouse\DataLoader\QuoteLoader\DelphiSourceXE8\uQuoteLoader.pas',0,1,861,1,884,0,0,,
-File_8=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.Controls.pas',0,1,9767,1,9794,0,0,,
-File_9=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.pas',0,1,22373,1,22398,0,0,,
-File_10=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.SysUtils.pas',0,1,19808,1,19837,0,0,,
-File_11=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.StdCtrls.pas',0,1,5763,1,5789,0,0,{{1651,4}
-File_12=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.Forms.pas',0,1,4402,1,4428,0,0,{{1716,4}
-File_13=TSourceModule,'c:\codegear\delphixe8\source\rtl\common\System.Classes.pas',0,1,16842,1,16885,0,0,,
-File_14=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Release\CertifyExpDataLoader.ini',0,1,1,1,19,0,0,,
+File_0=TSourceModule,'c:\codegear\delphixe8\source\Indy10\Protocols\IdSMTP.pas',0,1,223,34,253,0,0,,
+File_1=TSourceModule,'c:\codegear\delphixe8\source\Indy10\Core\IdAssignedNumbers.pas',0,1,27,1,52,0,0,,
+File_2=TSourceModule,'F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.dfm',0,1,1,1,1,0,0,,
+File_3=TSourceModule,'Z:\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini',0,1,1,51,7,0,0,,
+File_4=TSourceModule,'Z:\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',0,1,1258,41,1265,0,0,,
+File_5=TSourceModule,'Z:\DCS\CLA\DataWarehouse\DataLoader\QuoteLoader\DelphiSourceXE8\uQuoteLoader.pas',0,1,658,66,672,0,0,,
+File_6=TSourceModule,'Z:\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Release\CertifyExpDataLoader.ini',0,1,1,82,16,0,0,,
+File_7=TSourceModule,'Z:\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Release\CertifyDataLoader.log',0,1,1,1,1,0,0,,
+File_8=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.dfm',0,1,1,1,1,0,0,,
+File_9=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini',0,1,16,52,10,0,0,,
+File_10=TSourceModule,'F:\XDrive\DCS\CLA\DataWarehouse\DataLoader\QuoteLoader\DelphiSourceXE8\uQuoteLoader.pas',0,1,861,1,884,0,0,,
+File_11=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.Controls.pas',0,1,9767,1,9794,0,0,,
+File_12=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.pas',0,1,22373,1,22398,0,0,,
+File_13=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.SysUtils.pas',0,1,19808,1,19837,0,0,,
+File_14=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.StdCtrls.pas',0,1,5763,1,5789,0,0,{{1651,4}
 
 [Modules]
-Module0=F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-Module1=index.php?title=Main_Page&action=edit
-Count=2
+Module0=F:\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini
+Module1=F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
+Module2=index.php?title=Main_Page&action=edit
+Count=3
 EditWindowCount=1
+
+[F:\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini]
+ModuleType=TSourceModule
 
 [F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas]
 ModuleType=TSourceModule
 FormState=1
-FormOnTop=1
+FormOnTop=0
 
 [index.php?title=Main_Page&action=edit]
 ModuleType=TURLModule
 
 [EditWindow0]
-ViewCount=2
-CurrentEditView=F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
+ViewCount=3
+CurrentEditView=F:\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini
 View0=0
 View1=1
+View2=2
 PercentageSizes=1
 Create=1
 Visible=1
@@ -50,9 +55,9 @@ ClientHeight=8789
 DockedToMainForm=1
 BorlandEditorCodeExplorer=BorlandEditorCodeExplorer@EditWindow0
 TopPanelSize=0
-LeftPanelSize=1521
+LeftPanelSize=2159
 LeftPanelClients=PropertyInspector,DockSite3
-LeftPanelData=00000800010100000000D10E00000000000001F1050000000000000100000000560E000009000000446F636B53697465330100000000211D00001100000050726F7065727479496E73706563746F72FFFFFFFF
+LeftPanelData=00000800010100000000D10E000000000000016F080000000000000100000000560E000009000000446F636B53697465330100000000211D00001100000050726F7065727479496E73706563746F72FFFFFFFF
 RightPanelSize=1288
 RightPanelClients=DockSite2,DockSite4
 RightPanelData=00000800010100000000D10E00000000000001080500000000000001000000004912000009000000446F636B53697465320100000000211D000009000000446F636B5369746534FFFFFFFF
@@ -70,13 +75,24 @@ WelcomePageURL=http://docwiki.embarcadero.com/RADStudio/Tokyo/e/index.php?title=
 [View1]
 CustomEditViewType=TEditView
 Module=F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-CursorX=1
-CursorY=1
+CursorX=3
+CursorY=2176
+TopLine=2137
+LeftCol=1
+Elisions=
+Bookmarks={1,1597,19}
+EditViewName=F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
+
+[View2]
+CustomEditViewType=TEditView
+Module=F:\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini
+CursorX=26
+CursorY=28
 TopLine=1
 LeftCol=1
 Elisions=
 Bookmarks=
-EditViewName=Borland.FormDesignerView
+EditViewName=F:\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini
 
 [Watches]
 Count=0
@@ -104,8 +120,8 @@ StayOnTop=0
 
 [Breakpoints]
 Count=2
-Breakpoint0='F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',1499,'',0,0,'',1,0,0,'',1,'','','',0,''
-Breakpoint1='F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',1472,'',0,0,'',1,0,0,'',1,'','','',0,''
+Breakpoint0='F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',1497,'',0,0,'',1,0,0,'',1,'','','',0,''
+Breakpoint1='F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',1470,'',0,0,'',1,0,0,'',1,'','','',0,''
 
 [EmbarcaderoWin32Debugger_AddressBreakpoints]
 Count=0
@@ -215,7 +231,7 @@ Create=1
 Visible=0
 Docked=1
 State=0
-Left=-140
+Left=-199
 Top=-132
 Width=1845
 Height=3133
@@ -274,22 +290,22 @@ Docked=1
 State=0
 Left=0
 Top=368
-Width=1521
+Width=2159
 Height=3700
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=1521
+ClientWidth=2159
 ClientHeight=3700
 TBDockHeight=7367
-LRDockWidth=1521
+LRDockWidth=2159
 Dockable=1
 StayOnTop=0
-SplitPos=90
+SplitPos=186
 
 [PropInspDesignerSelection]
 ArrangeBy=Name
-SelectedItem=Action,
-ExpandedItems=Anchors=0,BorderIcons=0
+SelectedItem=Name,
+ExpandedItems=Encryption=0,FilterOptions=0,"LiveBindings Designer=0"
 
 [frmDesignPreview]
 PercentageSizes=1
@@ -568,11 +584,11 @@ Docked=1
 State=0
 Left=0
 Top=0
-Width=1521
+Width=2159
 Height=3233
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=1521
+ClientWidth=2159
 ClientHeight=3233
 TBDockHeight=3678
 LRDockWidth=1894
@@ -625,11 +641,11 @@ Docked=1
 State=0
 Left=0
 Top=0
-Width=763
+Width=1082
 Height=7067
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=763
+ClientWidth=1082
 ClientHeight=7067
 TBDockHeight=3678
 LRDockWidth=1894
@@ -740,14 +756,14 @@ Docked=1
 State=0
 Left=0
 Top=23
-Width=1521
+Width=2159
 Height=3533
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=1521
+ClientWidth=2159
 ClientHeight=3533
 TBDockHeight=7367
-LRDockWidth=1521
+LRDockWidth=2159
 Dockable=1
 StayOnTop=0
 TabPosition=1

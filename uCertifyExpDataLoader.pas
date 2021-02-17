@@ -200,8 +200,6 @@ type
     cbShowSQL: TCheckBox;
     qryGetChangedCrew: TUniQuery;
     qryLookUpFirstLeg: TUniQuery;
-    edEndDate: TEdit;
-    Label5: TLabel;
 
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -2178,6 +2176,7 @@ begin
   tblStartBucket.Insert;
   tblStartBucket.FieldByName('LogSheet').AsInteger        := qryDataToInsert.FieldByName('LOGSHEET').AsInteger;
   tblStartBucket.FieldByName('CrewMemberID').AsString     := strCrewID ;
+  tblStartBucket.FieldByName('CrewMemberVendorNum').AsString := strCrewID ;
   tblStartBucket.FieldByName('QuoteNum').AsInteger        := qryDataToInsert.FieldByName('QUOTENO').AsInteger;
   tblStartBucket.FieldByName('TailNum').AsString          := qryDataToInsert.FieldByName('ACREGNO').AsString;
   tblStartBucket.FieldByName('FARPart').AsString          := qryDataToInsert.FieldByName('FARPART').AsString;
@@ -2200,7 +2199,7 @@ begin
   qryCrewChange.SQL.Append('  and quoteno is not null ');
   qryCrewChange.SQL.Append('  and LegNo = 1 ');
   qryCrewChange.SQL.Append('  and L.' + CrewIDFieldName + ' > 0 ');
-  qryCrewChange.SQL.Append('  and L.Source = ''IB''');
+//  qryCrewChange.SQL.Append('  and L.Source = ''IB''');
   qryCrewChange.SQL.Append('order by quoteno, legno ');
   if cbShowSQL.Checked then ShowMessage('CrewChange_LoadFirstLegs:qryCrewChange' + #13#13 + qryCrewChange.SQL.Text);
   qryCrewChange.Execute;
@@ -2219,7 +2218,7 @@ begin
   qryCrewChange.SQL.Append('  and quoteno is not null ');
   qryCrewChange.SQL.Append('  and LegNo > 1 ');
   qryCrewChange.SQL.Append('  and L.' + CrewIDFieldName + ' > 0 ');
-  qryCrewChange.SQL.Append('  and L.Source = ''IB''');
+//  qryCrewChange.SQL.Append('  and L.Source = ''IB''');
   qryCrewChange.SQL.Append('order by quoteno, legno ');
 
   if cbShowSQL.Checked then ShowMessage('CrewChange_LoadOtherLegs:qryCrewChange' + #13#13 + qryCrewChange.SQL.Text);

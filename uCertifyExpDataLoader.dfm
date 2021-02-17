@@ -141,13 +141,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Height = 13
     Caption = 'Inflight Services (IFS) Pseudo Users:'
   end
-  object Label5: TLabel
-    Left = 321
-    Top = 238
-    Width = 48
-    Height = 13
-    Caption = 'End Date:'
-  end
   object edPayComInputFile: TEdit
     Left = 257
     Top = 24
@@ -306,15 +299,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Color = clBtnFace
     ParentColor = False
     TabOrder = 16
-  end
-  object edEndDate: TEdit
-    Left = 321
-    Top = 254
-    Width = 76
-    Height = 21
-    Alignment = taRightJustify
-    TabOrder = 17
-    Text = '2020-08-28'
   end
   object UniConnection1: TUniConnection
     ProviderName = 'SQL Server'
@@ -1519,7 +1503,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'CREGNO = T.ACREGNO and L.LogSheet = T.Logsheet'
       'where T.QuoteNo = :parmQuoteNumIn'
       '  and L.LEGNO = 1'
-      '  and L.Source = '#39'IB'#39
       'order by T.QuoteNo')
     Left = 250
     Top = 126
