@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'Certify Data Loader - ver 3.X - FX Testing'
+  Caption = 'Certify Data Loader - ver 4.01 - FX'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -1497,7 +1497,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         'select T.QuoteNo, L.ACREGNO, L.LOGSHEET, L.LEGNO, L.DEPTID, L.AR' +
         'RIVEID, L.PICPILOTNO, L.SICPILOTNO, '
-      '       L.TICPILOTNO, L.FANO, L.DEPARTURE, T.FARPART'
+      
+        '       L.TICPILOTNO, L.FANO, FORMAT(L.DEPARTURE, '#39'MM/dd/yyyy HH:' +
+        'mm:ss'#39' ) AS DEPARTURE, T.FARPART'
       
         'from vQuoteSys_TripLeg L left outer join vQuoteSys_Trip T on L.A' +
         'CREGNO = T.ACREGNO and L.LogSheet = T.Logsheet'
@@ -1521,7 +1523,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'S.CrewMemberID, S.QuoteNum, S.TripDepartDate, S.TailNum'
       
         'from  QuoteSys_PilotMaster P left outer join CertifyExp_Trips_St' +
-        'artBucket S  on S.CrewMemberID = CONVERT(varchar(20), P.PilotID)'
+        'artBucket S  on P.VendorNumber = S.CrewMemberVendorNum '
       'where S.TripDepartDate > (CURRENT_TIMESTAMP - :parmDaysBack)'
       '  and CrewMemberVendorNum not in ('
       
