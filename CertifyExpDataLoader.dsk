@@ -16,26 +16,26 @@ File_13=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.SysUtils.pas'
 File_14=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.StdCtrls.pas',0,1,5763,1,5789,0,0,{{1651,4}
 
 [Modules]
-Module0=F:\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini
-Module1=F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
+Module0=F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
+Module1=F:\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini
 Module2=index.php?title=Main_Page&action=edit
 Count=3
 EditWindowCount=1
-
-[F:\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini]
-ModuleType=TSourceModule
 
 [F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas]
 ModuleType=TSourceModule
 FormState=1
 FormOnTop=0
 
+[F:\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini]
+ModuleType=TSourceModule
+
 [index.php?title=Main_Page&action=edit]
 ModuleType=TURLModule
 
 [EditWindow0]
 ViewCount=3
-CurrentEditView=F:\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini
+CurrentEditView=F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
 View0=0
 View1=1
 View2=2
@@ -55,9 +55,9 @@ ClientHeight=8789
 DockedToMainForm=1
 BorlandEditorCodeExplorer=BorlandEditorCodeExplorer@EditWindow0
 TopPanelSize=0
-LeftPanelSize=2159
+LeftPanelSize=3095
 LeftPanelClients=PropertyInspector,DockSite3
-LeftPanelData=00000800010100000000D10E000000000000016F080000000000000100000000560E000009000000446F636B53697465330100000000211D00001100000050726F7065727479496E73706563746F72FFFFFFFF
+LeftPanelData=00000800010100000000D10E00000000000001170C0000000000000100000000560E000009000000446F636B53697465330100000000211D00001100000050726F7065727479496E73706563746F72FFFFFFFF
 RightPanelSize=1288
 RightPanelClients=DockSite2,DockSite4
 RightPanelData=00000800010100000000D10E00000000000001080500000000000001000000004912000009000000446F636B53697465320100000000211D000009000000446F636B5369746534FFFFFFFF
@@ -75,9 +75,9 @@ WelcomePageURL=http://docwiki.embarcadero.com/RADStudio/Tokyo/e/index.php?title=
 [View1]
 CustomEditViewType=TEditView
 Module=F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-CursorX=3
-CursorY=2176
-TopLine=2137
+CursorX=59
+CursorY=2162
+TopLine=2148
 LeftCol=1
 Elisions=
 Bookmarks={1,1597,19}
@@ -231,7 +231,7 @@ Create=1
 Visible=0
 Docked=1
 State=0
-Left=-199
+Left=-286
 Top=-132
 Width=1845
 Height=3133
@@ -290,22 +290,22 @@ Docked=1
 State=0
 Left=0
 Top=368
-Width=2159
+Width=3095
 Height=3700
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=2159
+ClientWidth=3095
 ClientHeight=3700
 TBDockHeight=7367
-LRDockWidth=2159
+LRDockWidth=3095
 Dockable=1
 StayOnTop=0
-SplitPos=186
+SplitPos=158
 
 [PropInspDesignerSelection]
 ArrangeBy=Name
-SelectedItem=Name,
-ExpandedItems=Encryption=0,FilterOptions=0,"LiveBindings Designer=0"
+SelectedItem=BorderWidth,
+ExpandedItems="LiveBindings Designer=1",Options=0,"LiveBindings Designer.Element Layers=0",Anchors=0,BorderIcons=0,Constraints=0,Font=0,GlassFrame=0,HorzScrollBar=0,LiveBindings=0,Margins=0
 
 [frmDesignPreview]
 PercentageSizes=1
@@ -584,11 +584,11 @@ Docked=1
 State=0
 Left=0
 Top=0
-Width=2159
+Width=3095
 Height=3233
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=2159
+ClientWidth=3095
 ClientHeight=3233
 TBDockHeight=3678
 LRDockWidth=1894
@@ -641,11 +641,11 @@ Docked=1
 State=0
 Left=0
 Top=0
-Width=1082
+Width=1548
 Height=7067
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=1082
+ClientWidth=1548
 ClientHeight=7067
 TBDockHeight=3678
 LRDockWidth=1894
@@ -756,14 +756,14 @@ Docked=1
 State=0
 Left=0
 Top=23
-Width=2159
+Width=3095
 Height=3533
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=2159
+ClientWidth=3095
 ClientHeight=3533
 TBDockHeight=7367
-LRDockWidth=2159
+LRDockWidth=3095
 Dockable=1
 StayOnTop=0
 TabPosition=1

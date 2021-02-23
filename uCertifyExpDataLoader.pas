@@ -2174,7 +2174,7 @@ procedure TufrmCertifyExpDataLoader.CrewChange_InsertStartBucket(const qryDataTo
 begin
 
   tblStartBucket.Insert;
-  tblStartBucket.FieldByName('LogSheet').AsInteger        := qryDataToInsert.FieldByName('LOGSHEET').AsInteger;
+  tblStartBucket.FieldByName('LogSheet').AsString         := qryDataToInsert.FieldByName('LOGSHEET').AsString;
   tblStartBucket.FieldByName('CrewMemberID').AsString     := strCrewID ;
   tblStartBucket.FieldByName('CrewMemberVendorNum').AsString := strCrewID ;
   tblStartBucket.FieldByName('QuoteNum').AsInteger        := qryDataToInsert.FieldByName('QUOTENO').AsInteger;
