@@ -1417,8 +1417,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'and (L.arrival < CURRENT_TIMESTAMP) )   -- ended within the past' +
         ' n days'
       '    AND L.LEGNO = 1'
-      '    AND L.Source = '#39'IB'#39
-      'ORDER BY DEPARTURE'
+      ' ORDER BY DEPARTURE'
       ''
       '')
     Left = 207

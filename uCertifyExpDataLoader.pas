@@ -228,7 +228,7 @@ type
     Procedure BuildValidationFiles(Const BatchTimeIn : TDateTime);
     Procedure CalculateApproverEmail(Const lgFlightCrewList, lgCharterVisaList, lgCorporateList, lgDOMList : String;  Const BatchTimeIn: TDateTime) ;
     Procedure FilterTripsByCount;
-    Procedure DeleteTrip(Const LogSheetIn:String; QuoteNumIn : Integer; CrewMemberIDIn: String);
+    Procedure DeleteTrip(Const LogSheetIn:String; QuoteNumIn : String; CrewMemberIDIn: String);
 
     Procedure ConnectToDB();
     Procedure SendStatusEmail;
@@ -281,7 +281,7 @@ type
 
     // 7 Jun 2019
     Procedure AddDummyTripToStartBucket(Const VendorNumIn: Integer; NewHireKind: String) ;
-    Procedure InsertDummyNewHireTripStop(Const QuoteNumIn : Integer);
+    Procedure InsertDummyNewHireTripStop(Const QuoteNumIn : String);
     Procedure Process_NewHire_Employees_FlightCrew(Const BatchTimeIn: TDateTime);
 
     // 10 Jul 2019
@@ -355,7 +355,7 @@ var
   gloMissingFlightCrewFile : String;
 
   gloPusher : TfrmPushToCertify;
-  gloNewHireDummyQuoteNum : Integer;
+  gloNewHireDummyQuoteNum : String;
 
 
 implementation
@@ -526,7 +526,9 @@ var
 begin
   BatchTime := StrToDateTime('09/10/2020 10:16:39.767');
 
-//  LoadTripsIntoStartBucket(BatchTime);
+
+
+//   LoadTripsIntoStartBucket(BatchTime);
 //  FilterTripsByCount;
   GenerateMissingFlightCrewReport(BatchTime);
 
@@ -634,8 +636,8 @@ begin
   // Build Trip/Stop records
   scrLoadTripStopData.Execute;    // puts recs into working table CertifyExp_TripStop_Step1
 
-    InsertDummyNewHireTripStop(818181);   // adds NewHire records for new contractors to working table CertifyExp_TripStop_Step1
-    InsertDummyNewHireTripStop(828282);   // adds NewHire records for new employees to working table CertifyExp_TripStop_Step1
+    InsertDummyNewHireTripStop('818181');   // adds NewHire records for new contractors to working table CertifyExp_TripStop_Step1
+    InsertDummyNewHireTripStop('828282');   // adds NewHire records for new employees to working table CertifyExp_TripStop_Step1
 
   BuildGenericValidationFile2(TargetDirectory + 'trip_stop.csv',
                              'select distinct TripNum, AirportID from CertifyExp_TripStop_Step1 where AirportID is not null' );
@@ -643,16 +645,16 @@ begin
 end;  { BuildValidationFiles }
 
 
-procedure TufrmCertifyExpDataLoader.InsertDummyNewHireTripStop(Const QuoteNumIn : Integer);
+procedure TufrmCertifyExpDataLoader.InsertDummyNewHireTripStop(Const QuoteNumIn : String);
 begin
 
   tblTripStop.Open;
   tblTripStop.Insert;
-  tblTripStop.FieldByName('TripNum').AsInteger  := QuoteNumIn;
+  tblTripStop.FieldByName('TripNum').AsString  := QuoteNumIn;
   tblTripStop.FieldByName('AirportID').AsString := 'KVNY';
   tblTripStop.Post;
   tblTripStop.Insert;
-  tblTripStop.FieldByName('TripNum').AsInteger  := QuoteNumIn;
+  tblTripStop.FieldByName('TripNum').AsString  := QuoteNumIn;
   tblTripStop.FieldByName('AirportID').AsString := 'KTEB';
   tblTripStop.Post;
 
@@ -884,7 +886,7 @@ begin
       counter := counter + 1;
       if Counter > Limit then
         DeleteTrip(qryGetStartBucketSorted.FieldByName('LogSheet').AsString,
-                   qryGetStartBucketSorted.FieldByName('QuoteNum').AsInteger,
+                   qryGetStartBucketSorted.FieldByName('QuoteNum').AsString,
                    qryGetStartBucketSorted.FieldByName('CrewMemberID').AsString );
 
     end else begin
@@ -1268,7 +1270,8 @@ begin
   // Load PIC data into StartBucket
   qryLoadTripData.SQL.Clear;
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');                                //  v
-  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.PICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, L.PICPILOTNO, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
+  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.PICPILOTNO, T.BOOKINGIDENTIFIER AS QUOTENO, L.ACREGNO, FARPART, L.PICPILOTNO, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
+//  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.PICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, L.PICPILOTNO, L.DEPARTURE, L.ARRIVEID, L.LEGNO');  qryLoadTripData.SQL.Append('from vQuoteSys_TripLeg L left outer join vQuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
   qryLoadTripData.SQL.Append('from vQuoteSys_TripLeg L left outer join vQuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
   qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
   qryLoadTripData.SQL.Append('  and L.PICPILOTNO > 0');
@@ -1279,7 +1282,7 @@ begin
 
   // Load SIC data into StartBucket
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
-  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.SICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, L.SICPILOTNO, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
+  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.SICPILOTNO, T.BOOKINGIDENTIFIER AS QUOTENO, L.ACREGNO, FARPART, L.SICPILOTNO, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
   qryLoadTripData.SQL.Append('from vQuoteSys_TripLeg L left outer join vQuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
   qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
   qryLoadTripData.SQL.Append('  and L.SICPILOTNO > 0');
@@ -1289,7 +1292,7 @@ begin
 
   // Load TIC data into StartBucket
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
-  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.TICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, L.TICPILOTNO, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
+  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.TICPILOTNO, T.BOOKINGIDENTIFIER AS QUOTENO, L.ACREGNO, FARPART, L.TICPILOTNO, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
   qryLoadTripData.SQL.Append('from vQuoteSys_TripLeg L left outer join vQuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
   qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
   qryLoadTripData.SQL.Append('  and L.TICPILOTNO > 0');
@@ -1299,7 +1302,7 @@ begin
 
   // Load FA data into StartBucket
   qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
-  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.FANO, T.QUOTENO, L.ACREGNO, FARPART, L.FANO, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
+  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.FANO, T.BOOKINGIDENTIFIER AS QUOTENO, L.ACREGNO, FARPART, L.FANO, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
   qryLoadTripData.SQL.Append('from vQuoteSys_TripLeg L left outer join vQuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
   qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
   qryLoadTripData.SQL.Append('  and L.FANO > 0');
@@ -1853,13 +1856,13 @@ begin
 end;
 
 
-procedure TufrmCertifyExpDataLoader.DeleteTrip(const LogSheetIn: String; QuoteNumIn: Integer; CrewMemberIDIn : String);
+procedure TufrmCertifyExpDataLoader.DeleteTrip(const LogSheetIn: String; QuoteNumIn: String; CrewMemberIDIn : String);
 begin
 
   qryDeleteTrips.Close;
   qryDeleteTrips.ParamByName('parmLogSheetIn').AsString      := LogSheetIn;
   qryDeleteTrips.ParamByName('parmCrewMemberIDIn').AsString  := CrewMemberIDIn;
-  qryDeleteTrips.ParamByName('parmQuoteNumIn').AsInteger     := QuoteNumIn;
+  qryDeleteTrips.ParamByName('parmQuoteNumIn').AsString     := QuoteNumIn;
 
   try
     qryDeleteTrips.Execute;
@@ -1903,7 +1906,7 @@ begin
   StatusBar1.Panels[1].Text := 'Current Task:  Processing New Hire Employees' ;
   Application.ProcessMessages;
 
-  gloNewHireDummyQuoteNum := 828282;
+  gloNewHireDummyQuoteNum := '828282';
 
   qryGetFlightCrewNewHire.Close;    // contains definition of Flight Crew; refactor to pull that definition up & store in one place  ???JL  13 Jun 2019
   qryGetFlightCrewNewHire.ParamByName('parmImportedOn').AsDateTime := BatchTimeIn;
@@ -1928,7 +1931,7 @@ begin
   tblStartBucket.Insert;
   tblStartBucket.FieldByName('LogSheet').AsInteger            := 123456;
   tblStartBucket.FieldByName('CrewMemberID').AsString         := NewHireKind;
-  tblStartBucket.FieldByName('QuoteNum').AsInteger            := gloNewHireDummyQuoteNum;
+  tblStartBucket.FieldByName('QuoteNum').AsString             := gloNewHireDummyQuoteNum;
   tblStartBucket.FieldByName('TailNum').AsString              := 'NTEST1';
   tblStartBucket.FieldByName('CrewMemberVendorNum').AsInteger := VendorNumIn;
   tblStartBucket.Post;
@@ -2152,7 +2155,7 @@ begin
       qryGetChangedCrew.Open;   // Returns QuoteNum & CrewMemberID for trips where Crew Member changed bewteen legs
 
       while Not qryGetChangedCrew.Eof do begin
-        qryLookupFirstLeg.ParamByName('parmQuoteNumIn').AsInteger := qryGetChangedCrew.FieldByName('QuoteNum').AsInteger;
+        qryLookupFirstLeg.ParamByName('parmQuoteNumIn').AsString := qryGetChangedCrew.FieldByName('QuoteNum').AsString;
         qryLookUpFirstLeg.Open;
         CrewChange_InsertStartBucket(qryLookupFirstLeg, qryGetChangedCrew.FieldByName('CrewMemberID').AsString );
         qryLookUpFirstLeg.Close;
@@ -2177,7 +2180,7 @@ begin
   tblStartBucket.FieldByName('LogSheet').AsString         := qryDataToInsert.FieldByName('LOGSHEET').AsString;
   tblStartBucket.FieldByName('CrewMemberID').AsString     := strCrewID ;
   tblStartBucket.FieldByName('CrewMemberVendorNum').AsString := strCrewID ;
-  tblStartBucket.FieldByName('QuoteNum').AsInteger        := qryDataToInsert.FieldByName('QUOTENO').AsInteger;
+  tblStartBucket.FieldByName('QuoteNum').AsString         := qryDataToInsert.FieldByName('QUOTENO').AsString;
   tblStartBucket.FieldByName('TailNum').AsString          := qryDataToInsert.FieldByName('ACREGNO').AsString;
   tblStartBucket.FieldByName('FARPart').AsString          := qryDataToInsert.FieldByName('FARPART').AsString;
   tblStartBucket.FieldByName('TripDepartDate').AsDatetime := qryDataToInsert.FieldByName('DEPARTURE').AsDateTime;
