@@ -216,7 +216,7 @@ type
     Procedure IdentifyNonCertifyRecs( Const BatchTimeIn : TDateTime );
     Procedure ValidateEmployeeRecords(Const BatchTimeIn: Tdatetime);
     Procedure UpdateDupeEmailRecs( Const EMailIn: String; BatchTimeIn: TDateTime);
-    Procedure BuildCrewTailFile(Const CurrBatchTimeIn: TDatetime);
+    Procedure BuildCrewTailFile();
     Procedure BuildCrewTripFile();
 
     Procedure BuildCrewDepartDateAirportFile();
@@ -517,7 +517,7 @@ end;  { LoadData() }
 
 procedure TufrmCertifyExpDataLoader.btnFixerClick(Sender: TObject);
 var
-  BatchTime, PreviousBatchDate, NewBatchDate : TDateTime;
+  BatchTime: TDateTime;
 //  strTest : String;
 //  retValq : String;
 
@@ -525,11 +525,11 @@ var
 begin
   BatchTime := StrToDateTime('09/10/2020 10:16:39.767');
 
-
+  BuildCrewTailFile();
 
 //   LoadTripsIntoStartBucket(BatchTime);
 //  FilterTripsByCount;
-  GenerateMissingFlightCrewReport(BatchTime);
+//  GenerateMissingFlightCrewReport(BatchTime);
 
   //BuildCrewDepartDateAirportFile();
 // LoadCrewChangeRecsIntoStartBucket;
@@ -627,7 +627,7 @@ var
 begin
   TargetDirectory :=  edOutputDirectory.Text;  // 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\';
 
-  BuildCrewTailFile(BatchTimeIn);
+  BuildCrewTailFile();
   BuildCrewTripFile;
   BuildCrewDepartDateAirportFile;
   BuildTailTripDepartTimeAirport;
@@ -1671,7 +1671,7 @@ begin
 end;  { Load_Crew_Trip_HistoryTable }
 
 
-procedure TufrmCertifyExpDataLoader.BuildCrewTailFile(Const CurrBatchTimeIn: TDatetime);
+procedure TufrmCertifyExpDataLoader.BuildCrewTailFile();
 Var
   RowOut : String;
   WorkFile : TextFile;
@@ -1681,10 +1681,9 @@ begin
 
   qryBuildValFile.Close;
   qryBuildValFile.SQL.Clear;
-  qryBuildValFile.SQL.Text := 'select distinct TailNum, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and TailNum is not null and CrewMemberVendorNum > 0' ;
+  qryBuildValFile.SQL.Text := 'select distinct TailNum, CrewMemberVendorNum from CertifyExp_Trips_StartBucket where CrewMemberVendorNum is not null and (TailNum is not null and TailNum <> '''' ) and CrewMemberVendorNum > 0' ;
   qryBuildValFile.Open ;
 
-//  AssignFile(WorkFile, CalcCrewTailFileName(CurrBatchTimeIn));
   AssignFile(WorkFile, edOutputDirectory.Text + 'crew_tail.csv');
 
   Rewrite(WorkFile);

@@ -1444,8 +1444,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     SQL.Strings = (
       '  insert into CertifyExp_Trips_StartBucket'
       
-        '  select distinct null, '#39'IFS'#39', null, Tail, null, :parmCrewMember' +
-        'VendorNumIn, null, null, null'
+        '  select distinct null, '#39'IFS'#39', null, tail_number, null, :parmCre' +
+        'wMemberVendorNumIn, null, null, null'
       '  from V_CertifyExp_TailLeadPilot'
       ''
       ' ')
