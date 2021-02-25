@@ -194,7 +194,6 @@ type
     qryGetJobCodeDescrips: TUniQuery;
     qryGetCertifyGroups: TUniQuery;
     qryGetCertifyDeptName: TUniQuery;
-    qrySpecialUserDupes: TUniQuery;
     qryGetValidGroups: TUniQuery;
     qryCrewChange: TUniQuery;
     cbShowSQL: TCheckBox;

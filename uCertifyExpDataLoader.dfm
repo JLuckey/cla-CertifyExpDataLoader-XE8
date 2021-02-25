@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'Certify Data Loader - ver 4.02 - FX'
+  Caption = 'Certify Data Loader - ver 4.10 - FX'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -1446,9 +1446,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       
         '  select distinct null, '#39'IFS'#39', null, Tail, null, :parmCrewMember' +
         'VendorNumIn, null, null, null'
-      '  from CertifyExp_Tail_LeadPilot'
+      '  from V_CertifyExp_TailLeadPilot'
       ''
-      '')
+      ' ')
     Left = 192
     Top = 258
     ParamData = <
@@ -1612,35 +1612,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       item
         DataType = ftUnknown
         Name = 'parmGroupIn'
-        Value = nil
-      end>
-  end
-  object qrySpecialUserDupes: TUniQuery
-    Connection = UniConnection1
-    SQL.Strings = (
-      'update CertifyExp_PaycomHistory'
-      'set record_status    = '#39'error'#39','
-      '    status_timestamp = CURRENT_TIMESTAMP,'
-      
-        '    error_text       = '#39'Dupe certfile_employee_id (Vendor Number' +
-        ') from Special User file'#39'      '
-      ''
-      'where imported_on = :parmImportedOn'
-      '  and data_source in ('#39'special_users'#39' )                '
-      '  and record_status in ( '#39'OK'#39' ) '
-      '  and certify_gp_vendornum in'
-      ''
-      '     (select certfile_employee_id'
-      '      from CertifyExp_PaycomHistory'
-      '      where imported_on   = :parmImportedOn'
-      '        and record_status in ( '#39'OK'#39', '#39'terminated'#39' ) '
-      '        and data_source   = '#39'paycom_file'#39')')
-    Left = 35
-    Top = 416
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'parmImportedOn'
         Value = nil
       end>
   end
