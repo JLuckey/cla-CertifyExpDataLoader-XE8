@@ -1403,9 +1403,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       ''
       'insert into CertifyExp_Trips_StartBucket'
       
-        'select distinct L.LogSheet, :parmGroupNameIn, T.QUOTENO, L.acreg' +
-        'no, null, :parmCrewMemberVendorNumIn, L.DEPARTURE, L.ARRIVEID, L' +
-        '.LEGNO'
+        'select distinct L.LogSheet, :parmGroupNameIn, T.BOOKINGIDENTIFIE' +
+        'R AS QUOTENO, L.acregno, null, :parmCrewMemberVendorNumIn, L.DEP' +
+        'ARTURE, L.ARRIVEID, L.LEGNO'
       
         '  from vQuoteSys_TripLeg L LEFT OUTER JOIN vQuoteSys_Trip T ON L' +
         '.ACREGNO = T.ACREGNO AND L.LOGSHEET = T.LOGSHEET'
@@ -1447,6 +1447,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '  select distinct null, '#39'IFS'#39', null, Tail, null, :parmCrewMember' +
         'VendorNumIn, null, null, null'
       '  from CertifyExp_Tail_LeadPilot'
+      ''
       '')
     Left = 192
     Top = 258
