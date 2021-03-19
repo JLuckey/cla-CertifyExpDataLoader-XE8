@@ -2174,6 +2174,7 @@ end;  { LoadCrewChangeRecs }
 procedure TufrmCertifyExpDataLoader.CrewChange_InsertStartBucket(const qryDataToInsert: TUniQuery; strCrewID: String);
 begin
 
+  try
   tblStartBucket.Insert;
   tblStartBucket.FieldByName('LogSheet').AsString         := qryDataToInsert.FieldByName('LOGSHEET').AsString;
   tblStartBucket.FieldByName('CrewMemberID').AsString     := strCrewID ;
@@ -2185,6 +2186,15 @@ begin
   tblStartBucket.FieldByName('FirstDestination').AsString := qryDataToInsert.FieldByName('ARRIVEID').AsString;
   tblStartBucket.FieldByName('LegNum').AsInteger          := 999;      //  Conspicuous value indicating rec is from the Crew Change process
   tblStartBucket.Post;
+
+
+  except on E1: Exception do begin
+    LogIt('Error in CrewChange_InsertStartBucket: ' + E1.Message + ' --  QuoteNo: ' + qryDataToInsert.FieldByName('QUOTENO').AsString );
+
+  end;
+
+  end;
+
 
 end;  { CrewChange_InsertStartBucket }
 

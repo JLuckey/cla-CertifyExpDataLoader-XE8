@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'Certify Data Loader - ver 4.10 - FX'
+  Caption = 'Certify Data Loader - ver 4.11 - FX'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -630,8 +630,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       'delete from CertifyExp_PilotsNotInPaycom')
-    Left = 443
-    Top = 191
+    Left = 430
+    Top = 197
   end
   object qryDeleteTrips: TUniQuery
     Connection = UniConnection1
