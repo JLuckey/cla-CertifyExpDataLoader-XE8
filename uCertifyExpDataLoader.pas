@@ -134,10 +134,10 @@ type
     qryFlagTerminatedEmployees: TUniQuery;
     edLastNTrips: TEdit;
     edTerminatedDaysBack: TEdit;
-    edContractorDaysBack: TEdit;
+    edDaysForward: TEdit;
     Label6: TLabel;
     Label7: TLabel;
-    Label8: TLabel;
+    I: TLabel;
     Label9: TLabel;
     Label10: TLabel;
     Label11: TLabel;
@@ -181,7 +181,6 @@ type
     qryUpdtStatus_CrewTail_2: TUniQuery;
     qryUpdtStatus_CrewLog_1: TUniQuery;
     qryUpdtStatus_CrewLog_2: TUniQuery;
-    connOnBase: TUniConnection;
     qryGetNewTailLeadPilotRecs: TUniQuery;
     edIFSPseudoUsers: TEdit;
     Label20: TLabel;
@@ -199,6 +198,10 @@ type
     cbShowSQL: TCheckBox;
     qryGetChangedCrew: TUniQuery;
     qryLookUpFirstLeg: TUniQuery;
+    Label5: TLabel;
+    Label8: TLabel;
+    edTripTable: TEdit;
+    edTripLegTable: TEdit;
 
     procedure btnMainClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -208,7 +211,7 @@ type
 
   private
     Procedure Main();
-    Procedure ImportPaycomData(Const BatchTimeIn : TDateTime);
+    Function  ImportPaycomData(Const BatchTimeIn : TDateTime): Boolean;
     Procedure InsertIntoHistoryTable(Const slInputFileRec: TStringList; BatchTimeIn: TDateTime);
     Procedure BuildEmployeeFile(Const BatchTimeIn: TDateTime)  ;
     Procedure WriteToCertifyEmployeeFile(Const BatchTimeIn: TDateTime)   ;
@@ -340,6 +343,8 @@ type
     Procedure CrewChange_LoadOtherLegs(Const CrewIDFieldName: String; DaysBack: Integer);
     Procedure CrewChange_InsertStartBucket(Const qryDataToInsert: TUniQuery; strCrewID: String);
 
+    Function  SubstituteParams1(Const SQLIn, PilotFieldIn: String ): String;
+
   public
     { Public declarations }
   end;
@@ -355,11 +360,12 @@ var
 
   gloPusher : TfrmPushToCertify;
   gloNewHireDummyQuoteNum : String;
-
+  gloShutDownNow : Boolean = False;
 
 implementation
 
 {$R *.dfm}
+
 
 procedure TufrmCertifyExpDataLoader.FormCreate(Sender: TObject);
 var
@@ -383,14 +389,17 @@ begin
   edPayComInputFile.Text  := myIni.ReadString('Startup', 'PaycomFileName',   '') ;
   edOutputFileName.Text   := myIni.ReadString('Startup', 'CertifyEmployeeFileName', '') ;
   edOutputDirectory.Text  := myIni.ReadString('Startup', 'OutputDirectory', '') ;
-//  edSpecialUsersFile.Text := myIni.ReadString('Startup', 'SpecialUsersFileName', '') ;
   edCharterVisaUsers.Text := myIni.ReadString('Startup', 'CharterVisaVendorNumbers', '') ;
   edIFSPseudoUsers.Text   := myIni.ReadString('Startup', 'IFSPseudoUsers', '') ;
 
   edDaysBack.Text           := myIni.ReadString('Startup', 'EmployeeFlightCrewDaysBack', '') ;
-  edContractorDaysBack.Text := myIni.ReadString('Startup', 'ContractFlightCrewDaysBack', '') ;
   edLastNTrips.Text         := myIni.ReadString('Startup', 'MostRecentTripCount', '') ;
   edTerminatedDaysBack.Text := myIni.ReadString('Startup', 'TerminatedEmployeeGracePeriodDays', '') ;
+
+  // added for TID:1152
+  edDaysForward.Text  := myIni.ReadString('Startup', 'FlightCrewTripsDaysForward', '') ;
+  edTripTable.Text    := myIni.ReadString('Startup', 'TripTable', '') ;
+  edTripLegTable.Text := myIni.ReadString('Startup', 'TripLegTable', '') ;
 
 
   //  ShowMessage(ParamStr(1));
@@ -425,7 +434,10 @@ begin
 
   PruneHistoryTables('CertifyExp_PaycomHistory');
 
-  LoadData(BatchTime);      // Loads PaycomHistory & StartBucket tables; also imports SpecialUsers file
+  LoadData(BatchTime);      // Loads PaycomHistory & StartBucket tables; also imports SpecialUsers data
+
+  if gloShutDownNow then Exit;
+
 
   BuildEmployeeFile(BatchTime);
 
@@ -486,7 +498,12 @@ end;  { HourlyPushMain }
 procedure TufrmCertifyExpDataLoader.LoadData(Const BatchTimeIn: TDateTime);
 begin
 
-  ImportPaycomData(BatchTimeIn);               // rec status: imported or error  6 Jan 2020
+  ImportPaycomData(BatchTimeIn);                // rec status: imported or error  6 Jan 2020
+
+  Application.ProcessMessages;
+
+  if gloShutDownNow Then Exit;
+
 
   FlagTerminatedEmployees(BatchTimeIn);      // checks Termination Date & updates record_status in PaycomHistory, was part of ValidateEmployeeRecord
 
@@ -520,20 +537,12 @@ var
   BatchTime: TDateTime;
 //  strTest : String;
 //  retValq : String;
-
-
 begin
   BatchTime := StrToDateTime('09/10/2020 10:16:39.767');
 
-  BuildCrewTailFile();
+  LoadTripsIntoStartBucket(BatchTime)
 
-//   LoadTripsIntoStartBucket(BatchTime);
-//  FilterTripsByCount;
-//  GenerateMissingFlightCrewReport(BatchTime);
-
-  //BuildCrewDepartDateAirportFile();
-// LoadCrewChangeRecsIntoStartBucket;
-
+ // FormatTesterJL;
 
 end;
 
@@ -592,26 +601,6 @@ begin
     LogIt(errorMsg);
     StatusBar1.Panels[0].Text :=  'DB: Error! - ' + dbName ;
 //   Raise;
-    end;
-  end;
-
-  // Connect to the OnBase (SQL Server) database
-  try
-    connOnBase.Connected := false;
-    connOnBase.Server    := myIni.ReadString('DBConfig_OnBase', 'Server', '') ;
-    connOnBase.Database  := myIni.ReadString('DBConfig_OnBase', 'DatabaseName', '') ;
-    dbName := connOnBase.Database;
-    connOnBase.Username  := myIni.ReadString('DBConfig_OnBase', 'UserName', '') ;
-    connOnBase.Password  := myIni.ReadString('DBConfig_OnBase', 'Password', '') ;
-    connOnBase.Connected := true;
-  except on E: Exception do begin
-    errorMsg := 'Error! from ConnectToDBs();  ' +
-                'Problem connecting to database: ' + dbName + '; ' +
-                E.ClassName + '; ' +
-                E.Message ;
-
-    LogIt(errorMsg);
-    StatusBar1.Panels[0].Text :=  'DB: Error! - ' + dbName ;
     end;
   end;
 
@@ -990,33 +979,46 @@ begin
 end;
 
 
-procedure TufrmCertifyExpDataLoader.ImportPaycomData(Const BatchTimeIn : TDateTime);
+Function TufrmCertifyExpDataLoader.ImportPaycomData(Const BatchTimeIn : TDateTime): Boolean;
 var
   FileIn: TextFile;
   sl : TStringList;
-  s: string;
+  s, errorTxt: string;
 
 begin
+  Result := True;
   StatusBar1.Panels[1].Text := 'Current Task:  Importing Payroll Data' ;
   Application.ProcessMessages;
 
   sl := TStringList.Create;
   sl.StrictDelimiter := true;      { tell stringList to not use space as delimeter }
 
-  AssignFile(FileIn, edPayComInputFile.Text) ;
-  Reset(FileIn);
-  tblPayComHistory.open;
+    Try
+      AssignFile(FileIn, edPayComInputFile.Text) ;
+      Reset(FileIn);
 
-  Readln(FileIn, s);            // skip the first line of the file which is the field names header, not data
-  while not Eof(FileIn) do begin
-    Readln(FileIn, s);
-    sl.CommaText := s;
-    InsertIntoHistoryTable(sl, BatchTimeIn);
-  end;
+      Readln(FileIn, s);            // skip the first line of the file which is the field names header, not data
+      tblPayComHistory.Open;
+      while not Eof(FileIn) do begin
+        Readln(FileIn, s);
+        sl.CommaText := s;
+        InsertIntoHistoryTable(sl, BatchTimeIn);
+      end;
+      CloseFile(FileIn);
 
-  tblPayComHistory.close;
-  CloseFile(FileIn);
-  sl.Free;
+    except on E1: Exception do
+      begin
+        errorTxt := 'Could not find ' + edPayComInputFile.Text;
+        MessageDlg(errorTxt, mtError, [mbOK], 0);
+        LogIt('Error! from ImportPaycomData(); ' + errorTxt);
+        gloShutDownNow := True;
+//        Result := False;
+        application.terminate;                 // App fails to terminate! don't know why
+                                                // it only works with the gloShutDownNow logic (which is  klugey!!!) -JL
+      end;
+    End;
+    sl.Free;
+    tblPayComHistory.close;
 
 end;  {PaycomImportMain }
 
@@ -1250,75 +1252,65 @@ end;  { WriteTailLeadPilotToFile }
 
 procedure TufrmCertifyExpDataLoader.LoadTripsIntoStartBucket(Const BatchTimeIn : TDateTime);
 var
-  strDaysBack: String;
   strInClause: String;
+  strGetTripsSQL, strNewSQL : String;
 
 begin
-(*  1. Empty Start Bucket & Load trips into Start Bucket from Trip tables
+(*  1. Empty Start Bucket &
+    2. Insert trips into Start Bucket from Trip tables
     3. Add Vendor number for air crew
 *)
-
   StatusBar1.Panels[1].Text := 'Current Task:  Loading Trips into StartBucket ' ;
   Application.ProcessMessages;
 
-  qryLoadTripData.SQL.Clear;
-  strDaysBack := edDaysBack.Text;
-
   PurgeTable('CertifyExp_Trips_StartBucket');
+  qryLoadTripData.SQL.Clear;
+
+  // Changes to implement TID:1152 - Adding days in the future to the selection criteria (used to be only trips that had already flown)  -JL
+  strGetTripsSQL :=                // Retrieving trips flown by PIC, SIC, TIC, FA
+  ' insert into CertifyExp_Trips_StartBucket ' +
+  ' select distinct L.LOGSHEET, L.{PilotNoField}, T.BOOKINGIDENTIFIER AS QUOTENO, L.ACREGNO, FARPART, L.{PilotNoField}, L.DEPARTURE, L.ARRIVEID, L.LEGNO ' +
+  ' from {TripLegTbl} L left outer join {TripTbl} T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET) ' +
+  ' where L.DEPARTURE BETWEEN (CURRENT_TIMESTAMP - {DaysBack}) and (CURRENT_TIMESTAMP + {DaysForward}) ' +
+  ' and L.{PilotNoField} > 0 ' +
+  ' and L.LEGNO = 1 ' ;
 
   // Load PIC data into StartBucket
-  qryLoadTripData.SQL.Clear;
-  qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');                                //  v
-  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.PICPILOTNO, T.BOOKINGIDENTIFIER AS QUOTENO, L.ACREGNO, FARPART, L.PICPILOTNO, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
-//  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.PICPILOTNO, T.QUOTENO, L.ACREGNO, FARPART, L.PICPILOTNO, L.DEPARTURE, L.ARRIVEID, L.LEGNO');  qryLoadTripData.SQL.Append('from vQuoteSys_TripLeg L left outer join vQuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
-  qryLoadTripData.SQL.Append('from vQuoteSys_TripLeg L left outer join vQuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
-  qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
-  qryLoadTripData.SQL.Append('  and L.PICPILOTNO > 0');
-  qryLoadTripData.SQL.Append('  and L.LEGNO = 1 ');
+  strNewSQL := SubstituteParams1(strGetTripsSQL, 'PICPILOTNO');
+  qryLoadTripData.SQL.Text := strNewSQL;
   if cbShowSQL.checked then ShowMessage('LoadTripsIntoStartBucket: ' + #13#13 + qryLoadTripData.SQL.Text);
   qryLoadTripData.Execute;
   qryLoadTripData.SQL.Clear;
 
   // Load SIC data into StartBucket
-  qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
-  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.SICPILOTNO, T.BOOKINGIDENTIFIER AS QUOTENO, L.ACREGNO, FARPART, L.SICPILOTNO, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
-  qryLoadTripData.SQL.Append('from vQuoteSys_TripLeg L left outer join vQuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
-  qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
-  qryLoadTripData.SQL.Append('  and L.SICPILOTNO > 0');
-  qryLoadTripData.SQL.Append('  and L.LEGNO = 1 ');
+  strNewSQL := SubstituteParams1(strGetTripsSQL, 'SICPILOTNO');
+  qryLoadTripData.SQL.Text := strNewSQL;
+  if cbShowSQL.checked then ShowMessage('LoadTripsIntoStartBucket: ' + #13#13 + qryLoadTripData.SQL.Text);
   qryLoadTripData.Execute;
   qryLoadTripData.SQL.Clear;
 
   // Load TIC data into StartBucket
-  qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
-  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.TICPILOTNO, T.BOOKINGIDENTIFIER AS QUOTENO, L.ACREGNO, FARPART, L.TICPILOTNO, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
-  qryLoadTripData.SQL.Append('from vQuoteSys_TripLeg L left outer join vQuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
-  qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
-  qryLoadTripData.SQL.Append('  and L.TICPILOTNO > 0');
-  qryLoadTripData.SQL.Append('  and L.LEGNO = 1 ');
+  strNewSQL := SubstituteParams1(strGetTripsSQL, 'TICPILOTNO');
+  qryLoadTripData.SQL.Text := strNewSQL;
+  if cbShowSQL.checked then ShowMessage('LoadTripsIntoStartBucket: ' + #13#13 + qryLoadTripData.SQL.Text);
   qryLoadTripData.Execute;
   qryLoadTripData.SQL.Clear;
 
   // Load FA data into StartBucket
-  qryLoadTripData.SQL.Append('insert into CertifyExp_Trips_StartBucket');
-  qryLoadTripData.SQL.Append('select distinct L.LOGSHEET, L.FANO, T.BOOKINGIDENTIFIER AS QUOTENO, L.ACREGNO, FARPART, L.FANO, L.DEPARTURE, L.ARRIVEID, L.LEGNO');
-  qryLoadTripData.SQL.Append('from vQuoteSys_TripLeg L left outer join vQuoteSys_Trip T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET)');
-  qryLoadTripData.SQL.Append('where L.DEPARTURE > (CURRENT_TIMESTAMP - ' + strDaysBack + ')');
-  qryLoadTripData.SQL.Append('  and L.FANO > 0');
-  qryLoadTripData.SQL.Append('  and L.LEGNO = 1 ');
+  strNewSQL := SubstituteParams1(strGetTripsSQL, 'FANO');
+  qryLoadTripData.SQL.Text := strNewSQL;
+  if cbShowSQL.checked then ShowMessage('LoadTripsIntoStartBucket: ' + #13#13 + qryLoadTripData.SQL.Text);
   qryLoadTripData.Execute;
   qryLoadTripData.SQL.Clear;
+
 
   LoadCrewChangeRecsIntoStartBucket();
 
 (* T&E-25  Adding default crew_tail recs for employees & T&E:25b
    D 1. import new field from paycom_employees.csv
-     2. run WriteToStartBucket twice w/ field name as param
-   D 3. add paycom_assigned_ac_2 field to PaycomHistory table
+   D 2. add paycom_assigned_ac_2 field to PaycomHistory table
 *)
-
   strInClause :=  CalcInClause(GetGroupsByLogicGroup('lg_FlightCrew'));
-//  qryGetAirCrewVendorNum.Execute;     // assigns VendorNum to StartBucket recs
 
   //  T&E-25:  Adding default crew_tail recs (into StartBucket) for employees & T&E:25b
   qryLoadTripData.SQL.Clear;
@@ -1334,9 +1326,24 @@ begin
 
   WriteToStartBucket(qryLoadTripData, 'paycom_assigned_ac');
   WriteToStartBucket(qryLoadTripData, 'paycom_assigned_ac_2');
+
   qryLoadTripData.Close;
 
 end;  { LoadTripsIntoStartBucket }
+
+
+function TufrmCertifyExpDataLoader.SubstituteParams1(const SQLIn, PilotFieldIn: String): String;
+begin
+  Result := StringReplace(SQLIn,  '{PilotNoField}', PilotFieldIn,        [rfIgnoreCase, rfReplaceAll]);
+
+  // making the source Trip tables controlled by the .ini file to allow switching of tables for testing  -JL
+  Result := StringReplace(Result, '{TripLegTbl}' ,  edTripLegTable.Text, [rfIgnoreCase, rfReplaceAll]);
+  Result := StringReplace(Result, '{TripTbl}',      edTripTable.Text,    [rfIgnoreCase, rfReplaceAll]);
+
+  Result := StringReplace(Result, '{DaysBack}',     edDaysBack.Text,     [rfIgnoreCase, rfReplaceAll]);
+  Result := StringReplace(Result, '{DaysForward}',  edDaysForward.Text,  [rfIgnoreCase, rfReplaceAll]);
+
+end;  {SubstituteParams1}
 
 
 
@@ -1632,9 +1639,6 @@ begin
 end;  { BuildCrewDepartDateAirportFile }
 
 
-
-
-
 procedure TufrmCertifyExpDataLoader.Load_CrewTail_HistoryTable(Const BatchTimeIn: TDateTime);
 begin
   StatusBar1.Panels[1].Text := 'Current Task:  Loading data into CrewTail_History table'  ;
@@ -1884,7 +1888,7 @@ begin
 
   qryGetMissingFlightCrew.Close;
   qryGetMissingFlightCrew.ParamByName('parmImportDateIn').AsDateTime := BatchTimeIn ;
-  qryGetMissingFlightCrew.ParamByName('parmDaysBack').AsInteger       := StrToInt(edContractorDaysBack.text);
+  qryGetMissingFlightCrew.ParamByName('parmDaysBack').AsInteger      := StrToInt(edDaysBack.text);
   qryGetMissingFlightCrew.Open;
 
   gloMissingFlightCrewFile := 'C:\CertifyExpense\OutputFiles\MissingFlightCrew.csv';
@@ -2090,7 +2094,7 @@ begin
   // Prep Output File
   AssignFile(PaycomErrorFile, CalcPaycomErrorFileName(BatchTimeIn));
 
-//  ShowMessage( edOutputDirectory.Text + CalcPaycomErrorFileName(BatchTimeIn) );
+  //  ShowMessage( edOutputDirectory.Text + CalcPaycomErrorFileName(BatchTimeIn) );
 
   Rewrite(PaycomErrorFile);
 
@@ -2137,6 +2141,8 @@ var
   i : Integer;
 
 begin
+  StatusBar1.Panels[1].Text := 'Current Task: Loading Crew Change Recs into StartBucket ...' ;
+
   stlCrewIDFieldNames := TStringList.Create;
   stlCrewIDFieldNames.CommaText := 'PICPilotNo, SICPilotNo, TICPilotNo, FANo' ;
 
@@ -2172,21 +2178,23 @@ end;  { LoadCrewChangeRecs }
 
 
 procedure TufrmCertifyExpDataLoader.CrewChange_InsertStartBucket(const qryDataToInsert: TUniQuery; strCrewID: String);
+var
+  quotenumdebug : String;
 begin
+  quotenumdebug := qryDataToInsert.FieldByName('QUOTENO').AsString;
 
   try
-  tblStartBucket.Insert;
-  tblStartBucket.FieldByName('LogSheet').AsString         := qryDataToInsert.FieldByName('LOGSHEET').AsString;
-  tblStartBucket.FieldByName('CrewMemberID').AsString     := strCrewID ;
-  tblStartBucket.FieldByName('CrewMemberVendorNum').AsString := strCrewID ;
-  tblStartBucket.FieldByName('QuoteNum').AsString         := qryDataToInsert.FieldByName('QUOTENO').AsString;
-  tblStartBucket.FieldByName('TailNum').AsString          := qryDataToInsert.FieldByName('ACREGNO').AsString;
-  tblStartBucket.FieldByName('FARPart').AsString          := qryDataToInsert.FieldByName('FARPART').AsString;
-  tblStartBucket.FieldByName('TripDepartDate').AsDatetime := qryDataToInsert.FieldByName('DEPARTURE').AsDateTime;
-  tblStartBucket.FieldByName('FirstDestination').AsString := qryDataToInsert.FieldByName('ARRIVEID').AsString;
-  tblStartBucket.FieldByName('LegNum').AsInteger          := 999;      //  Conspicuous value indicating rec is from the Crew Change process
-  tblStartBucket.Post;
-
+    tblStartBucket.Insert;
+    tblStartBucket.FieldByName('LogSheet').AsString         := qryDataToInsert.FieldByName('LOGSHEET').AsString;
+    tblStartBucket.FieldByName('CrewMemberID').AsString     := strCrewID ;
+    tblStartBucket.FieldByName('CrewMemberVendorNum').AsString := strCrewID ;
+    tblStartBucket.FieldByName('QuoteNum').AsString         := qryDataToInsert.FieldByName('QUOTENO').AsString;
+    tblStartBucket.FieldByName('TailNum').AsString          := qryDataToInsert.FieldByName('ACREGNO').AsString;
+    tblStartBucket.FieldByName('FARPart').AsString          := qryDataToInsert.FieldByName('FARPART').AsString;
+    tblStartBucket.FieldByName('TripDepartDate').AsDatetime := qryDataToInsert.FieldByName('DEPARTURE').AsDateTime;
+    tblStartBucket.FieldByName('FirstDestination').AsString := qryDataToInsert.FieldByName('ARRIVEID').AsString;
+    tblStartBucket.FieldByName('LegNum').AsInteger          := 999;      //  Conspicuous value indicating rec is from the Crew Change process
+    tblStartBucket.Post;
 
   except on E1: Exception do begin
     LogIt('Error in CrewChange_InsertStartBucket: ' + E1.Message + ' --  QuoteNo: ' + qryDataToInsert.FieldByName('QUOTENO').AsString );
@@ -2559,27 +2567,7 @@ begin
   SendToCertify(qryGetCrewTailRecs, BatchTimeIn, 'crew_tail');
   qryGetCrewTailRecs.Close;
 
-  //  Get Deleted recs from this new batch
-
-(*  Depricating this process. Not necessary to deal with Deleted recs on an hourly basis.
-    The nightly full-file-refresh handles records that would be Deleted by this process -  28 oct 2019  JL
-
-  StatusBar1.Panels[1].Text := 'Current Task:  Retrieving deleted CrewTail_History recs'  ;
-  Application.ProcessMessages;
-  UpdateRecordStatus_CrewTail('deleted', NewBatchDateIn, PreviousBatchDateIn);
-  qryGetCrewTailRecs.ParamByName('parmCreatedOnIn').AsDateTime := PreviousBatchDateIn;
-  qryGetCrewTailRecs.ParamByName('parmRecStatusIn').AsString   := 'deleted';
-  qryGetCrewTailRecs.Open;
-
-  DataSource1.DataSet := qryGetCrewTailRecs;
-  Application.ProcessMessages;
-  Sleep(5000);
-
-  SendToCertify(qryGetCrewTailRecs, BatchTimeIn, 'crew_tail');
-  qryGetCrewTailRecs.Close;
-*)
-
-end;  { DoCrewTailAPI }
+ end;  { DoCrewTailAPI }
 
 
 procedure TufrmCertifyExpDataLoader.Do_CrewTrip_API(const BatchTimeIn, PreviousBatchDateIn, NewBatchDateIn: TDateTime);
@@ -2600,28 +2588,6 @@ begin
 
   SendToCertify(qryGetCrewTripRecs, BatchTimeIn, 'crew_trip');
   qryGetCrewTripRecs.Close;
-
-  //  Get Deleted recs from this new batch
-
-  (*  Depricating this process. Not necessary to deal with Deleted recs on an hourly basis.
-    The nightly full-file-refresh handles records that would be Deleted by this process -  28 oct 2019  JL
-
-  StatusBar1.Panels[1].Text := 'Current Task:  Retrieving deleted CrewTrip_History recs'  ;
-  Application.ProcessMessages;
-
-  UpdateRecordStatus_CrewTrip('deleted', NewBatchDateIn, PreviousBatchDateIn);
-  qryGetCrewTripRecs.Close;
-  qryGetCrewTripRecs.ParamByName('parmCreatedOnIn').AsDateTime := PreviousBatchDateIn;
-  qryGetCrewTripRecs.ParamByName('parmRecStatusIn').AsString   := 'deleted';
-  qryGetCrewTripRecs.Open;
-
-  DataSource1.DataSet := qryGetCrewTripRecs;
-  Application.ProcessMessages;
-  Sleep(5000);
-
-  SendToCertify(qryGetCrewTripRecs, BatchTimeIn, 'crew_trip');
-  qryGetCrewTripRecs.Close;
-*)
 
 end;  { Do_CrewTrip_API }
 
@@ -2647,32 +2613,7 @@ begin
   SendToCertify(qryGetCrewLogRecs, BatchTimeIn, 'crew_log');
   qryGetCrewLogRecs.Close;
 
-
-  //  Get Deleted recs from this new batch
-
- (*  Depricating this process. Not necessary to deal with Deleted recs on an hourly basis.
-    The nightly full-file-refresh handles records that would be Deleted by this process -  28 oct 2019  JL
-
-  StatusBar1.Panels[1].Text := 'Current Task:  Retrieving deleted CrewLog_History recs'  ;
-  Application.ProcessMessages;
-
-  UpdateRecordStatus_CrewLog('deleted', NewBatchDateIn, PreviousBatchDateIn);
-  qryGetCrewLogRecs.Close;
-  qryGetCrewLogRecs.ParamByName('parmCreatedOnIn').AsDateTime := PreviousBatchDateIn;
-  qryGetCrewLogRecs.ParamByName('parmRecStatusIn').AsString   := 'deleted';
-  qryGetCrewLogRecs.Open;
-
-  // Update data grid in UI for test/dev purposes
-  DataSource1.DataSet := qryGetCrewLogRecs;
-  Application.ProcessMessages;
-  Sleep(5000);
-
-  SendToCertify(qryGetCrewLogRecs, BatchTimeIn, 'crew_log');
-  qryGetCrewLogRecs.Close;
- *)
-
 end;  {Do_CrewLog_API}
-
 
 
 procedure TufrmCertifyExpDataLoader.SendToCertify(Const WorkingQueryIn: TUniQuery; Const BatchTimeIn : TDateTime; DataSetNameIn: String);
@@ -2872,13 +2813,6 @@ begin
   qryLoadCertifyEmployeesTable.Execute;
 
 end;
-
-
-
-
-
-
-
 
 
 procedure TufrmCertifyExpDataLoader.LogIt(ErrorMsgIn: String);
