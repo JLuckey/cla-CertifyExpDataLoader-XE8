@@ -304,7 +304,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Width = 75
     Height = 25
     Caption = 'Fixer'
-    Enabled = False
     TabOrder = 14
     OnClick = btnFixerClick
   end
@@ -329,7 +328,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object edTripTable: TEdit
     Left = 257
     Top = 160
-    Width = 172
+    Width = 200
     Height = 21
     TabOrder = 17
     Text = 'vQuoteSys_Trip'
@@ -337,7 +336,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object edTripLegTable: TEdit
     Left = 469
     Top = 160
-    Width = 172
+    Width = 194
     Height = 21
     TabOrder = 18
   end
@@ -1532,8 +1531,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '       L.TICPILOTNO, L.FANO, FORMAT(L.DEPARTURE, '#39'MM/dd/yyyy HH:' +
         'mm:ss'#39' ) AS DEPARTURE, T.FARPART'
       
-        'from vQuoteSys_TripLeg_TID_1152_JL_1 L left outer join vQuoteSys' +
-        '_Trip T on L.ACREGNO = T.ACREGNO and L.LogSheet = T.Logsheet'
+        'from {TripLegTbl} L left outer join {TripTbl} T on L.ACREGNO = T' +
+        '.ACREGNO and L.LogSheet = T.Logsheet'
       'where T.QuoteNo = :parmQuoteNumIn'
       '  and L.LEGNO = 1'
       'order by T.QuoteNo')
