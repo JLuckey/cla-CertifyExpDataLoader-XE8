@@ -540,11 +540,11 @@ var
 //  retValq : String;
 begin
 
-  LoadCrewChangeRecsIntoStartBucket;
+ // LoadCrewChangeRecsIntoStartBucket;
 
   //BatchTime := StrToDateTime('09/10/2020 10:16:39.767');
 
- // LoadTripsIntoStartBucket(BatchTime)
+  LoadTripsIntoStartBucket(BatchTime)
 
  // FormatTesterJL;
 
@@ -1554,7 +1554,7 @@ begin
   qryFlagMissingFlightCrews.SQL.Clear;
   qryFlagMissingFlightCrews.SQL.Append('update CertifyExp_PayComHistory ');
   qryFlagMissingFlightCrews.SQL.Append(' set record_status = ' + QuotedStr('error') + ', ');
-  qryFlagMissingFlightCrews.SQL.Append('     error_text    = ' + QuotedStr(' Foo!! - flight crew missing Certify fields: gp_vendornum, department, role;') );
+  qryFlagMissingFlightCrews.SQL.Append('     error_text    = ' + QuotedStr(' Error!! - flight crew missing Certify fields: gp_vendornum, department, role;') );
   qryFlagMissingFlightCrews.SQL.Append(' where imported_on = ' + QuotedStr(FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz',BatchTimeIn)) );
   qryFlagMissingFlightCrews.SQL.Append('   and job_code_descrip in ( ' + strJobCodes + ' )' );
   qryFlagMissingFlightCrews.SQL.Append('   and record_status = ' + QuotedStr('non-certify')  );
@@ -1629,7 +1629,8 @@ begin
   WriteLn(WorkFile, RowOut) ;
   while ( not qryBuildValFile.eof ) do begin
     // ShowMessage('here I am');
-    strDateDest := Trim(FormatDateTime('mm/dd/yy', qryBuildValFile.FieldByName('TripDepartDate').AsDateTime)) + ' ' + qryBuildValFile.FieldByName('FirstDestination').AsString;
+    strDateDest := Trim(FormatDateTime('mm/dd/yy', qryBuildValFile.FieldByName('TripDepartDate').AsDateTime)) ;
+//    strDateDest := Trim(FormatDateTime('mm/dd/yy', qryBuildValFile.FieldByName('TripDepartDate').AsDateTime)) + ' ' + qryBuildValFile.FieldByName('FirstDestination').AsString;
     RowOut := strDateDest + ',' +
               qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + strDateDest;
 
@@ -1763,8 +1764,8 @@ begin
   while Not qryGetTailTripDepartdate.eof do Begin
     RowOut := Trim(qryGetTailTripDepartdate.FieldByName('TailNum').AsString) + ',' +
                    qryGetTailTripDepartdate.FieldByName('QuoteNum').AsString + ',' +
-                   FormatDateTime('mm/dd/yy', qryGetTailTripDepartdate.FieldByName('TripDepartDate').AsDateTime) + ' ' + qryGetTailTripDepartdate.FieldByName('FirstDestination').AsString;
-//                   qryGetTailTripDepartdate.FieldByName('TripDepartDate').AsString + '_' +qryGetTailTripDepartdate.FieldByName('FirstDestination').AsString;
+                   FormatDateTime('mm/dd/yy', qryGetTailTripDepartdate.FieldByName('TripDepartDate').AsDateTime);
+//                   FormatDateTime('mm/dd/yy', qryGetTailTripDepartdate.FieldByName('TripDepartDate').AsDateTime) + ' ' + qryGetTailTripDepartdate.FieldByName('FirstDestination').AsString;
 
     WriteLn(WorkFile, RowOut) ;
     qryGetTailTripDepartdate.Next;
@@ -2236,7 +2237,9 @@ begin
   qryCrewChange.SQL.Append('select T.QuoteNo, L.' + CrewIDFieldName + ' as PilotID, L.LegNo ');
 //  qryCrewChange.SQL.Append('from vQuoteSys_TripLeg L left join vQuoteSys_Trip T on L.ACREGNO = T.ACREGNO and L.LogSheet = T.Logsheet');
   qryCrewChange.SQL.Append('from ' + edTripLegTable.Text + ' L left join ' + edTripTable.Text + ' T on L.ACREGNO = T.ACREGNO and L.LogSheet = T.Logsheet');
-  qryCrewChange.SQL.Append('where T.TR_Depart > CURRENT_TIMESTAMP - ' + IntToStr(DaysBack) );
+//  qryCrewChange.SQL.Append('where T.TR_Depart > CURRENT_TIMESTAMP - ' + IntToStr(DaysBack) );
+  qryCrewChange.SQL.Append('where T.TR_Depart BETWEEN (CURRENT_TIMESTAMP - ' + edDaysBack.Text + ') and (CURRENT_TIMESTAMP  + ' + edDaysForward.Text + ')' );
+
   qryCrewChange.SQL.Append('  and quoteno is not null ');
   qryCrewChange.SQL.Append('  and LegNo = 1 ');
   qryCrewChange.SQL.Append('  and L.' + CrewIDFieldName + ' > 0 ');
@@ -2255,7 +2258,8 @@ begin
   qryCrewChange.SQL.Append('insert into CertifyExp_OtherLegs');
   qryCrewChange.SQL.Append('select T.QuoteNo, L.' + CrewIDFieldName + ' as PilotID, L.LegNo ');
   qryCrewChange.SQL.Append('from ' + edTripLegTable.Text + ' L left join ' + edTripTable.Text + ' T on L.ACREGNO = T.ACREGNO and L.LogSheet = T.Logsheet');
-  qryCrewChange.SQL.Append('where T.TR_Depart > CURRENT_TIMESTAMP - ' + IntToStr(DaysBack) );
+//  qryCrewChange.SQL.Append('where T.TR_Depart > CURRENT_TIMESTAMP - ' + IntToStr(DaysBack) );
+  qryCrewChange.SQL.Append('where T.TR_Depart BETWEEN (CURRENT_TIMESTAMP - ' + edDaysBack.Text + ') and (CURRENT_TIMESTAMP  + ' + edDaysForward.Text + ')' );
   qryCrewChange.SQL.Append('  and quoteno is not null ');
   qryCrewChange.SQL.Append('  and LegNo > 1 ');
   qryCrewChange.SQL.Append('  and L.' + CrewIDFieldName + ' > 0 ');
