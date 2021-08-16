@@ -1,5 +1,6 @@
 (*
 
+
 DevNotes:
 
 Lifecycle for recs in CertifyExp_PayComHistory recorded by the record_status & error_text fields:
@@ -1265,6 +1266,7 @@ begin
   strDaysBack := edDaysBack.Text;
 
   PurgeTable('CertifyExp_Trips_StartBucket');
+  //  start here for IID:1248   ???JL
 
   // Load PIC data into StartBucket
   qryLoadTripData.SQL.Clear;
