@@ -1,11 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-<<<<<<< HEAD
   Caption = 'Certify Data Loader - ver 4.20 - FX'
-=======
-  Caption = 'Certify Data Loader - ver 4.12 - FX'
->>>>>>> branch_dev_IID-1248
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -159,7 +155,7 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Caption = 'Source Trip Table:'
   end
   object Label8: TLabel
-    Left = 469
+    Left = 490
     Top = 144
     Width = 104
     Height = 13
@@ -332,15 +328,15 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object edTripTable: TEdit
     Left = 257
     Top = 160
-    Width = 200
+    Width = 214
     Height = 21
     TabOrder = 17
     Text = 'vQuoteSys_Trip'
   end
   object edTripLegTable: TEdit
-    Left = 469
+    Left = 490
     Top = 160
-    Width = 194
+    Width = 218
     Height = 21
     TabOrder = 18
   end
@@ -1535,7 +1531,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         '       L.TICPILOTNO, L.FANO, FORMAT(L.DEPARTURE, '#39'MM/dd/yyyy HH:' +
         'mm:ss'#39' ) AS DEPARTURE, T.FARPART'
       
-<<<<<<< HEAD
         'from {TripLegTbl} L left outer join {TripTbl} T on L.ACREGNO = T' +
         '.ACREGNO and L.LogSheet = T.Logsheet'
       'where T.QuoteNo = :parmQuoteNumIn'
@@ -1543,15 +1538,6 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'order by T.QuoteNo')
     Left = 221
     Top = 56
-=======
-        'from vQuoteSys_TripLeg L left outer join vQuoteSys_Trip T on L.A' +
-        'CREGNO = T.ACREGNO and L.LogSheet = T.Logsheet'
-      'where T.BookingIdentifier = :parmQuoteNumIn'
-      '  and L.LEGNO = 1'
-      'order by T.QuoteNo')
-    Left = 218
-    Top = 65
->>>>>>> branch_dev_IID-1248
     ParamData = <
       item
         DataType = ftUnknown

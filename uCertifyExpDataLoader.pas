@@ -395,10 +395,6 @@ begin
   edIFSPseudoUsers.Text   := myIni.ReadString('Startup', 'IFSPseudoUsers', '') ;
 
   edDaysBack.Text           := myIni.ReadString('Startup', 'EmployeeFlightCrewDaysBack', '') ;
-<<<<<<< HEAD
-=======
-  edContractorDaysBack.Text := myIni.ReadString('Startup', 'ContractFlightCrewDaysBack', '45') ;
->>>>>>> branch_dev_IID-1248
   edLastNTrips.Text         := myIni.ReadString('Startup', 'MostRecentTripCount', '') ;
   edTerminatedDaysBack.Text := myIni.ReadString('Startup', 'TerminatedEmployeeGracePeriodDays', '') ;
 
@@ -544,19 +540,7 @@ var
 //  strTest : String;
 //  retValq : String;
 begin
-<<<<<<< HEAD
-
  // LoadCrewChangeRecsIntoStartBucket;
-=======
-  BatchTime := StrToDateTime('08/19/2021 10:17:17.780');
-
-  LoadCrewChangeRecsIntoStartBucket;
-
-//  BuildValidationFiles( BatchTime) ;
-
-
-//  BuildCrewTailFile();
->>>>>>> branch_dev_IID-1248
 
   //BatchTime := StrToDateTime('09/10/2020 10:16:39.767');
 
@@ -624,31 +608,6 @@ begin
     end;
   end;
 
-<<<<<<< HEAD
-=======
-(*    This DB is no longer needed - 18 Aug 2021  -JL
-  // Connect to the OnBase (SQL Server) database
-  try
-    connOnBase.Connected := false;
-    connOnBase.Server    := myIni.ReadString('DBConfig_OnBase', 'Server', '') ;
-    connOnBase.Database  := myIni.ReadString('DBConfig_OnBase', 'DatabaseName', '') ;
-    dbName := connOnBase.Database;
-    connOnBase.Username  := myIni.ReadString('DBConfig_OnBase', 'UserName', '') ;
-    connOnBase.Password  := myIni.ReadString('DBConfig_OnBase', 'Password', '') ;
-    connOnBase.Connected := true;
-  except on E: Exception do begin
-    errorMsg := 'Error! from ConnectToDBs();  ' +
-                'Problem connecting to database: ' + dbName + '; ' +
-                E.ClassName + '; ' +
-                E.Message ;
-
-    LogIt(errorMsg);
-    StatusBar1.Panels[0].Text :=  'DB: Error! - ' + dbName ;
-    end;
-  end;
-*)
-
->>>>>>> branch_dev_IID-1248
   StatusBar1.Panels[0].Text :=  'Main DB: ' + UniConnection1.Database;
 
 end;
@@ -1311,7 +1270,6 @@ begin
   PurgeTable('CertifyExp_Trips_StartBucket');
   qryLoadTripData.SQL.Clear;
 
-<<<<<<< HEAD
   // Changes to implement TID:1152 - Adding days in the future to the selection criteria (used to be only trips that had already flown)  -JL
   strGetTripsSQL :=                // Retrieving trips flown by PIC, SIC, TIC, FA
   ' insert into CertifyExp_Trips_StartBucket ' +
@@ -1320,10 +1278,6 @@ begin
   ' where L.DEPARTURE BETWEEN (CURRENT_TIMESTAMP - {DaysBack}) and (CURRENT_TIMESTAMP + {DaysForward}) ' +
   ' and L.{PilotNoField} > 0 ' +
   ' and L.LEGNO = 1 ' ;
-=======
-  PurgeTable('CertifyExp_Trips_StartBucket');
-  //  start here for IID:1248   ???JL
->>>>>>> branch_dev_IID-1248
 
   // Load PIC data into StartBucket
   strNewSQL := SubstituteParams1(strGetTripsSQL, 'PICPILOTNO');
@@ -1939,11 +1893,7 @@ begin
 
   qryGetMissingFlightCrew.Close;
   qryGetMissingFlightCrew.ParamByName('parmImportDateIn').AsDateTime := BatchTimeIn ;
-<<<<<<< HEAD
   qryGetMissingFlightCrew.ParamByName('parmDaysBack').AsInteger      := StrToInt(edDaysBack.text);
-=======
-  qryGetMissingFlightCrew.ParamByName('parmDaysBack').AsInteger      := StrToInt(edContractorDaysBack.text);
->>>>>>> branch_dev_IID-1248
   qryGetMissingFlightCrew.Open;
 
   gloMissingFlightCrewFile := 'C:\CertifyExpense\OutputFiles\MissingFlightCrew.csv';
@@ -2261,7 +2211,6 @@ begin
   quotenumdebug := qryDataToInsert.FieldByName('QUOTENO').AsString;
 
   try
-<<<<<<< HEAD
     tblStartBucket.Insert;
     tblStartBucket.FieldByName('LogSheet').AsString         := qryDataToInsert.FieldByName('LOGSHEET').AsString;
     tblStartBucket.FieldByName('CrewMemberID').AsString     := strCrewID ;
@@ -2269,29 +2218,16 @@ begin
     tblStartBucket.FieldByName('QuoteNum').AsString         := qryDataToInsert.FieldByName('QUOTENO').AsString;
     tblStartBucket.FieldByName('TailNum').AsString          := qryDataToInsert.FieldByName('ACREGNO').AsString;
     tblStartBucket.FieldByName('FARPart').AsString          := qryDataToInsert.FieldByName('FARPART').AsString;
-    tblStartBucket.FieldByName('TripDepartDate').AsDatetime := qryDataToInsert.FieldByName('DEPARTURE').AsDateTime;
+
+    // added for IID:1248 - using conspicuous dummy date when incoming record is missing DEPARTURE date - should not happen very often  -JL
+    if qryDataToInsert.FieldByName('DEPARTURE').AsString = '' Then
+      tblStartBucket.FieldByName('TripDepartDate').AsDatetime := StrToDate('1/1/2200')
+    Else
+      tblStartBucket.FieldByName('TripDepartDate').AsDatetime := qryDataToInsert.FieldByName('DEPARTURE').AsDateTime;
+
     tblStartBucket.FieldByName('FirstDestination').AsString := qryDataToInsert.FieldByName('ARRIVEID').AsString;
     tblStartBucket.FieldByName('LegNum').AsInteger          := 999;      //  Conspicuous value indicating rec is from the Crew Change process
     tblStartBucket.Post;
-=======
-  tblStartBucket.Insert;
-  tblStartBucket.FieldByName('LogSheet').AsString         := qryDataToInsert.FieldByName('LOGSHEET').AsString;
-  tblStartBucket.FieldByName('CrewMemberID').AsString     := strCrewID ;
-  tblStartBucket.FieldByName('CrewMemberVendorNum').AsString := strCrewID ;
-  tblStartBucket.FieldByName('QuoteNum').AsString         := qryDataToInsert.FieldByName('QUOTENO').AsString;
-  tblStartBucket.FieldByName('TailNum').AsString          := qryDataToInsert.FieldByName('ACREGNO').AsString;
-  tblStartBucket.FieldByName('FARPart').AsString          := qryDataToInsert.FieldByName('FARPART').AsString;
-
-  // added for IID:1248
-  if qryDataToInsert.FieldByName('DEPARTURE').AsString = '' Then
-    tblStartBucket.FieldByName('TripDepartDate').AsDatetime := StrToDate('1/1/2200')
-  Else
-    tblStartBucket.FieldByName('TripDepartDate').AsDatetime := qryDataToInsert.FieldByName('DEPARTURE').AsDateTime;
-
-  tblStartBucket.FieldByName('FirstDestination').AsString := qryDataToInsert.FieldByName('ARRIVEID').AsString;
-  tblStartBucket.FieldByName('LegNum').AsInteger          := 999;      //  Conspicuous value indicating rec is from the Crew Change process
-  tblStartBucket.Post;
->>>>>>> branch_dev_IID-1248
 
   except on E1: Exception do begin
     LogIt('Error in CrewChange_InsertStartBucket: ' + E1.Message + ' --  QuoteNo: ' + qryDataToInsert.FieldByName('QUOTENO').AsString );
@@ -2351,16 +2287,10 @@ begin
   PurgeTable('CertifyExp_OtherLegs');
   qryCrewChange.SQL.Clear;
   qryCrewChange.SQL.Append('insert into CertifyExp_OtherLegs');
-<<<<<<< HEAD
   qryCrewChange.SQL.Append('select T.QuoteNo, L.' + CrewIDFieldName + ' as PilotID, L.LegNo ');
   qryCrewChange.SQL.Append('from ' + edTripLegTable.Text + ' L left join ' + edTripTable.Text + ' T on L.ACREGNO = T.ACREGNO and L.LogSheet = T.Logsheet');
 //  qryCrewChange.SQL.Append('where T.TR_Depart > CURRENT_TIMESTAMP - ' + IntToStr(DaysBack) );
   qryCrewChange.SQL.Append('where T.TR_Depart BETWEEN (CURRENT_TIMESTAMP - ' + edDaysBack.Text + ') and (CURRENT_TIMESTAMP  + ' + edDaysForward.Text + ')' );
-=======
-  qryCrewChange.SQL.Append('select T.BookingIdentifier as QuoteNo, L.' + CrewIDFieldName + ' as PilotID, L.LegNo ');
-  qryCrewChange.SQL.Append('from vQuoteSys_TripLeg L left join vQuoteSys_Trip T on L.ACREGNO = T.ACREGNO and L.LogSheet = T.Logsheet');  //???JL
-  qryCrewChange.SQL.Append('where T.TR_Depart > CURRENT_TIMESTAMP - ' + IntToStr(DaysBack) );
->>>>>>> branch_dev_IID-1248
   qryCrewChange.SQL.Append('  and quoteno is not null ');
   qryCrewChange.SQL.Append('  and LegNo > 1 ');
   qryCrewChange.SQL.Append('  and L.' + CrewIDFieldName + ' > 0 ');
