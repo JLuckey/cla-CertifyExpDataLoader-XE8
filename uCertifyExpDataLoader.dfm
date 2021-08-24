@@ -1,7 +1,11 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
+<<<<<<< HEAD
   Caption = 'Certify Data Loader - ver 4.20 - FX'
+=======
+  Caption = 'Certify Data Loader - ver 4.12 - FX'
+>>>>>>> branch_dev_IID-1248
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -1525,12 +1529,13 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     Connection = UniConnection1
     SQL.Strings = (
       
-        'select T.QuoteNo, L.ACREGNO, L.LOGSHEET, L.LEGNO, L.DEPTID, L.AR' +
-        'RIVEID, L.PICPILOTNO, L.SICPILOTNO, '
+        'select T.BookingIdentifier as QuoteNo, L.ACREGNO, L.LOGSHEET, L.' +
+        'LEGNO, L.DEPTID, L.ARRIVEID, L.PICPILOTNO, L.SICPILOTNO, '
       
         '       L.TICPILOTNO, L.FANO, FORMAT(L.DEPARTURE, '#39'MM/dd/yyyy HH:' +
         'mm:ss'#39' ) AS DEPARTURE, T.FARPART'
       
+<<<<<<< HEAD
         'from {TripLegTbl} L left outer join {TripTbl} T on L.ACREGNO = T' +
         '.ACREGNO and L.LogSheet = T.Logsheet'
       'where T.QuoteNo = :parmQuoteNumIn'
@@ -1538,6 +1543,15 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
       'order by T.QuoteNo')
     Left = 221
     Top = 56
+=======
+        'from vQuoteSys_TripLeg L left outer join vQuoteSys_Trip T on L.A' +
+        'CREGNO = T.ACREGNO and L.LogSheet = T.Logsheet'
+      'where T.BookingIdentifier = :parmQuoteNumIn'
+      '  and L.LEGNO = 1'
+      'order by T.QuoteNo')
+    Left = 218
+    Top = 65
+>>>>>>> branch_dev_IID-1248
     ParamData = <
       item
         DataType = ftUnknown
