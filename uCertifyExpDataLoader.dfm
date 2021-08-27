@@ -622,6 +622,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   end
   object scrLoadTripStopData: TUniScript
     SQL.Strings = (
+      
+        '/* This is a sample of the SQL, actual SQL is built in source co' +
+        'de at run time */'
       'delete from CertifyExp_tripStop_Step1 '
       ''
       'insert into CertifyExp_TripStop_Step1'
@@ -1430,7 +1433,9 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryInsertTripsForGroup: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
-      ''
+      
+        '/* This is an example of the sql, actual sql calculated at runti' +
+        'me */'
       'insert into CertifyExp_Trips_StartBucket'
       
         'select distinct L.LogSheet, :parmGroupNameIn, T.BOOKINGIDENTIFIE' +
@@ -1524,6 +1529,10 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
     LocalUpdate = True
     Connection = UniConnection1
     SQL.Strings = (
+      
+        '/* This is an example of the sql, actual sql calculated at runti' +
+        'me */'
+      ''
       
         'select T.BookingIdentifier as QuoteNo, L.ACREGNO, L.LOGSHEET, L.' +
         'LEGNO, L.DEPTID, L.ARRIVEID, L.PICPILOTNO, L.SICPILOTNO, '

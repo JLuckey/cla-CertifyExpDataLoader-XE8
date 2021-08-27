@@ -340,12 +340,16 @@ type
 
     // 7 July 2020
     Procedure LoadCrewChangeRecsIntoStartBucket;
-    Procedure CrewChange_LoadFirstLegs(Const CrewIDFieldName: String; DaysBack: Integer);
-    Procedure CrewChange_LoadOtherLegs(Const CrewIDFieldName: String; DaysBack: Integer);
+    Procedure CrewChange_LoadLegs(Const CrewIDFieldName: String; LegNumIn: Integer);
     Procedure CrewChange_InsertStartBucket(Const qryDataToInsert: TUniQuery; strCrewID: String);
 
+
     Function  SubstituteParams1(Const SQLIn, PilotFieldIn: String ): String;
-    Procedure PrepQryLookupFirstLeg();
+
+    Procedure LoadTripStopTable;
+    Procedure Prep_InsertTripsForGroup_Query;
+    Procedure Prep_LookupFirstLeg_Query;
+
 
   public
     { Public declarations }
@@ -540,13 +544,27 @@ var
 //  strTest : String;
 //  retValq : String;
 begin
- // LoadCrewChangeRecsIntoStartBucket;
 
-  //BatchTime := StrToDateTime('09/10/2020 10:16:39.767');
+  LoadCrewChangeRecsIntoStartBucket;
 
-  LoadTripsIntoStartBucket(BatchTime)
+//  CrewChange_LoadLegs('PICPilotNo', 1);
+//  CrewChange_LoadLegs('PICPilotNo', 2);
 
- // FormatTesterJL;
+//  LoadCrewChangeRecsIntoStartBucket;
+
+//  BatchTime := StrToDateTime('08/26/2021 09:30:02.377');  //2021-08-26 09:30:02.377
+//  Load_IFS_IntoStartBucket(BatchTime);
+
+//  Load_CharterVisa_IntoStartBucket;
+
+//  LoadTripStopTable;
+
+
+
+   // LoadCrewChangeRecsIntoStartBucket;
+
+
+  //  LoadTripsIntoStartBucket(BatchTime)
 
 end;
 
@@ -618,23 +636,50 @@ var
   TargetDirectory : string;
 
 begin
-  TargetDirectory :=  edOutputDirectory.Text;  // 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\';
+//  TargetDirectory :=  edOutputDirectory.Text;  // 'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\';
 
   BuildCrewTailFile();
   BuildCrewTripFile;
   BuildCrewDepartDateAirportFile;
   BuildTailTripDepartTimeAirport;
 
-  // Build Trip/Stop records
-  scrLoadTripStopData.Execute;    // puts recs into working table CertifyExp_TripStop_Step1
-
-    InsertDummyNewHireTripStop('818181');   // adds NewHire records for new contractors to working table CertifyExp_TripStop_Step1
-    InsertDummyNewHireTripStop('828282');   // adds NewHire records for new employees to working table CertifyExp_TripStop_Step1
-
-  BuildGenericValidationFile2(TargetDirectory + 'trip_stop.csv',
-                             'select distinct TripNum, AirportID from CertifyExp_TripStop_Step1 where AirportID is not null' );
+  LoadTripStopTable;               // puts recs into working table CertifyExp_TripStop_Step1
 
 end;  { BuildValidationFiles }
+
+
+
+procedure TufrmCertifyExpDataLoader.LoadTripStopTable;
+var
+  strSQL : String;
+
+begin
+  strSQL :=
+    'delete from CertifyExp_tripStop_Step1 ' +                // purge TripStop Step1 table
+    'insert into CertifyExp_TripStop_Step1 ' +
+    'select distinct B.QuoteNum, L.DEPTID as AirportID ' +    // get Departure Airport
+    'from CertifyExp_Trips_StartBucket B left outer join ' + edTripLegTable.Text + ' L on B.TailNum = L.ACREGNO and B.LogSheet = L.LOGSHEET ' +
+    'where QuoteNum is not null ' +
+    'order by QuoteNum ' +
+
+    'insert into CertifyExp_TripStop_Step1 ' +
+    'select distinct B.QuoteNum, L.ARRIVEID as AirportID ' +  // get Arrival Airport
+    'from CertifyExp_Trips_StartBucket B left outer join ' + edTripLegTable.Text + ' L on B.TailNum = L.ACREGNO and B.LogSheet = L.LOGSHEET ' +
+    'where QuoteNum is not null ' +
+    'order by QuoteNum ' ;
+
+  if cbShowSQL.Checked then ShowMessage('LoadTripStopTable: ' + #13#13 + strSQL);
+  scrLoadTripStopData.SQL.Text := strSQL;
+  scrLoadTripStopData.Execute;
+
+  InsertDummyNewHireTripStop('818181');   // adds NewHire records for new contractors to working table CertifyExp_TripStop_Step1
+  InsertDummyNewHireTripStop('828282');   // adds NewHire records for new employees to working table CertifyExp_TripStop_Step1
+
+  BuildGenericValidationFile2(edOutputDirectory.Text + 'trip_stop.csv',
+                             'select distinct TripNum, AirportID from CertifyExp_TripStop_Step1 where AirportID is not null' );
+
+end;   { LoadTripStopTable }
+
 
 
 procedure TufrmCertifyExpDataLoader.InsertDummyNewHireTripStop(Const QuoteNumIn : String);
@@ -1274,8 +1319,8 @@ begin
   strGetTripsSQL :=                // Retrieving trips flown by PIC, SIC, TIC, FA
   ' insert into CertifyExp_Trips_StartBucket ' +
   ' select distinct L.LOGSHEET, L.{PilotNoField}, T.BOOKINGIDENTIFIER AS QUOTENO, L.ACREGNO, FARPART, L.{PilotNoField}, L.DEPARTURE, L.ARRIVEID, L.LEGNO ' +
-  ' from {TripLegTbl} L left outer join {TripTbl} T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET) ' +
-  ' where L.DEPARTURE BETWEEN (CURRENT_TIMESTAMP - {DaysBack}) and (CURRENT_TIMESTAMP + {DaysForward}) ' +
+  ' from ' + edTripLegTable.Text + ' L left outer join ' + edTripTable.Text + ' T on (L.ACREGNO = T.ACREGNO and L.LOGSHEET = T.LOGSHEET) ' +
+  ' where L.DEPARTURE BETWEEN (CURRENT_TIMESTAMP - ' + edDaysBack.Text + ') and (CURRENT_TIMESTAMP +  ' + edDaysForward.Text + ') ' +
   ' and L.{PilotNoField} > 0 ' +
   ' and L.LEGNO = 1 ' ;
 
@@ -1338,16 +1383,14 @@ end;  { LoadTripsIntoStartBucket }
 
 function TufrmCertifyExpDataLoader.SubstituteParams1(const SQLIn, PilotFieldIn: String): String;
 begin
-  Result := StringReplace(SQLIn,  '{PilotNoField}', PilotFieldIn,        [rfIgnoreCase, rfReplaceAll]);
+  Result := StringReplace(SQLIn,  '{PilotNoField}', PilotFieldIn, [rfIgnoreCase, rfReplaceAll]);
 
-  // making the source Trip tables controlled by the .ini file to allow switching of tables for testing  -JL
-  Result := StringReplace(Result, '{TripLegTbl}' ,  edTripLegTable.Text, [rfIgnoreCase, rfReplaceAll]);
-  Result := StringReplace(Result, '{TripTbl}',      edTripTable.Text,    [rfIgnoreCase, rfReplaceAll]);
-
-  Result := StringReplace(Result, '{DaysBack}',     edDaysBack.Text,     [rfIgnoreCase, rfReplaceAll]);
-  Result := StringReplace(Result, '{DaysForward}',  edDaysForward.Text,  [rfIgnoreCase, rfReplaceAll]);
+  // doing it this way instead of ParamByName because there are multiple instances of {PilotNoField} in the SQL and they all need to
+  //   be replaced, hence rfReplaceAll.  ParamByName can only do one occurance of a parameter.
 
 end;  {SubstituteParams1}
+
+
 
 
 
@@ -2137,7 +2180,7 @@ end;  { CreateEmployeeErrorReport }
 
 (*
 15 Aug 2020
-Looking for trips where Crew Members changed for different legs
+Looking for trips where Crew Members changed for different legs of same trip
 
 *)
 procedure TufrmCertifyExpDataLoader.LoadCrewChangeRecsIntoStartBucket;
@@ -2153,29 +2196,35 @@ begin
   stlCrewIDFieldNames.CommaText := 'PICPilotNo, SICPilotNo, TICPilotNo, FANo' ;
 
   try
-    qryLookUpFirstLeg.Close;
-    PrepQryLookupFirstLeg;   // substitutes table names into query SQL
+    Prep_LookupFirstLeg_Query;  // substitutes table names into SQL
+
     tblStartBucket.Open;
 
     for i := 0 to stlCrewIDFieldNames.Count - 1 do begin
       qryGetChangedCrew.Close;
 
-      CrewChange_LoadFirstLegs(stlCrewIDFieldNames[i], StrToInt(edDaysBack.text));  // Puts recs in CertifyExp_FirstLegs table
-      CrewChange_LoadOtherLegs(stlCrewIDFieldNames[i], StrToInt(edDaysBack.text));  // Puts recs in CertifyExp_OtherLegs table
+      CrewChange_LoadLegs(stlCrewIDFieldNames[i], 1);  // Puts First Leg recs in CertifyExp_FirstLegs table
+      CrewChange_LoadLegs(stlCrewIDFieldNames[i], 2);  // Puts other than first recs in CertifyExp_OtherLegs table
 
       qryGetChangedCrew.Open;   // Returns QuoteNum & CrewMemberID for trips where Crew Member changed bewteen legs
 
+      // Write Crew Changed recs to StartBucket
       while Not qryGetChangedCrew.Eof do begin
-
-        recnum := qryGetChangedCrew.RecNo;
-        currentQuoteNum := qryGetChangedCrew.FieldByName('QuoteNum').AsString;
-
+        recnum := qryGetChangedCrew.RecNo;                                      // debug var
+        currentQuoteNum := qryGetChangedCrew.FieldByName('QuoteNum').AsString;  // debug var
+      Try
         qryLookupFirstLeg.ParamByName('parmQuoteNumIn').AsString := qryGetChangedCrew.FieldByName('QuoteNum').AsString;
         if cbShowSQL.Checked then ShowMessage('LoadCrewChangeRecs:qryLookupFirstLeg' + #13#13 + qryLookUpFirstLeg.SQL.Text);
         qryLookUpFirstLeg.Open;
         CrewChange_InsertStartBucket(qryLookupFirstLeg, qryGetChangedCrew.FieldByName('CrewMemberID').AsString );
         qryLookUpFirstLeg.Close;
         qryGetChangedCrew.Next;
+      Except  on E1: Exception do begin
+        ShowMessage('Error DumbAss!    RecNum: ' + IntToStr(recnum) + '  |  QuoteNum: ' + currentQuoteNum );
+      end
+
+
+      End;
       end;  { While }
     end;  { For }
 
@@ -2189,35 +2238,76 @@ begin
 end;  { LoadCrewChangeRecs }
 
 
-Procedure TufrmCertifyExpDataLoader.PrepQryLookupFirstLeg;
+
+Procedure TufrmCertifyExpDataLoader.Prep_LookupFirstLeg_Query;
 var
   strSQL : String;
-begin
-  strSQL := qryLookUpFirstLeg.SQL.Text;
 
-  strSQL := StringReplace(strSQL, '{TripLegTbl}' ,  edTripLegTable.Text, [rfIgnoreCase, rfReplaceAll]);
-  strSQL := StringReplace(strSQL, '{TripTbl}',      edTripTable.Text,    [rfIgnoreCase, rfReplaceAll]);
+begin
+  qryLookUpFirstLeg.Close;
+
+  strSQL :=
+    'select T.BookingIdentifier as QuoteNo, L.ACREGNO, L.LOGSHEET, L.LEGNO, L.DEPTID, L.ARRIVEID, L.PICPILOTNO, L.SICPILOTNO, ' +
+    '       L.TICPILOTNO, L.FANO, FORMAT(L.DEPARTURE, ' + QuotedStr('MM/dd/yyyy HH:mm:ss') + ') AS DEPARTURE, T.FARPART ' +
+    'from ' + edTripLegTable.Text + ' L left outer join ' + edTripTable.Text + ' T on L.ACREGNO = T.ACREGNO and L.LogSheet = T.Logsheet ' +
+    'where T.BookingIdentifier = :parmQuoteNumIn  ' +
+    '  and L.LEGNO = 1 ' +
+    'order by T.BookingIdentifier ';      //T.QuoteNo ' ;
 
   qryLookUpFirstLeg.SQL.Text := strSQL;
+  if cbShowSQL.Checked then ShowMessage('Prep_LookupFirstLeg_Query:' + #13#13 + qryLookUpFirstLeg.SQL.Text);
 
-end;  {PrepQryLookupFirstLeg}
+end;  { Prep_LookupFirstLeg_Query }
 
+
+procedure TufrmCertifyExpDataLoader.CrewChange_LoadLegs(const CrewIDFieldName: String; LegNumIn: Integer);
+begin
+
+  if LegNumIn = 1 then
+    PurgeTable('CertifyExp_FirstLegs')
+  else
+    PurgeTable('CertifyExp_OtherLegs');
+
+  qryCrewChange.SQL.Clear;
+  if LegNumIn = 1 then
+    qryCrewChange.SQL.Append('insert into CertifyExp_FirstLegs ')
+  else
+    qryCrewChange.SQL.Append('insert into CertifyExp_OtherLegs ');
+
+  qryCrewChange.SQL.Append('select T.BOOKINGIDENTIFIER AS QuoteNo, L.' + CrewIDFieldName + ' as PilotID, L.LegNo ');
+  qryCrewChange.SQL.Append('from ' + edTripLegTable.Text + ' L left join ' + edTripTable.Text + ' T on L.ACREGNO = T.ACREGNO and L.LogSheet = T.Logsheet ');
+  qryCrewChange.SQL.Append('where T.TR_Depart BETWEEN (CURRENT_TIMESTAMP - ' + edDaysBack.Text + ') and (CURRENT_TIMESTAMP  + ' + edDaysForward.Text + ') ' );
+  qryCrewChange.SQL.Append('  and quoteno is not null ');
+
+  if LegNumIn = 1 then
+    qryCrewChange.SQL.Append('  and LegNo = 1 ')
+  else
+    qryCrewChange.SQL.Append('  and LegNo > 1 ');
+
+  qryCrewChange.SQL.Append('  and L.' + CrewIDFieldName + ' > 0 ');
+  qryCrewChange.SQL.Append('order by quoteno, legno ');
+
+  if cbShowSQL.Checked then ShowMessage('CrewChange_LoadFirstLegs:qryCrewChange' + #13#13 + qryCrewChange.SQL.Text);
+  qryCrewChange.Execute;
+
+end;  { CrewChange_LoadLegs }
 
 
 procedure TufrmCertifyExpDataLoader.CrewChange_InsertStartBucket(const qryDataToInsert: TUniQuery; strCrewID: String);
 var
   quotenumdebug : String;
+
 begin
   quotenumdebug := qryDataToInsert.FieldByName('QUOTENO').AsString;
 
   try
     tblStartBucket.Insert;
-    tblStartBucket.FieldByName('LogSheet').AsString         := qryDataToInsert.FieldByName('LOGSHEET').AsString;
-    tblStartBucket.FieldByName('CrewMemberID').AsString     := strCrewID ;
+    tblStartBucket.FieldByName('LogSheet').AsString            := qryDataToInsert.FieldByName('LOGSHEET').AsString;
+    tblStartBucket.FieldByName('CrewMemberID').AsString        := strCrewID ;
     tblStartBucket.FieldByName('CrewMemberVendorNum').AsString := strCrewID ;
-    tblStartBucket.FieldByName('QuoteNum').AsString         := qryDataToInsert.FieldByName('QUOTENO').AsString;
-    tblStartBucket.FieldByName('TailNum').AsString          := qryDataToInsert.FieldByName('ACREGNO').AsString;
-    tblStartBucket.FieldByName('FARPart').AsString          := qryDataToInsert.FieldByName('FARPART').AsString;
+    tblStartBucket.FieldByName('QuoteNum').AsString            := qryDataToInsert.FieldByName('QUOTENO').AsString;
+    tblStartBucket.FieldByName('TailNum').AsString             := qryDataToInsert.FieldByName('ACREGNO').AsString;
+    tblStartBucket.FieldByName('FARPart').AsString             := qryDataToInsert.FieldByName('FARPART').AsString;
 
     // added for IID:1248 - using conspicuous dummy date when incoming record is missing DEPARTURE date - should not happen very often  -JL
     if qryDataToInsert.FieldByName('DEPARTURE').AsString = '' Then
@@ -2236,71 +2326,7 @@ begin
 
   end;
 
-
 end;  { CrewChange_InsertStartBucket }
-
-
-procedure TufrmCertifyExpDataLoader.CrewChange_LoadFirstLegs(const CrewIDFieldName: String; DaysBack: Integer);
-begin
-  PurgeTable('CertifyExp_FirstLegs');
-  qryCrewChange.SQL.Clear;
-  qryCrewChange.SQL.Append('insert into CertifyExp_FirstLegs');
-  qryCrewChange.SQL.Append('select T.BookingIdentifier as QuoteNo, L.' + CrewIDFieldName + ' as PilotID, L.LegNo ');
-  qryCrewChange.SQL.Append('from vQuoteSys_TripLeg L left join vQuoteSys_Trip T on L.ACREGNO = T.ACREGNO and L.LogSheet = T.Logsheet');
-  qryCrewChange.SQL.Append('where T.TR_Depart > CURRENT_TIMESTAMP - ' + IntToStr(DaysBack) );
-  qryCrewChange.SQL.Append('  and quoteno is not null ');
-  qryCrewChange.SQL.Append('  and LegNo = 1 ');
-  qryCrewChange.SQL.Append('  and L.' + CrewIDFieldName + ' > 0 ');
-//  qryCrewChange.SQL.Append('  and L.Source = ''IB''');
-  qryCrewChange.SQL.Append('order by quoteno, legno ');
-  if cbShowSQL.Checked then ShowMessage('CrewChange_LoadFirstLegs:qryCrewChange' + #13#13 + qryCrewChange.SQL.Text);
-  qryCrewChange.Execute;
-
-end;  { CrewChange_LoadFirstLegs }
-
-
-(* procedure TufrmCertifyExpDataLoader.CrewChange_LoadFirstLegs(const CrewIDFieldName: String; DaysBack: Integer);
-begin
-  PurgeTable('CertifyExp_FirstLegs');
-  qryCrewChange.SQL.Clear;
-  qryCrewChange.SQL.Append('insert into CertifyExp_FirstLegs');
-  qryCrewChange.SQL.Append('select T.QuoteNo, L.' + CrewIDFieldName + ' as PilotID, L.LegNo ');
-//  qryCrewChange.SQL.Append('from vQuoteSys_TripLeg L left join vQuoteSys_Trip T on L.ACREGNO = T.ACREGNO and L.LogSheet = T.Logsheet');
-  qryCrewChange.SQL.Append('from ' + edTripLegTable.Text + ' L left join ' + edTripTable.Text + ' T on L.ACREGNO = T.ACREGNO and L.LogSheet = T.Logsheet');
-//  qryCrewChange.SQL.Append('where T.TR_Depart > CURRENT_TIMESTAMP - ' + IntToStr(DaysBack) );
-  qryCrewChange.SQL.Append('where T.TR_Depart BETWEEN (CURRENT_TIMESTAMP - ' + edDaysBack.Text + ') and (CURRENT_TIMESTAMP  + ' + edDaysForward.Text + ')' );
-
-  qryCrewChange.SQL.Append('  and quoteno is not null ');
-  qryCrewChange.SQL.Append('  and LegNo = 1 ');
-  qryCrewChange.SQL.Append('  and L.' + CrewIDFieldName + ' > 0 ');
-//  qryCrewChange.SQL.Append('  and L.Source = ''IB''');
-  qryCrewChange.SQL.Append('order by quoteno, legno ');
-  if cbShowSQL.Checked then ShowMessage('CrewChange_LoadFirstLegs:qryCrewChange' + #13#13 + qryCrewChange.SQL.Text);
-  qryCrewChange.Execute;
-
-end;  { CrewChange_LoadFirstLegs }
-*)
-
-
-procedure TufrmCertifyExpDataLoader.CrewChange_LoadOtherLegs(const CrewIDFieldName: String; DaysBack: Integer);
-begin
-  PurgeTable('CertifyExp_OtherLegs');
-  qryCrewChange.SQL.Clear;
-  qryCrewChange.SQL.Append('insert into CertifyExp_OtherLegs');
-  qryCrewChange.SQL.Append('select T.QuoteNo, L.' + CrewIDFieldName + ' as PilotID, L.LegNo ');
-  qryCrewChange.SQL.Append('from ' + edTripLegTable.Text + ' L left join ' + edTripTable.Text + ' T on L.ACREGNO = T.ACREGNO and L.LogSheet = T.Logsheet');
-//  qryCrewChange.SQL.Append('where T.TR_Depart > CURRENT_TIMESTAMP - ' + IntToStr(DaysBack) );
-  qryCrewChange.SQL.Append('where T.TR_Depart BETWEEN (CURRENT_TIMESTAMP - ' + edDaysBack.Text + ') and (CURRENT_TIMESTAMP  + ' + edDaysForward.Text + ')' );
-  qryCrewChange.SQL.Append('  and quoteno is not null ');
-  qryCrewChange.SQL.Append('  and LegNo > 1 ');
-  qryCrewChange.SQL.Append('  and L.' + CrewIDFieldName + ' > 0 ');
-  qryCrewChange.SQL.Append('order by quoteno, legno ');
-
-  if cbShowSQL.Checked then ShowMessage('CrewChange_LoadOtherLegs:qryCrewChange' + #13#13 + qryCrewChange.SQL.Text);
-  qryCrewChange.Execute;
-
-end;  { CrewChange_LoadOtherLegs }
-
 
 
 function TufrmCertifyExpDataLoader.CalcPaycomErrorFileName(const BatchTimeIn: TDateTime): String;
@@ -2428,6 +2454,8 @@ begin
 
   stlCharterVisaUsers := TStringList.Create;
 
+  Prep_InsertTripsForGroup_Query;
+
   // the edCharterVisaUsers field initialized in "Initialize form fields from ini" section of FormCreate()
   stlCharterVisaUsers.CommaText := edCharterVisaUsers.Text;       // comma-seperated string of Vendor Numbers for CharterVisa Group
   try
@@ -2435,7 +2463,8 @@ begin
       qryInsertTripsForGroup.Close;
       qryInsertTripsForGroup.ParamByName('parmCrewMemberVendorNumIn').AsInteger := StrToInt(stlCharterVisaUsers[i]);
       qryInsertTripsForGroup.ParamByName('parmGroupNameIn').AsString            := 'CharterVisa';
-      qryInsertTripsForGroup.ParamByName('parmDaysBackIn').AsInteger            := strToInt(edDaysBack.Text);
+//      qryInsertTripsForGroup.ParamByName('parmDaysBackIn').AsInteger            := strToInt(edDaysBack.Text);
+      if cbShowSQL.Checked then ShowMessage('Load_CharterVisa_IntoStartBuckety:' + #13#13 + qryInsertTripsForGroup.SQL.Text);
       qryInsertTripsForGroup.Execute;
     End;
 
@@ -2444,6 +2473,29 @@ begin
   end;
 
 end;  { LoadCharterVisaTripsIntoStartBucket }
+
+
+procedure TufrmCertifyExpDataLoader.Prep_InsertTripsForGroup_Query;
+var
+  strSQL : String;
+
+begin
+  qryInsertTripsForGroup.Close;
+
+  strSQL :=
+    'insert into CertifyExp_Trips_StartBucket ' +
+    'select distinct L.LogSheet, :parmGroupNameIn, T.BOOKINGIDENTIFIER AS QUOTENO, L.acregno, null, :parmCrewMemberVendorNumIn, L.DEPARTURE, L.ARRIVEID, L.LEGNO ' +
+    'from ' + edTripLegTable.Text + ' L LEFT OUTER JOIN ' + edTripTable.Text + ' T ON L.ACREGNO = T.ACREGNO AND L.LOGSHEET = T.LOGSHEET ' +
+    'where ( (L.departure < CURRENT_TIMESTAMP)                     and (L.arrival > CURRENT_TIMESTAMP) ) '  +         // in-progress
+    'OR ( (L.departure > (CURRENT_TIMESTAMP - ' + edDaysBack.Text + ' )) and (L.arrival < CURRENT_TIMESTAMP + ' + edDaysForward.Text + ' ) ) ' +
+    'AND L.LEGNO = 1 ' +
+    'ORDER BY DEPARTURE ' ;
+
+  qryInsertTripsForGroup.SQL.Text := strSQL;
+  if cbShowSQL.Checked then ShowMessage('Prep_InsertTripsForGroup_Query:' + #13#13 + qryInsertTripsForGroup.SQL.Text);
+
+end;  { Prep_InsertTripsForGroup_Query }
+
 
 
 // **********************************************
@@ -2470,13 +2522,15 @@ begin
     qryGetIFSMembers.Next;
   end;
 
+  Prep_InsertTripsForGroup_Query;  // initialize the basic parameters in qryInsertTripsForGroup
+
   // Load actual Trips that IFS members flew on
   qryGetIFSMembers.First;
   while not qryGetIFSMembers.eof do begin
     qryInsertTripsForGroup.Close;
     qryInsertTripsForGroup.ParamByName('parmCrewMemberVendorNumIn').AsInteger := qryGetIFSMembers.FieldByName('certify_gp_vendornum').AsInteger;
     qryInsertTripsForGroup.ParamByName('parmGroupNameIn').AsString            := 'IFS';
-    qryInsertTripsForGroup.ParamByName('parmDaysBackIn').AsInteger            := strToInt(edDaysBack.Text);
+//    qryInsertTripsForGroup.ParamByName('parmDaysBackIn').AsInteger            := strToInt(edDaysBack.Text);
     qryInsertTripsForGroup.Execute;
     qryGetIFSMembers.Next;
   end;
@@ -2491,7 +2545,7 @@ begin
       qryInsertTripsForGroup.Close;
       qryInsertTripsForGroup.ParamByName('parmCrewMemberVendorNumIn').AsInteger := strToInt(stlAdditionalIFSUsers[i]);
       qryInsertTripsForGroup.ParamByName('parmGroupNameIn').AsString            := 'IFS';
-      qryInsertTripsForGroup.ParamByName('parmDaysBackIn').AsInteger            := strToInt(edDaysBack.Text);
+//      qryInsertTripsForGroup.ParamByName('parmDaysBackIn').AsInteger            := strToInt(edDaysBack.Text);
       qryInsertTripsForGroup.Execute;
     end;
   Finally
@@ -3013,6 +3067,53 @@ begin
   Result := strGroupAccum;
 
 end; { GetGroupsByLogicGroup }
+
+
+(* Code junk yard
+
+
+procedure TufrmCertifyExpDataLoader.CrewChange_LoadFirstLegs(const CrewIDFieldName: String; DaysBack: Integer);
+begin
+  PurgeTable('CertifyExp_FirstLegs');
+  qryCrewChange.SQL.Clear;
+  qryCrewChange.SQL.Append('insert into CertifyExp_FirstLegs');
+  qryCrewChange.SQL.Append('select T.BookingIdentifier as QuoteNo, L.' + CrewIDFieldName + ' as PilotID, L.LegNo ');
+  qryCrewChange.SQL.Append('from vQuoteSys_TripLeg L left join vQuoteSys_Trip T on L.ACREGNO = T.ACREGNO and L.LogSheet = T.Logsheet');
+  qryCrewChange.SQL.Append('where T.TR_Depart > CURRENT_TIMESTAMP - ' + IntToStr(DaysBack) );            // ???JL add new Future Date param
+  qryCrewChange.SQL.Append('  and quoteno is not null ');
+  qryCrewChange.SQL.Append('  and LegNo = 1 ');
+  qryCrewChange.SQL.Append('  and L.' + CrewIDFieldName + ' > 0 ');
+//  qryCrewChange.SQL.Append('  and L.Source = ''IB''');
+  qryCrewChange.SQL.Append('order by quoteno, legno ');
+  if cbShowSQL.Checked then ShowMessage('CrewChange_LoadFirstLegs:qryCrewChange' + #13#13 + qryCrewChange.SQL.Text);
+  qryCrewChange.Execute;
+
+end;  { CrewChange_LoadFirstLegs }
+
+
+
+
+procedure TufrmCertifyExpDataLoader.CrewChange_LoadOtherLegs(const CrewIDFieldName: String; DaysBack: Integer);
+begin
+  PurgeTable('CertifyExp_OtherLegs');
+  qryCrewChange.SQL.Clear;
+  qryCrewChange.SQL.Append('insert into CertifyExp_OtherLegs');
+  qryCrewChange.SQL.Append('select T.QuoteNo, L.' + CrewIDFieldName + ' as PilotID, L.LegNo ');
+  qryCrewChange.SQL.Append('from ' + edTripLegTable.Text + ' L left join ' + edTripTable.Text + ' T on L.ACREGNO = T.ACREGNO and L.LogSheet = T.Logsheet');
+  qryCrewChange.SQL.Append('where T.TR_Depart BETWEEN (CURRENT_TIMESTAMP - ' + edDaysBack.Text + ') and (CURRENT_TIMESTAMP  + ' + edDaysForward.Text + ')' );
+  qryCrewChange.SQL.Append('  and quoteno is not null ');
+  qryCrewChange.SQL.Append('  and LegNo > 1 ');
+  qryCrewChange.SQL.Append('  and L.' + CrewIDFieldName + ' > 0 ');
+  qryCrewChange.SQL.Append('order by quoteno, legno ');
+
+  if cbShowSQL.Checked then ShowMessage('CrewChange_LoadOtherLegs:qryCrewChange' + #13#13 + qryCrewChange.SQL.Text);
+  qryCrewChange.Execute;
+
+end;  { CrewChange_LoadOtherLegs }
+
+
+*)
+
 
 
 end.

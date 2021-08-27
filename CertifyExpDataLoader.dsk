@@ -1,4 +1,5 @@
 ﻿[Closed Files]
+<<<<<<< HEAD
 File_0=TSourceModule,'X:\DCS\CLA\PurgedRecsFix\Source_XE8\ufoPurgedRecsFixer.pas',0,1,134,1,158,0,0,,
 File_1=TSourceModule,'F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.dfm',0,1,1,1,1,0,0,,
 File_2=TSourceModule,'c:\codegear\delphixe8\source\Indy10\Protocols\IdSMTP.pas',0,1,223,34,253,0,0,,
@@ -14,12 +15,27 @@ File_11=TSourceModule,'F:\XDrive\DCS\CLA\DataWarehouse\DataLoader\QuoteLoader\De
 File_12=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.Controls.pas',0,1,9767,1,9794,0,0,,
 File_13=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.pas',0,1,22373,1,22398,0,0,,
 File_14=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.SysUtils.pas',0,1,19808,1,19837,0,0,,
+=======
+File_0=TSourceModule,'F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.dfm',0,1,1,1,1,0,0,,
+File_1=TSourceModule,'c:\codegear\delphixe8\source\Indy10\Protocols\IdSMTP.pas',0,1,223,34,253,0,0,,
+File_2=TSourceModule,'c:\codegear\delphixe8\source\Indy10\Core\IdAssignedNumbers.pas',0,1,27,1,52,0,0,,
+File_3=TSourceModule,'Z:\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini',0,1,1,51,7,0,0,,
+File_4=TSourceModule,'Z:\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',0,1,1258,41,1265,0,0,,
+File_5=TSourceModule,'Z:\DCS\CLA\DataWarehouse\DataLoader\QuoteLoader\DelphiSourceXE8\uQuoteLoader.pas',0,1,658,66,672,0,0,,
+File_6=TSourceModule,'Z:\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Release\CertifyExpDataLoader.ini',0,1,1,82,16,0,0,,
+File_7=TSourceModule,'Z:\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Release\CertifyDataLoader.log',0,1,1,1,1,0,0,,
+File_8=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.dfm',0,1,1,1,1,0,0,,
+File_9=TSourceModule,'F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\Win32\Debug\CertifyExpDataLoader.ini',0,1,16,52,10,0,0,,
+File_10=TSourceModule,'F:\XDrive\DCS\CLA\DataWarehouse\DataLoader\QuoteLoader\DelphiSourceXE8\uQuoteLoader.pas',0,1,861,1,884,0,0,,
+File_11=TSourceModule,'c:\codegear\delphixe8\SOURCE\VCL\Vcl.Controls.pas',0,1,9767,1,9794,0,0,,
+File_12=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.pas',0,1,22373,1,22398,0,0,,
+File_13=TSourceModule,'c:\codegear\delphixe8\SOURCE\RTL\SYS\System.SysUtils.pas',0,1,19808,1,19837,0,0,,
+>>>>>>> branch_dev_IID-1248
 
 [Modules]
 Module0=F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
 Module1=F:\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini
-Module2=index.php?title=Main_Page&action=edit
-Count=3
+Count=2
 EditWindowCount=1
 
 [F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas]
@@ -30,15 +46,11 @@ FormOnTop=0
 [F:\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini]
 ModuleType=TSourceModule
 
-[index.php?title=Main_Page&action=edit]
-ModuleType=TURLModule
-
 [EditWindow0]
-ViewCount=3
+ViewCount=2
 CurrentEditView=F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
 View0=0
 View1=1
-View2=2
 PercentageSizes=1
 Create=1
 Visible=1
@@ -69,26 +81,37 @@ BottomMiddlePanelClients=DockSite0,GraphDrawingModel
 BottomMiddelPanelData=0000080001020200000009000000446F636B536974653010000000477261706844726177696E6756696577991D00000000000002F606000000000000FFFFFFFF
 
 [View0]
-CustomEditViewType=TWelcomePageView
-WelcomePageURL=http://docwiki.embarcadero.com/RADStudio/Tokyo/e/index.php?title=Main_Page&action=edit
-
-[View1]
 CustomEditViewType=TEditView
 Module=F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
+<<<<<<< HEAD
 CursorX=1
 CursorY=1273
 TopLine=1251
 LeftCol=1
 Elisions=
 Bookmarks={1,2187,58}
+=======
+CursorX=16
+CursorY=2200
+TopLine=2151
+LeftCol=1
+Elisions=
+Bookmarks=
+>>>>>>> branch_dev_IID-1248
 EditViewName=F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
 
-[View2]
+[View1]
 CustomEditViewType=TEditView
 Module=F:\Certify_Expense\DataLoader\Source_XE8\CertifyExpDataLoader.ini
+<<<<<<< HEAD
 CursorX=25
 CursorY=37
 TopLine=4
+=======
+CursorX=1
+CursorY=39
+TopLine=15
+>>>>>>> branch_dev_IID-1248
 LeftCol=1
 Elisions=
 Bookmarks=
@@ -119,12 +142,20 @@ Dockable=1
 StayOnTop=0
 
 [Breakpoints]
+<<<<<<< HEAD
 Count=5
 Breakpoint0='F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',1504,'',0,0,'',1,0,0,'',1,'','','',0,''
 Breakpoint1='F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',1477,'',0,0,'',1,0,0,'',1,'','','',0,''
 Breakpoint2='F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',2421,'',0,1,'',1,0,0,'',1,'','','',0,''
 Breakpoint3='F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',717,'',0,1,'',1,0,0,'',1,'','','',0,''
 Breakpoint4='F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',2170,'',0,0,'',1,0,0,'',1,'','','',0,''
+=======
+Count=4
+Breakpoint0='F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',1509,'',0,0,'',1,0,0,'',1,'','','',0,''
+Breakpoint1='F:\XDrive\DCS\CLA\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',1482,'',0,0,'',1,0,0,'',1,'','','',0,''
+Breakpoint2='F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',496,'',0,1,'',1,0,0,'',1,'','','',0,''
+Breakpoint3='F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas',512,'',0,1,'',1,0,0,'',1,'','','',0,''
+>>>>>>> branch_dev_IID-1248
 
 [EmbarcaderoWin32Debugger_AddressBreakpoints]
 Count=0
@@ -308,7 +339,11 @@ SplitPos=242
 [PropInspDesignerSelection]
 ArrangeBy=Name
 SelectedItem=Name,
+<<<<<<< HEAD
 ExpandedItems=StyleElements=0,"LiveBindings Designer=0",ImageMargins=0,LiveBindings=0,Margins=0,Font=0,Options=0,RefreshOptions=0,SmartFetch=0
+=======
+ExpandedItems=StyleElements=0,"LiveBindings Designer=0",ImageMargins=0,LiveBindings=0,Margins=0,Font=0,Options=0,RefreshOptions=0,SmartFetch=0,Constraints=0
+>>>>>>> branch_dev_IID-1248
 
 [frmDesignPreview]
 PercentageSizes=1
