@@ -1672,8 +1672,8 @@ begin
   WriteLn(WorkFile, RowOut) ;
   while ( not qryBuildValFile.eof ) do begin
     // ShowMessage('here I am');
-//    strDateDest := Trim(FormatDateTime('mm/dd/yy', qryBuildValFile.FieldByName('TripDepartDate').AsDateTime)) ;
-    strDateDest := Trim(FormatDateTime('mm/dd/yy', qryBuildValFile.FieldByName('TripDepartDate').AsDateTime)) + ' ' + qryBuildValFile.FieldByName('FirstDestination').AsString;
+    strDateDest := Trim(FormatDateTime('mm/dd/yy', qryBuildValFile.FieldByName('TripDepartDate').AsDateTime)) ;       // remove airport code from output
+//    strDateDest := Trim(FormatDateTime('mm/dd/yy', qryBuildValFile.FieldByName('TripDepartDate').AsDateTime)) + ' ' + qryBuildValFile.FieldByName('FirstDestination').AsString;
     RowOut := strDateDest + ',' +
               qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + strDateDest;
 
@@ -1807,8 +1807,8 @@ begin
   while Not qryGetTailTripDepartdate.eof do Begin
     RowOut := Trim(qryGetTailTripDepartdate.FieldByName('TailNum').AsString) + ',' +
                    qryGetTailTripDepartdate.FieldByName('QuoteNum').AsString + ',' +
- //                  FormatDateTime('mm/dd/yy', qryGetTailTripDepartdate.FieldByName('TripDepartDate').AsDateTime);
-                   FormatDateTime('mm/dd/yy', qryGetTailTripDepartdate.FieldByName('TripDepartDate').AsDateTime) + ' ' + qryGetTailTripDepartdate.FieldByName('FirstDestination').AsString;
+                   FormatDateTime('mm/dd/yy', qryGetTailTripDepartdate.FieldByName('TripDepartDate').AsDateTime);
+ //                  FormatDateTime('mm/dd/yy', qryGetTailTripDepartdate.FieldByName('TripDepartDate').AsDateTime) + ' ' + qryGetTailTripDepartdate.FieldByName('FirstDestination').AsString;    // remove airport from output
 
     WriteLn(WorkFile, RowOut) ;
     qryGetTailTripDepartdate.Next;
