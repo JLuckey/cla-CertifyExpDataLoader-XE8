@@ -1807,8 +1807,8 @@ begin
   while Not qryGetTailTripDepartdate.eof do Begin
     RowOut := Trim(qryGetTailTripDepartdate.FieldByName('TailNum').AsString) + ',' +
                    qryGetTailTripDepartdate.FieldByName('QuoteNum').AsString + ',' +
-                   FormatDateTime('mm/dd/yy', qryGetTailTripDepartdate.FieldByName('TripDepartDate').AsDateTime);
- //                  FormatDateTime('mm/dd/yy', qryGetTailTripDepartdate.FieldByName('TripDepartDate').AsDateTime) + ' ' + qryGetTailTripDepartdate.FieldByName('FirstDestination').AsString;    // remove airport from output
+ //                  FormatDateTime('mm/dd/yy', qryGetTailTripDepartdate.FieldByName('TripDepartDate').AsDateTime);
+                   FormatDateTime('mm/dd/yy', qryGetTailTripDepartdate.FieldByName('TripDepartDate').AsDateTime) + ' ' + qryGetTailTripDepartdate.FieldByName('FirstDestination').AsString;    // remove airport from output
 
     WriteLn(WorkFile, RowOut) ;
     qryGetTailTripDepartdate.Next;
@@ -2486,9 +2486,9 @@ begin
     'insert into CertifyExp_Trips_StartBucket ' +
     'select distinct L.LogSheet, :parmGroupNameIn, T.BOOKINGIDENTIFIER AS QUOTENO, L.acregno, null, :parmCrewMemberVendorNumIn, L.DEPARTURE, L.ARRIVEID, L.LEGNO ' +
     'from ' + edTripLegTable.Text + ' L LEFT OUTER JOIN ' + edTripTable.Text + ' T ON L.ACREGNO = T.ACREGNO AND L.LOGSHEET = T.LOGSHEET ' +
-    'where ( (L.departure < CURRENT_TIMESTAMP)                     and (L.arrival > CURRENT_TIMESTAMP) ) '  +         // in-progress
-    'OR ( (L.departure > (CURRENT_TIMESTAMP - ' + edDaysBack.Text + ' )) and (L.arrival < CURRENT_TIMESTAMP + ' + edDaysForward.Text + ' ) ) ' +
-    'AND L.LEGNO = 1 ' +
+    'where ( (L.departure < CURRENT_TIMESTAMP)                     and (L.arrival > CURRENT_TIMESTAMP) ) '  +                                       // in-progress
+    '   OR ( (L.departure > (CURRENT_TIMESTAMP - ' + edDaysBack.Text + ' )) and (L.arrival < CURRENT_TIMESTAMP + ' + edDaysForward.Text + ' ) )' +  // trip is within the designated time-frame
+    '  AND L.LEGNO = 1 ' +
     'ORDER BY DEPARTURE ' ;
 
   qryInsertTripsForGroup.SQL.Text := strSQL;
