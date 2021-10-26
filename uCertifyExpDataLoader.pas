@@ -1672,8 +1672,8 @@ begin
   WriteLn(WorkFile, RowOut) ;
   while ( not qryBuildValFile.eof ) do begin
     // ShowMessage('here I am');
-    strDateDest := Trim(FormatDateTime('mm/dd/yy', qryBuildValFile.FieldByName('TripDepartDate').AsDateTime)) ;       // remove airport code from output
-//    strDateDest := Trim(FormatDateTime('mm/dd/yy', qryBuildValFile.FieldByName('TripDepartDate').AsDateTime)) + ' ' + qryBuildValFile.FieldByName('FirstDestination').AsString;
+//    strDateDest := Trim(FormatDateTime('mm/dd/yy', qryBuildValFile.FieldByName('TripDepartDate').AsDateTime)) ;       // remove airport code from output
+    strDateDest := Trim(FormatDateTime('mm/dd/yy', qryBuildValFile.FieldByName('TripDepartDate').AsDateTime)) + ' ' + qryBuildValFile.FieldByName('FirstDestination').AsString;
     RowOut := strDateDest + ',' +
               qryBuildValFile.FieldByName('CrewMemberVendorNum').AsString + '|' + strDateDest;
 
@@ -2486,8 +2486,8 @@ begin
     'insert into CertifyExp_Trips_StartBucket ' +
     'select distinct L.LogSheet, :parmGroupNameIn, T.BOOKINGIDENTIFIER AS QUOTENO, L.acregno, null, :parmCrewMemberVendorNumIn, L.DEPARTURE, L.ARRIVEID, L.LEGNO ' +
     'from ' + edTripLegTable.Text + ' L LEFT OUTER JOIN ' + edTripTable.Text + ' T ON L.ACREGNO = T.ACREGNO AND L.LOGSHEET = T.LOGSHEET ' +
-    'where ( (L.departure < CURRENT_TIMESTAMP)                     and (L.arrival > CURRENT_TIMESTAMP) ) '  +                                       // in-progress
-    '   OR ( (L.departure > (CURRENT_TIMESTAMP - ' + edDaysBack.Text + ' )) and (L.arrival < CURRENT_TIMESTAMP + ' + edDaysForward.Text + ' ) )' +  // trip is within the designated time-frame
+    'where ( ( (L.departure < CURRENT_TIMESTAMP)                     and (L.arrival > CURRENT_TIMESTAMP) ) '  +                                       // in-progress
+    '   OR ( (L.departure > (CURRENT_TIMESTAMP - ' + edDaysBack.Text + ' )) and (L.arrival < CURRENT_TIMESTAMP + ' + edDaysForward.Text + ' ) ) )' +  // trip is within the designated time-frame
     '  AND L.LEGNO = 1 ' +
     'ORDER BY DEPARTURE ' ;
 
