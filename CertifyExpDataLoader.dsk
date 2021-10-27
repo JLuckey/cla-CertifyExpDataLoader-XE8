@@ -24,7 +24,7 @@ EditWindowCount=1
 [F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas]
 ModuleType=TSourceModule
 FormState=1
-FormOnTop=0
+FormOnTop=1
 
 [Main_Page]
 ModuleType=TURLModule
@@ -74,13 +74,13 @@ WelcomePageURL=https://docwiki.embarcadero.com/RADStudio/Tokyo/en/Main_Page
 [View1]
 CustomEditViewType=TEditView
 Module=F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
-CursorX=4
-CursorY=1810
-TopLine=1776
+CursorX=3
+CursorY=2483
+TopLine=2461
 LeftCol=1
 Elisions=
-Bookmarks={1,2463,14}
-EditViewName=F:\Certify_Expense\DataLoader\Source_XE8\uCertifyExpDataLoader.pas
+Bookmarks={1,2463,14}{2,1676,4}
+EditViewName=Borland.FormDesignerView
 
 [View2]
 CustomEditViewType=TEditView
@@ -299,6 +299,11 @@ LRDockWidth=1830
 Dockable=1
 StayOnTop=0
 SplitPos=137
+
+[PropInspDesignerSelection]
+ArrangeBy=Name
+SelectedItem=BorderWidth,
+ExpandedItems=Encryption=0,FilterOptions=0,"LiveBindings Designer=0",Options=0,Anchors=0,BorderIcons=0,Constraints=0,Font=0,GlassFrame=0,HorzScrollBar=0,LiveBindings=0,Margins=0,Padding=0
 
 [frmDesignPreview]
 PercentageSizes=1

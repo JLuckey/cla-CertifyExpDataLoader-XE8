@@ -1496,13 +1496,26 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   object qryGetTailTripDepartdate: TUniQuery
     Connection = UniConnection1
     SQL.Strings = (
+      ''
       
-        'select distinct TailNum, QuoteNum, TripDepartDate, FirstDestinat' +
-        'ion'
-      'from CertifyExp_Trips_StartBucket'
-      'where QuoteNum is not Null'
-      '/*  and LogSheet is not Null  */'
-      'order by QuoteNum'
+        'select distinct T.TailNum, T.QuoteNum, T.TripDepartDate, B.First' +
+        'Destination '
+      'from '
+      
+        '  (select TailNum, QuoteNum, Min(TripDepartDate) as TripDepartDa' +
+        'te'
+      '    from CertifyExp_Trips_StartBucket'
+      '    where QuoteNum is not null'
+      
+        '    group by TailNum, QuoteNum) T  left outer join CertifyExp_Tr' +
+        'ips_StartBucket B on  T.TailNum  = B.TailNum '
+      
+        '                                                                ' +
+        '                  and T.QuoteNum = B.QuoteNum '
+      
+        '                                                                ' +
+        '                  and T.TripDepartDate  = B.TripDepartDate'
+      'order by T.QuoteNum, TripDepartDate'
       '')
     Left = 445
     Top = 203
