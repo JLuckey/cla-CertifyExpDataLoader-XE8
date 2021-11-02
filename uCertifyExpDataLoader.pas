@@ -149,7 +149,6 @@ type
     btnGoHourly: TButton;
     edCharterVisaUsers: TEdit;
     Label16: TLabel;
-    tblTailLeadPilot: TUniTable;
     qryFindLeadPilotEmail: TUniQuery;
     qryGetTerminationDate: TUniQuery;
     qryGetIFSMembers: TUniQuery;
@@ -246,7 +245,7 @@ type
     Procedure Load_CharterVisa_IntoStartBucket;
     Procedure InsertCrewTail(Const TailNumIn:String; VendorNumIn: Integer; DataSourceIn: String);
 
-    Procedure LoadTailLeadPilot2;
+    Procedure LoadTailLeadPilot;
 
     Procedure FlagRecordAsError(Const ErrorType, ErrorMsgIn : String);
 
@@ -292,7 +291,7 @@ type
 
     Procedure PurgeTable(Const TableNameIn: String);
 
-    Procedure LoadNewTailLeadPilotRecs();
+//    Procedure LoadNewTailLeadPilotRecs();    depricated 2 Nov 2021  -JL
     Procedure WriteTailLeadPilotToFile;
 
     // 17 Dec 2019
@@ -314,14 +313,12 @@ type
 
     Function GroupIsIn(Const GroupIn, GroupSetIn: String): Boolean;
 
-    Function CalcCrewTailFileName(Const BatchTimeIn: TDateTime): String;
 
     // 7 Jun 2019
     Function FindVendorNumInStartBucket(Const VendorNumIn: Integer): Boolean;
 
     Function CalcInClause(Const GroupStrIn: String): String;
 
-    Function ScrubVendorNum(Const strVendorNumIn: String; Var ErrorTxtOut: String): Integer;
 
   // TID:1112 15 May 2020
     Procedure GenerateMissingFlightCrewReport(Const BatchTimeIn: TDateTime);
@@ -436,7 +433,7 @@ var
 begin
   BatchTime := GetTimeFromDBServer;
 
-  LoadTailLeadPilot2;
+  LoadTailLeadPilot;
 
   PruneHistoryTables('CertifyExp_PaycomHistory');
 
@@ -545,26 +542,12 @@ var
 //  retValq : String;
 begin
 
-  LoadCrewChangeRecsIntoStartBucket;
+//  SendStatusEmail
+//  LoadTailLeadPilot;
 
-//  CrewChange_LoadLegs('PICPilotNo', 1);
-//  CrewChange_LoadLegs('PICPilotNo', 2);
+  BatchTime := StrToDateTime('11/01/2021 09:30:02.347');
 
-//  LoadCrewChangeRecsIntoStartBucket;
-
-//  BatchTime := StrToDateTime('08/26/2021 09:30:02.377');  //2021-08-26 09:30:02.377
-//  Load_IFS_IntoStartBucket(BatchTime);
-
-//  Load_CharterVisa_IntoStartBucket;
-
-//  LoadTripStopTable;
-
-
-
-   // LoadCrewChangeRecsIntoStartBucket;
-
-
-  //  LoadTripsIntoStartBucket(BatchTime)
+  ShowMessage('Here is the lead pilot: ' + FindLeadPilot('N371FPxx', BatchTime));
 
 end;
 
@@ -1215,61 +1198,48 @@ end;  { InsertSpecialUsersHistoryTable() }
 
 
 
-{  This new procedure gets Tail/LeadPilot data from OnBase/Workbench instead of from a manually-imported .csv file
-  1. open local tail_leadpilot table
-  2. query OnBase to get latest Tail/LeadPilot data
-  3. if record counts are within tolerance then empty CertifyExp_Tail_LeadPilot & add new recs
-  4. write tail_leadpilot.csv to output directory
+{ This new procedure gets Tail/LeadPilot data from OnBase/Workbench II instead of from a manually-imported .csv file
+    1. query OnBase to get latest Tail/LeadPilot data
+    2. if record counts are within tolerance then write tail_leadpilot.csv to output directory
 }
-procedure TufrmCertifyExpDataLoader.LoadTailLeadPilot2;
+procedure TufrmCertifyExpDataLoader.LoadTailLeadPilot;
 var
   CurrentCount, NewCount : Integer;
   TolerancePercent : Real;
 
 begin
-  tblTailLeadPilot.Open;               // This is the local (Warehouse) table
-  CurrentCount := tblTailLeadPilot.RecordCount;
+  CurrentCount := myIni.ReadInteger('Startup','TailLeadPilotCountFromPreviousRun', 150);  // current fleet has ~150 AC - 1 Nov 2021
 
-  qryGetNewTailLeadPilotRecs.Close;    // This is the external (OnBase) table
-  qryGetNewTailLeadPilotRecs.Open;
+  qryGetNewTailLeadPilotRecs.Close;
+  qryGetNewTailLeadPilotRecs.Open;     // This is querying an OnBase View
   NewCount := qryGetNewTailLeadPilotRecs.RecordCount;
 
   TolerancePercent := myIni.ReadInteger('Startup','TailLeadPilotCountTolerance', 20) / 100;
 
   // If change in record count is within Tolerance
   if Abs(CurrentCount - NewCount) < Round((CurrentCount * TolerancePercent)) then begin
-    LoadNewTailLeadPilotRecs();
+    WriteTailLeadPilotToFile;
   end else begin
-    SendWarningViaEmail('WARNING - Large delta in Tail_LeadPilot record count!' + #13#13 +
-                      'Existing count: ' + IntToStr(CurrentCount) + ', New count: ' + IntToStr(NewCount) + #13#13 +
-                      'If this is OK and you want to import this data, then increase the ' + QuotedStr('TailLeadPilotCountTolerance') + ' parameter in the .ini file.' + #13 +
-                      'The changed value will be used on the next Nightly or Morning run. ' + #13#13 +
-                      '(The Upload process ran using the existing data and did not import the new data.)');
+    SendWarningViaEmail('WARNING - Large difference in Tail_LeadPilot record count!' + #13#13 +
+                        'Existing count: ' + IntToStr(CurrentCount) + ', New count: ' + IntToStr(NewCount) + #13#13 +
+                        'If this is OK and you want to import this data, then increase the ' + QuotedStr('TailLeadPilotCountTolerance') + ' parameter in the .ini file.' + #13 +
+                        'The changed value will be used on the next Nightly or Morning run. ' + #13#13 +
+                        '(The Upload process ran using the existing data and did not import the new data.)');
   end;
+  (*  Note - If the record count is out-of-tolerance (something is wrong) then the tail_leadpilot.csv file will
+             not be created & therefore not uploaded to Certify.
 
-  WriteTailLeadPilotToFile;
+             If the file is not uploaded then the Certify Uptake/exchange process will leave its existing
+             data-set unchanged.  This is the behavior we want in this case.     -JL 1 Nov 2021
 
-  tblTailLeadPilot.Close;
+             In other words, if there is a problem with the new data then Certify will use the old data.
+  *)
+
+  // Save count from this run to .ini
+  myIni.WriteInteger('Startup','TailLeadPilotCountFromPreviousRun', NewCount);
+
   qryGetNewTailLeadPilotRecs.Close;
-
-end; { LoadTailLeadPilot2 }
-
-
-procedure TufrmCertifyExpDataLoader.LoadNewTailLeadPilotRecs;
-begin
-  StatusBar1.Panels[1].Text := 'Current Task:  Loading New Tail/LeadPilot recs from OnBase' ;
-
-  tblTailLeadPilot.EmptyTable;
-  qryGetNewTailLeadPilotRecs.First;
-  while not qryGetNewTailLeadPilotRecs.eof do begin
-    tblTailLeadPilot.Append;
-    tblTailLeadPilot.FieldByName('Tail').AsString  := qryGetNewTailLeadPilotRecs.FieldByName('tail_number').AsString;
-    tblTailLeadPilot.FieldByName('Email').AsString := qryGetNewTailLeadPilotRecs.FieldByName('lead_pilot_email').AsString;
-    tblTailLeadPilot.Post;
-    qryGetNewTailLeadPilotRecs.Next;
-  end;
-
-end;  { LoadNewTailLeadPilotRecs }
+end; { LoadTailLeadPilot }
 
 
 procedure TufrmCertifyExpDataLoader.WriteTailLeadPilotToFile;
@@ -1286,17 +1256,35 @@ begin
 
   RowOut := 'Tail,EMail';      // write header record
   WriteLn(WorkFile, RowOut) ;
-  tblTailLeadPilot.First;
-  while not tblTailLeadPilot.eof do begin
-    RowOut := Trim(tblTailLeadPilot.FieldByName('Tail').AsString) + ',' + tblTailLeadPilot.FieldByName('EMail').AsString ;
+  qryGetNewTailLeadPilotRecs.First;
+  while not qryGetNewTailLeadPilotRecs.eof do begin
+    RowOut := Trim(qryGetNewTailLeadPilotRecs.FieldByName('tail_number').AsString) + ',' + qryGetNewTailLeadPilotRecs.FieldByName('lead_pilot_email').AsString ;
     WriteLn(WorkFile, RowOut) ;
-    tblTailLeadPilot.Next;
+    qryGetNewTailLeadPilotRecs.Next;
   end;
 
   CloseFile(WorkFile);
 
 end;  { WriteTailLeadPilotToFile }
 
+
+(*            depricated 2 Nov 2021
+procedure TufrmCertifyExpDataLoader.LoadNewTailLeadPilotRecs;
+begin
+  StatusBar1.Panels[1].Text := 'Current Task:  Loading New Tail/LeadPilot recs from OnBase' ;
+
+  tblTailLeadPilot.EmptyTable;
+  qryGetNewTailLeadPilotRecs.First;
+  while not qryGetNewTailLeadPilotRecs.eof do begin
+    tblTailLeadPilot.Append;
+    tblTailLeadPilot.FieldByName('Tail').AsString  := qryGetNewTailLeadPilotRecs.FieldByName('tail_number').AsString;
+    tblTailLeadPilot.FieldByName('Email').AsString := qryGetNewTailLeadPilotRecs.FieldByName('lead_pilot_email').AsString;
+    tblTailLeadPilot.Post;
+    qryGetNewTailLeadPilotRecs.Next;
+  end;
+
+end;  { LoadNewTailLeadPilotRecs }
+*)
 
 
 procedure TufrmCertifyExpDataLoader.LoadTripsIntoStartBucket(Const BatchTimeIn : TDateTime);
@@ -1389,9 +1377,6 @@ begin
   //   be replaced, hence rfReplaceAll.  ParamByName can only do one occurance of a parameter.
 
 end;  {SubstituteParams1}
-
-
-
 
 
 // The data is a little goofy here.
@@ -2081,7 +2066,7 @@ begin
   myMessage.Body.Text    := ErrorMsgIn ;
 
   //  Hard-coding params because the error being trapped is 'cannot find .ini file' which contains these params
-  myMessage.Recipients.EMailAddresses := 'Jeff@dcsit.com,LTaylor@ClayLacy.com,DLittlefield@ClayLacy.com,thomasfduffy@gmail.com' ;
+  myMessage.Recipients.EMailAddresses := 'Jeff@dcsit.com,LTaylor@ClayLacy.com,DLittlefield@ClayLacy.com,thomasfduffy@gmail.com' ;  //???JL refactor
   mySMTP := TIdSMTP.Create(nil);
   mySMTP.Host     :=  '192.168.1.73' ;
   mySMTP.Username :=  'tkvassay@claylacy.com' ;
@@ -2353,28 +2338,6 @@ begin
 end;  { CalcPaycomErrorFileName }
 
 
-function TufrmCertifyExpDataLoader.CalcCrewTailFileName(const BatchTimeIn: TDateTime): String;
-var
-  myMonth, myDay, myYear: word;
-  strMonth, strDay: String;
-
-begin
-  DecodeDate(Trunc(BatchTimeIn), myYear, myMonth, myDay);
-
-  strMonth := IntToStr(myMonth);
-  if myMonth < 10 then
-    strMonth := '0' + strMonth ;
-
-  strDay := IntToStr(myDay);
-  if myDay < 10 then
-    strDay := '0' + strDay;
-
-
-  Result := myIni.ReadString('OutputFiles', 'CrewTailDestination', ''); // + '.csv'  ;
-
-end;  { CalcCrewTailFileName }
-
-
 procedure TufrmCertifyExpDataLoader.ImportSpecialUsers(const BatchTimeIn: TDateTime);
 begin
   StatusBar1.Panels[1].Text := 'Current Task:  Importing Special Users' ;
@@ -2395,40 +2358,6 @@ begin
   end;
 
 end;  {ImportSpecialUsers}
-
-
-function TufrmCertifyExpDataLoader.ScrubVendorNum(const strVendorNumIn: String; Var ErrorTxtOut: String): Integer;
-Var
-  intVendorNum : Integer;
-  strVendorNum : String;
-
-begin
-  ErrorTxtOut  := '';
-  Result       := 0;
-  strVendorNum := strVendorNumIn;
-
-  if strVendorNum <> '' then begin
-
-    // Strip-off trailing '|' if exists
-    if Pos('|', strVendorNum) = Length(strVendorNum) then
-      strVendorNum := Copy(strVendorNum, 1, Length(strVendorNum) - 1);
-
-    try
-      intVendorNum := StrToInt(strVendorNum);
-      Result       := intVendorNum ;
-
-    except on E1: Exception do begin
-      Result      := 0;
-      ErrorTxtOut := ' Field: employee_id - ' + E1.Message;  // employee_id in special_users file is Vendor Number
-    end;
-
-    end;
-  end else begin
-    Result := 0;
-    ErrorTxtOut := 'employee_id is blank';
-  end;
-
-end;  {ScrubAndValidateVendorNum}
 
 
 function TufrmCertifyExpDataLoader.ScrubFARPart(const FarPartIn: String): String;
