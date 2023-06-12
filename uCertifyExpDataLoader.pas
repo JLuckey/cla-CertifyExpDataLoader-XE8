@@ -360,6 +360,8 @@ var
   myLog : TIniFile;
   gloPaycomErrorFile: String;
   gloMissingFlightCrewFile : String;
+  gloSpecialUsersCSVFileName: String;
+
 
   gloPusher : TfrmPushToCertify;
   gloNewHireDummyQuoteNum : String;
@@ -403,6 +405,9 @@ begin
   edDaysForward.Text  := myIni.ReadString('Startup', 'FlightCrewTripsDaysForward', '') ;
   edTripTable.Text    := myIni.ReadString('Startup', 'TripTable', '') ;
   edTripLegTable.Text := myIni.ReadString('Startup', 'TripLegTable', '') ;
+
+  // added for TID:23215
+  gloSpecialUsersCSVFileName := myIni.ReadString('Startup', 'SpecialUsersFileName',   '') ;
 
 
   //  ShowMessage(ParamStr(1));
@@ -2004,7 +2009,7 @@ begin
   myMessage.Body.Text    := 'See attached files for Employee processing errors and uploaded data files:' ;
   myMessage.Recipients.EMailAddresses := myIni.ReadString('OutputFiles', 'EMailRecipientList', '');
 
-  //  Load Attachments
+  //  Load Attachment file names
   OutPutFileDir  := edOutputDirectory.Text;          // myIni.ReadString('OutputFiles', 'OutputFileDir', '');
   stlOutputFiles := TStringList.Create();
   stlOutputFiles.CommaText := myIni.ReadString('OutputFiles', 'EmailAttachFileList', '');
@@ -2016,7 +2021,7 @@ begin
   end ; { for }
 
 
-  // Add the Paycom Data file to attachemnt list
+  // Add the Paycom Data file to attachment list
   stlOutputFiles.Clear;
   stlOutputFiles.CommaText := myIni.ReadString('OutputFiles', 'EmailAttachFileList_Additional', '');
   for i := 0 to stlOutputFiles.Count - 1 do begin
@@ -2025,12 +2030,17 @@ begin
   end ; { for }
 
 
-  // Add the Paycom Error file to attachemnt list
+  // Add the Paycom Error file to attachment list
   if FileExists( gloPaycomErrorFile ) then
     TIDAttachmentFile.Create(myMessage.MessageParts, gloPaycomErrorFile );
 
   if FileExists( gloMissingFlightCrewFile ) then
     TIDAttachmentFile.Create(myMessage.MessageParts, gloMissingFlightCrewFile );
+
+
+  // Add Special Users file as attachment - TID: 23215
+  if FileExists( gloSpecialUsersCSVFileName ) then
+    TIDAttachmentFile.Create(myMessage.MessageParts, gloSpecialUsersCSVFileName );
 
 
   mySMTP := TIdSMTP.Create(nil);
@@ -2350,6 +2360,10 @@ begin
       InsertSpecialUsersHistoryTable(qryGetSpecialUsers, BatchTimeIn);
       qryGetSpecialUsers.Next;
     end;
+
+    // Write Special Users to a CSV file, per TID: 23215, 12 Jun 2023
+    qryGetSpecialUsers.First;
+    WriteQueryResultsToFile(qryGetSpecialUsers, gloSpecialUsersCSVFileName);
 
   finally
     tblPaycomHistory.Close;
