@@ -255,8 +255,6 @@ type
 
     Procedure LoadData(Const BatchTimeIn: TDateTime);
 
-    Procedure SendNewCrewTailToCertify(stlNewCrewTailIn: TStringList);
-
 
     Procedure SendToCertify(Const WorkingQueryIn: TUniQuery; Const BatchTimeIn : TDateTime; DataSetNameIn: String);
 
@@ -400,6 +398,9 @@ begin
   edDaysBack.Text           := myIni.ReadString('Startup', 'EmployeeFlightCrewDaysBack', '') ;
   edLastNTrips.Text         := myIni.ReadString('Startup', 'MostRecentTripCount', '') ;
   edTerminatedDaysBack.Text := myIni.ReadString('Startup', 'TerminatedEmployeeGracePeriodDays', '') ;
+
+  gloMissingFlightCrewFile  := myIni.ReadString('Startup', 'MissingFlightCrewFileName', '') ;
+
 
   // added for TID:1152
   edDaysForward.Text  := myIni.ReadString('Startup', 'FlightCrewTripsDaysForward', '') ;
@@ -550,9 +551,10 @@ begin
 //  SendStatusEmail
 //  LoadTailLeadPilot;
 
-  BatchTime := StrToDateTime('11/01/2021 09:30:02.347');
+  BatchTime := StrToDateTime('06/15/2023 11:42:02.347');
+  ImportSpecialUsers(BatchTime);
 
-  ShowMessage('Here is the lead pilot: ' + FindLeadPilot('N371FPxx', BatchTime));
+  //ShowMessage('Here is the lead pilot: ' + FindLeadPilot('N371FPxx', BatchTime));
 
 end;
 
@@ -1928,16 +1930,13 @@ begin
   qryGetMissingFlightCrew.ParamByName('parmDaysBack').AsInteger      := StrToInt(edDaysBack.text);
   qryGetMissingFlightCrew.Open;
 
-  gloMissingFlightCrewFile := 'C:\CertifyExpense\OutputFiles\MissingFlightCrew.csv';
+//  gloMissingFlightCrewFile := 'C:\CertifyExpense\OutputFiles\MissingFlightCrew.csv';
 
   WriteQueryResultsToFile(qryGetMissingFlightCrew, gloMissingFlightCrewFile );
 
   qryGetMissingFlightCrew.Close;
 
 end;  { GenerateMissingFlightCrewReport }
-
-
-
 
 
 procedure TufrmCertifyExpDataLoader.Process_NewHire_Employees_FlightCrew(const BatchTimeIn: TDateTime);
@@ -2034,9 +2033,9 @@ begin
   if FileExists( gloPaycomErrorFile ) then
     TIDAttachmentFile.Create(myMessage.MessageParts, gloPaycomErrorFile );
 
+  // Add the Missing Flight Crew file to attachment list
   if FileExists( gloMissingFlightCrewFile ) then
     TIDAttachmentFile.Create(myMessage.MessageParts, gloMissingFlightCrewFile );
-
 
   // Add Special Users file as attachment - TID: 23215
   if FileExists( gloSpecialUsersCSVFileName ) then
@@ -2052,8 +2051,9 @@ begin
     mySMTP.Connect;
     mySMTP.Send(myMessage);
    //  mySMTP.Disconnect();
-  Except on E:Exception Do
+  Except on E:Exception Do  begin
     LogIt('Email Error: ' + E.Message);
+  end;
   End;
 
   mySMTP.free;
@@ -2339,7 +2339,13 @@ begin
   if myDay < 10 then
     strDay := '0' + strDay;
 
-  Result :=   'C:\CertifyExpense\OutputFiles\PaycomErrors_' + IntToStr(myYear) + strMonth + strDay + '.csv';
+
+  //Result := edOutputDirectory.Text + 'PaycomErrors_' + IntToStr(myYear) + strMonth + strDay + '.csv';
+
+  Result := myIni.ReadString('Startup', 'PaycomErrorsFileName', '') + IntToStr(myYear) + strMonth + strDay + '.csv';
+
+
+//  Result := 'C:\CertifyExpense\OutputFiles\PaycomErrors_' + IntToStr(myYear) + strMonth + strDay + '.csv';
                // get this prefix from .ini  ???JL 2 Jan 2019
 
   gloPaycomErrorFile := Result;
@@ -2747,14 +2753,6 @@ begin
 
 end;
 
-
-procedure TufrmCertifyExpDataLoader.SendNewCrewTailToCertify(stlNewCrewTailIn: TStringList);
-begin
-
-  sleep(1);
-  // qryGetCrewTailRecs
-
-end;
 
 
 procedure TufrmCertifyExpDataLoader.GetBatchDates_CrewTail(var PreviousBatchDateOut, NewBatchDateOut: TDateTime);

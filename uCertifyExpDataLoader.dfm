@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'Certify Data Loader - ver 4.30 - FX'
+  Caption = 'Certify Data Loader - ver 4.31 - FX'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace

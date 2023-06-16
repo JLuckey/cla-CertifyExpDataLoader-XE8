@@ -110,7 +110,6 @@ type
     Function  GetCertifyRecKey(Const CodeFieldValIn: String; DimenIn: Integer): String;
     Function  DecodeUploadStatus(): String;
 
-    Procedure  BuildJSONBody(Const TripTailLogValIn: String; Var stlOut : TStringList);
 
   public
 
@@ -481,20 +480,6 @@ begin
   end;
 
 end;  {Add_CrewLog_Rec}
-
-
-
-Procedure TfrmPushToCertify.BuildJSONBody(const TripTailLogValIn: String; Var stlOut : TStringList) ;
-begin
-  // Format JSON data packet
-  stlOut.Add('{"ExpRptGLDIndex": ' + IntToStr(FCertifyDimension) + ',' );
-  stlOut.Add(' "ExpRptGLDLabel": "Trip #", ');
-  stlOut.Add(Format(' "Name": "%s",',  [FTripNumber]));
-//  stlOut.Add(Format(' "Code": "%s", ', [strVendorTrip] ) );
-  stlOut.Add(Format(' "Data": "%s", ', [FTripNumber] ) );
-  stlOut.Add(' "Active": 1 }');
-
-end;
 
 
 
