@@ -1219,6 +1219,7 @@ begin
 
   qryGetNewTailLeadPilotRecs.Close;
   qryGetNewTailLeadPilotRecs.Open;     // This is querying an OnBase View
+                                        // updated query criteria to reflect new Business Rules, see query 8 Jan 2024
   NewCount := qryGetNewTailLeadPilotRecs.RecordCount;
 
   TolerancePercent := myIni.ReadInteger('Startup','TailLeadPilotCountTolerance', 20) / 100;

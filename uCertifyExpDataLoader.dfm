@@ -1,7 +1,7 @@
 object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
   Left = 0
   Top = 0
-  Caption = 'Certify Data Loader - ver 4.31 - FX'
+  Caption = 'Certify Data Loader - ver 4.32 - FX'
   ClientHeight = 601
   ClientWidth = 716
   Color = clBtnFace
@@ -1384,8 +1384,8 @@ object ufrmCertifyExpDataLoader: TufrmCertifyExpDataLoader
         'mail'
       'from V_Accounting_AircraftMaster'
       'where Status = '#39'Active'#39'  '
-      ''
-      ''
+      '  and (LeadpilotEmail is not null AND LeadpilotEmail <> '#39#39')'
+      '  '
       '/* old code'
       'select tail_number, lead_pilot_email'
       'from V_CertifyExp_TailLeadPilot'
